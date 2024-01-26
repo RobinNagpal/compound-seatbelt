@@ -1,7 +1,7 @@
 import { FunctionFragment, Interface } from '@ethersproject/abi'
 import fs from 'fs'
 import mftch from 'micro-ftch'
-import { CometChains, ExecuteTransactionInfo } from './compound-types'
+import { CometChains, ContractNameAndAbi, ExecuteTransactionInfo } from './compound-types'
 // @ts-ignore
 const fetchUrl = mftch.default
 
@@ -27,7 +27,7 @@ async function storeContractNameAndAbi(chain: CometChains, addr: string) {
   fs.writeFileSync(abiFilePath, abiFileContent, 'utf-8')
 }
 
-async function getContractNameAndAbi(chain: CometChains, address: string) {
+async function getContractNameAndAbi(chain: CometChains, address: string): Promise<ContractNameAndAbi> {
   console.log(`Fetching contract name and ABI for address: ${address} on chain: ${chain}...`)
   // Add delay to avoid rate limiting from etherscan api
   await delay(2000)

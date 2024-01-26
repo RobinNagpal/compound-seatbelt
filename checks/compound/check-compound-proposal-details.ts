@@ -178,6 +178,7 @@ async function getTransactionMessages(
   } else {
     const [contractName, formatterName] = transactionFormatter.split('.')
     const message = await formattersLookup[contractName][formatterName](
+      chain,
       transactionInfo,
       decodedCalldata.map((data) => data.toString()),
     )
