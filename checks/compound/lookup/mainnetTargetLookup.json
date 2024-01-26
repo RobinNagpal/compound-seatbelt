@@ -1028,7 +1028,7 @@
     "functions": {
       "approve(address,uint256)": {
         "description": "approve(address,uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "Comp.approve(address,uint256)",
         "proposals": {
           "79": [
             "0xCD18eAa163733Da39c232722cBC4E8940b1D8888",
@@ -1094,7 +1094,7 @@
       },
       "transfer(address,uint256)": {
         "description": "transfer(address,uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "Comp.transfer(address,uint256)",
         "proposals": {
           "79": [
             "0x2B384212EDc04Ae8bB41738D05BA20E33277bf33",
