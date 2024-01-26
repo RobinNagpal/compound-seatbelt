@@ -1,4 +1,5 @@
 import { TransactionFormatter } from './compound-types'
+import { compFormatters } from './formatters/comp-formatters'
 import { configuratorFormatters } from './formatters/configurator-formatters'
 
 export const formattersLookup: {
@@ -7,4 +8,5 @@ export const formattersLookup: {
   }
 } = {
   Configurator: configuratorFormatters,
+  Comp: compFormatters,
 }
