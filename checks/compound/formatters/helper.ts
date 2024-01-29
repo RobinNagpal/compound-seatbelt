@@ -43,6 +43,6 @@ export function toYears(seconds: number, secondsPerYear = 31536000): number {
   return seconds / secondsPerYear
 }
 
-export function subtract(num1: number, num2: number): number {
+export function calculateDifferenceOfDecimals(num1: number, num2: number): number {
   return defactor(factor(num1) - factor(num2))
 }
