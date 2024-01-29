@@ -5,7 +5,7 @@ import { CometChains, ContractNameAndAbi, ExecuteTransactionInfo } from './compo
 // @ts-ignore
 const fetchUrl = mftch.default
 
-export async function getContractNameAndAbiFromFile(chain: CometChains, addr: string) {
+export async function getContractNameAndAbiFromFile(chain: CometChains, addr: string): Promise<ContractNameAndAbi> {
   const address = addr.toLowerCase()
   // read abi from file in contracts folder
   const abiFilePath = getContractInfoFilePath(chain, address)
@@ -92,7 +92,7 @@ function getExplorerApiUrl(chain: CometChains, address: string) {
 export async function getFunctionFragmentAndDecodedCalldata(
   proposalId: number,
   chain: CometChains,
-  transactionInfo: ExecuteTransactionInfo,
+  transactionInfo: ExecuteTransactionInfo
 ) {
   const { target, signature, calldata } = transactionInfo
   const contractNameAndAbi = await getContractNameAndAbiFromFile(chain, target)
