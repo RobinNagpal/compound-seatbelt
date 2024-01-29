@@ -2020,7 +2020,7 @@
     "functions": {
       "deployAndUpgradeTo(address,address)": {
         "description": "deployAndUpgradeTo(address,address)",
-        "transactionFormatter": "",
+        "transactionFormatter": "Configurator.deployAndUpgradeTo(address,address)",
         "proposals": {
           "116": [
             "0x316f9708bB98af7dA9c68C1C3b5e79039cD336E3",
