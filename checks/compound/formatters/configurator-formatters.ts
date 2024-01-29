@@ -2,9 +2,9 @@ import { BigNumber, Contract } from 'ethers'
 import { provider } from '../../../utils/clients/ethers'
 import { getContractNameAndAbiFromFile } from './../abi-utils'
 import { CometChains, ExecuteTransactionInfo, TransactionFormatter } from './../compound-types'
-import { annualize, defactor, subtract } from './helper'
+import { annualize, defactor, calculateDifferenceOfDecimals } from './helper'
 
-async function commonHandler(
+async function getTextForChangeInInterestRate(
   chain: CometChains,
   decodedParams: string[],
   getInterestRateFunction: (contract: Contract) => Promise<BigNumber>,
@@ -28,7 +28,7 @@ async function commonHandler(
   const currentRateInPercent = defactor(newInterestRate) * 100
   console.log(`New ${interestRateName}: ${currentRateInPercent}`)
 
-  const changeInRate = subtract(currentRateInPercent, previousRateInPercent)
+  const changeInRate = calculateDifferenceOfDecimals(currentRateInPercent, previousRateInPercent)
 
   return `\nSet ${interestRateName} of [${symbol}](https://etherscan.io/address/${baseToken}) to ${currentRateInPercent}%. Previous value was ${previousRateInPercent}% and now it is getting ${
     changeInRate > 0 ? 'increased' : 'decreased'
@@ -41,7 +41,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     transaction: ExecuteTransactionInfo,
     decodedParams: string[]
   ) => {
-    return commonHandler(
+    return getTextForChangeInInterestRate(
       chain,
       decodedParams,
       async (contract) => await contract.callStatic.borrowPerSecondInterestRateBase(),
@@ -53,7 +53,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     transaction: ExecuteTransactionInfo,
     decodedParams: string[]
   ) => {
-    return commonHandler(
+    return getTextForChangeInInterestRate(
       chain,
       decodedParams,
       async (contract) => await contract.callStatic.borrowPerSecondInterestRateSlopeLow(),
@@ -65,7 +65,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     transaction: ExecuteTransactionInfo,
     decodedParams: string[]
   ) => {
-    return commonHandler(
+    return getTextForChangeInInterestRate(
       chain,
       decodedParams,
       async (contract) => await contract.callStatic.borrowPerSecondInterestRateSlopeHigh(),
@@ -77,7 +77,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     transaction: ExecuteTransactionInfo,
     decodedParams: string[]
   ) => {
-    return commonHandler(
+    return getTextForChangeInInterestRate(
       chain,
       decodedParams,
       async (contract) => await contract.callStatic.supplyPerSecondInterestRateSlopeLow(),
@@ -89,7 +89,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     transaction: ExecuteTransactionInfo,
     decodedParams: string[]
   ) => {
-    return commonHandler(
+    return getTextForChangeInInterestRate(
       chain,
       decodedParams,
       async (contract) => await contract.callStatic.supplyPerSecondInterestRateSlopeHigh(),
