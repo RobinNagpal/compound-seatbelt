@@ -1,5 +1,5 @@
 import { BigNumber, Contract } from 'ethers'
-import { provider } from '../../../utils/clients/ethers'
+import { customProvider } from '../../../utils/clients/ethers'
 import { getContractNameAndAbiFromFile } from './../abi-utils'
 import { CometChains, ExecuteTransactionInfo, TransactionFormatter } from './../compound-types'
 import { annualize, defactor, calculateDifferenceOfDecimals } from './helper'
@@ -8,16 +8,17 @@ async function getTextForChangeInInterestRate(
   chain: CometChains,
   decodedParams: string[],
   getInterestRateFunction: (contract: Contract) => Promise<BigNumber>,
-  interestRateName: string
+  interestRateName: string,
+  platform: string
 ) {
   console.log(`decodedParams ${decodedParams.join(',')}`)
 
   const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
-  const currentCometInstance = new Contract(decodedParams[0], abi, provider)
+  const currentCometInstance = new Contract(decodedParams[0], abi, customProvider(chain))
 
   const baseToken = await currentCometInstance.callStatic.baseToken()
   const { abi: baseTokenAbi } = await getContractNameAndAbiFromFile(chain, baseToken)
-  const baseTokenInstance = new Contract(baseToken, baseTokenAbi, provider)
+  const baseTokenInstance = new Contract(baseToken, baseTokenAbi, customProvider(chain))
   const symbol = await baseTokenInstance.callStatic.symbol()
 
   const prevInterestRate = annualize(await getInterestRateFunction(currentCometInstance))
@@ -30,9 +31,22 @@ async function getTextForChangeInInterestRate(
 
   const changeInRate = calculateDifferenceOfDecimals(currentRateInPercent, previousRateInPercent)
 
-  return `\nSet ${interestRateName} of [${symbol}](https://etherscan.io/address/${baseToken}) to ${currentRateInPercent}%. Previous value was ${previousRateInPercent}% and now it is getting ${
+  return `\n\nSet ${interestRateName} of [${symbol}](https://${platform}/address/${baseToken}) to ${currentRateInPercent}%. Previous value was ${previousRateInPercent}% and now it is getting ${
     changeInRate > 0 ? 'increased' : 'decreased'
   } by **${changeInRate}%**`
+}
+
+async function getPlatform(chain: CometChains) {
+  switch (chain) {
+    case CometChains.mainnet:
+      return 'etherscan.io'
+    case CometChains.polygon:
+      return 'polygonscan.com'
+    case CometChains.arbitrum:
+      return 'arbiscan.io'
+    case CometChains.base:
+      return ''
+  }
 }
 
 export const configuratorFormatters: { [functionName: string]: TransactionFormatter } = {
@@ -45,7 +59,8 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       chain,
       decodedParams,
       async (contract) => await contract.callStatic.borrowPerSecondInterestRateBase(),
-      'BorrowPerYearInterestRateBase'
+      'BorrowPerYearInterestRateBase',
+      await getPlatform(chain)
     )
   },
   'setBorrowPerYearInterestRateSlopeLow(address,uint64)': async (
@@ -57,7 +72,8 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       chain,
       decodedParams,
       async (contract) => await contract.callStatic.borrowPerSecondInterestRateSlopeLow(),
-      'BorrowPerYearInterestRateSlopeLow'
+      'BorrowPerYearInterestRateSlopeLow',
+      await getPlatform(chain)
     )
   },
   'setBorrowPerYearInterestRateSlopeHigh(address,uint64)': async (
@@ -69,7 +85,8 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       chain,
       decodedParams,
       async (contract) => await contract.callStatic.borrowPerSecondInterestRateSlopeHigh(),
-      'BorrowPerYearInterestRateSlopeHigh'
+      'BorrowPerYearInterestRateSlopeHigh',
+      await getPlatform(chain)
     )
   },
   'setSupplyPerYearInterestRateSlopeLow(address,uint64)': async (
@@ -81,7 +98,8 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       chain,
       decodedParams,
       async (contract) => await contract.callStatic.supplyPerSecondInterestRateSlopeLow(),
-      'SupplyPerYearInterestRateSlopeLow'
+      'SupplyPerYearInterestRateSlopeLow',
+      await getPlatform(chain)
     )
   },
   'setSupplyPerYearInterestRateSlopeHigh(address,uint64)': async (
@@ -93,7 +111,8 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       chain,
       decodedParams,
       async (contract) => await contract.callStatic.supplyPerSecondInterestRateSlopeHigh(),
-      'SupplyPerYearInterestRateSlopeHigh'
+      'SupplyPerYearInterestRateSlopeHigh',
+      await getPlatform(chain)
     )
   },
   'deployAndUpgradeTo(address,address)': async (
@@ -101,18 +120,20 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     transaction: ExecuteTransactionInfo,
     decodedParams: string[]
   ) => {
+    const platform = await getPlatform(chain)
+
     console.log(`decodedParams ${decodedParams.join(',')}`)
 
     const { contractName } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
 
     const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[1])
-    const currentCometInstance = new Contract(decodedParams[1], abi, provider)
+    const currentCometInstance = new Contract(decodedParams[1], abi, customProvider(chain))
 
     const baseToken = await currentCometInstance.callStatic.baseToken()
     const { abi: baseTokenAbi } = await getContractNameAndAbiFromFile(chain, baseToken)
-    const baseTokenInstance = new Contract(baseToken, baseTokenAbi, provider)
+    const baseTokenInstance = new Contract(baseToken, baseTokenAbi, customProvider(chain))
     const symbol = await baseTokenInstance.callStatic.symbol()
 
-    return `Deploy and upgrade new implementation for [${symbol}](https://etherscan.io/address/${baseToken}) via [${contractName}](https://etherscan.io/address/${decodedParams[0]}).`
+    return `\n\nDeploy and upgrade new implementation for [${symbol}](https://${platform}/address/${baseToken}) via [${contractName}](https://${platform}/address/${decodedParams[0]}).`
   },
 }
