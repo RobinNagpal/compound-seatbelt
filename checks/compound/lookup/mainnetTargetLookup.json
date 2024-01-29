@@ -1842,7 +1842,7 @@
       },
       "setBorrowPerYearInterestRateSlopeLow(address,uint64)": {
         "description": "setBorrowPerYearInterestRateSlopeLow(address,uint64)",
-        "transactionFormatter": "",
+        "transactionFormatter": "Configurator.setBorrowPerYearInterestRateSlopeLow(address,uint64)",
         "proposals": {
           "162": [
             "0xc3d688B66703497DAA19211EEdff47f25384cdc3",
@@ -1868,7 +1868,7 @@
       },
       "setBorrowPerYearInterestRateSlopeHigh(address,uint64)": {
         "description": "setBorrowPerYearInterestRateSlopeHigh(address,uint64)",
-        "transactionFormatter": "",
+        "transactionFormatter": "Configurator.setBorrowPerYearInterestRateSlopeHigh(address,uint64)",
         "proposals": {
           "162": [
             "0xc3d688B66703497DAA19211EEdff47f25384cdc3",
@@ -1912,7 +1912,7 @@
       },
       "setSupplyPerYearInterestRateSlopeLow(address,uint64)": {
         "description": "setSupplyPerYearInterestRateSlopeLow(address,uint64)",
-        "transactionFormatter": "",
+        "transactionFormatter": "Configurator.setSupplyPerYearInterestRateSlopeLow(address,uint64)",
         "proposals": {
           "162": [
             "0xc3d688B66703497DAA19211EEdff47f25384cdc3",
@@ -1934,7 +1934,7 @@
       },
       "setSupplyPerYearInterestRateSlopeHigh(address,uint64)": {
         "description": "setSupplyPerYearInterestRateSlopeHigh(address,uint64)",
-        "transactionFormatter": "",
+        "transactionFormatter": "Configurator.setSupplyPerYearInterestRateSlopeHigh(address,uint64)",
         "proposals": {
           "162": [
             "0xc3d688B66703497DAA19211EEdff47f25384cdc3",
