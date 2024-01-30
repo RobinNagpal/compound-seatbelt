@@ -17,7 +17,7 @@ export const generalFormatters: { [functionName: string]: TransactionFormatter }
     const currentInstance = new Contract(transaction.target, abi, customProvider(chain))
     const symbol = await currentInstance.callStatic.symbol()
     const decimals = await currentInstance.callStatic.decimals()
-    const compToken = defactor(BigInt(decodedParams[1]), decimals)
+    const compToken = defactor(BigInt(decodedParams[1]), parseFloat(`1e${decimals}`))
 
     return `\n\nTransfer ${compToken.toFixed(2)} [${symbol}](https://${platform}/address/${transaction.target}) to ${
       decodedParams[0]
