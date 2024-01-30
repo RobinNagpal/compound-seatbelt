@@ -303,7 +303,7 @@
       },
       "_grantComp(address,uint256)": {
         "description": "_grantComp(address,uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "Comptroller._grantComp(address,uint256)",
         "proposals": {
           "49": [
             "0x91400bE76b7171Cf932Ae252390d2b60e2C73013",
@@ -835,7 +835,7 @@
     "functions": {
       "transfer(address,uint256)": {
         "description": "transfer(address,uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "General.transfer(address,uint256)",
         "proposals": {
           "58": [
             "0x2Abfc5e72C2144750A332e06dA376d067cC71605",
@@ -905,7 +905,7 @@
       },
       "transfer(address,uint256)": {
         "description": "transfer(address,uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "General.transfer(address,uint256)",
         "proposals": {
           "202": [
             "0x9c9dC2110240391d4BEe41203bDFbD19c279B429",
@@ -1094,7 +1094,7 @@
       },
       "transfer(address,uint256)": {
         "description": "transfer(address,uint256)",
-        "transactionFormatter": "Comp.transfer(address,uint256)",
+        "transactionFormatter": "General.transfer(address,uint256)",
         "proposals": {
           "79": [
             "0x2B384212EDc04Ae8bB41738D05BA20E33277bf33",
@@ -1404,7 +1404,7 @@
     "functions": {
       "transfer(address,uint256)": {
         "description": "transfer(address,uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "General.transfer(address,uint256)",
         "proposals": {
           "104": [
             "0xe8F0c9059b8Db5B863d48dB8e8C1A09f97D3B991",
@@ -1582,7 +1582,7 @@
       },
       "transfer(address,uint256)": {
         "description": "transfer(address,uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "General.transfer(address,uint256)",
         "proposals": {
           "112": [
             "0x2B384212EDc04Ae8bB41738D05BA20E33277bf33",
@@ -1638,7 +1638,7 @@
     "functions": {
       "transfer(address,uint256)": {
         "description": "transfer(address,uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "General.transfer(address,uint256)",
         "proposals": {
           "112": [
             "0x6918fE32bB0CCfba961C554699c1B506eD0Bd458",
@@ -2269,7 +2269,7 @@
       },
       "transfer(address,uint256)": {
         "description": "transfer(address,uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "General.transfer(address,uint256)",
         "proposals": {
           "202": [
             "0x9c9dC2110240391d4BEe41203bDFbD19c279B429",
@@ -2313,7 +2313,7 @@
       },
       "transfer(address,uint256)": {
         "description": "transfer(address,uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "General.transfer(address,uint256)",
         "proposals": {
           "144": [
             "0xA17581A9E3356d9A858b789D68B4d866e593aE94",
@@ -2594,7 +2594,7 @@
       },
       "transfer(address,uint256)": {
         "description": "transfer(address,uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "General.transfer(address,uint256)",
         "proposals": {
           "202": [
             "0x9c9dC2110240391d4BEe41203bDFbD19c279B429",
@@ -2631,7 +2631,7 @@
     "functions": {
       "transfer(address,uint256)": {
         "description": "transfer(address,uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "General.transfer(address,uint256)",
         "proposals": {
           "202": [
             "0x9c9dC2110240391d4BEe41203bDFbD19c279B429",
@@ -2649,7 +2649,7 @@
     "functions": {
       "transfer(address,uint256)": {
         "description": "transfer(address,uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "General.transfer(address,uint256)",
         "proposals": {
           "202": [
             "0x9c9dC2110240391d4BEe41203bDFbD19c279B429",
