@@ -2,7 +2,7 @@ import { TransactionFormatter } from './compound-types'
 import { compFormatters } from './formatters/comp-formatters'
 import { comptrollerFormatters } from './formatters/comptroller-formatters'
 import { configuratorFormatters } from './formatters/configurator-formatters'
-import { generalFormatters } from './formatters/general-formatters'
+import { ERC20Formatters } from './formatters/erc20-formatters'
 
 export const formattersLookup: {
   [contractName: string]: {
@@ -12,5 +12,5 @@ export const formattersLookup: {
   Configurator: configuratorFormatters,
   Comp: compFormatters,
   Comptroller: comptrollerFormatters,
-  General: generalFormatters,
+  ERC20: ERC20Formatters,
 }

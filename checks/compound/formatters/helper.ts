@@ -57,6 +57,6 @@ export async function getPlatform(chain: CometChains) {
     case CometChains.arbitrum:
       return 'arbiscan.io'
     case CometChains.base:
-      return ''
+      return 'basescan.org'
   }
 }
