@@ -1,4 +1,5 @@
 import { BigNumber } from '@ethersproject/bignumber'
+import { CometChains } from '../compound-types'
 
 export type Numeric = number | bigint
 export const factorDecimals = 18
@@ -13,8 +14,8 @@ export function factor(f: number, decimals: number = factorDecimals): bigint {
   return exp(f, decimals)
 }
 
-export function defactor(f: bigint | BigNumber): number {
-  return Number(toBigInt(f)) / 1e18
+export function defactor(f: bigint | BigNumber, decimals: number = 1e18): number {
+  return Number(toBigInt(f)) / decimals
 }
 
 // Truncates a factor to a certain number of decimals
@@ -45,4 +46,17 @@ export function toYears(seconds: number, secondsPerYear = 31536000): number {
 
 export function calculateDifferenceOfDecimals(num1: number, num2: number): number {
   return defactor(factor(num1) - factor(num2))
+}
+
+export async function getPlatform(chain: CometChains) {
+  switch (chain) {
+    case CometChains.mainnet:
+      return 'etherscan.io'
+    case CometChains.polygon:
+      return 'polygonscan.com'
+    case CometChains.arbitrum:
+      return 'arbiscan.io'
+    case CometChains.base:
+      return ''
+  }
 }
