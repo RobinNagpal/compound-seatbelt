@@ -2,7 +2,7 @@ import { Contract } from 'ethers'
 import { customProvider } from '../../../utils/clients/ethers'
 import { getContractNameAndAbiFromFile } from '../abi-utils'
 import { CometChains, ExecuteTransactionInfo, TransactionFormatter } from '../compound-types'
-import { defactor, getPlatform } from './helper'
+import { defactor, getContractSymbolAndDecimalsFromFile, getPlatform } from './helper'
 
 export const ERC20Formatters: { [functionName: string]: TransactionFormatter } = {
   'transfer(address,uint256)': async (
@@ -15,8 +15,8 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
 
     const { abi } = await getContractNameAndAbiFromFile(chain, transaction.target)
     const currentInstance = new Contract(transaction.target, abi, customProvider(chain))
-    const symbol = await currentInstance.callStatic.symbol()
-    const decimals = await currentInstance.callStatic.decimals()
+    const { symbol, decimals } = await getContractSymbolAndDecimalsFromFile(transaction.target, currentInstance)
+
     const token = defactor(BigInt(decodedParams[1]), parseFloat(`1e${decimals}`))
 
     return `\n\nTransfer **${token.toFixed(2)} [${symbol}](https://${platform}/address/${transaction.target})** to ${
