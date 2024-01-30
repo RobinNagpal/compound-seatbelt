@@ -1,7 +1,9 @@
 import { getContractNameAndAbiFromFile } from './../abi-utils'
 import { CometChains, ExecuteTransactionInfo, TransactionFormatter } from './../compound-types'
 import { BigNumber } from '@ethersproject/bignumber'
-import { constants } from 'ethers'
+import { Contract, constants } from 'ethers'
+import { defactor, getPlatform } from './helper'
+import { customProvider } from '../../../utils/clients/ethers'
 
 export const compFormatters: { [functionName: string]: TransactionFormatter } = {
   'approve(address,uint256)': async (
@@ -9,18 +11,19 @@ export const compFormatters: { [functionName: string]: TransactionFormatter } = 
     transaction: ExecuteTransactionInfo,
     decodedParams: string[]
   ) => {
+    console.log(`decodedParams ${decodedParams.join(',')}`)
+    const platform = await getPlatform(chain)
+
     const { contractName } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
-    const divisor = constants.WeiPerEther
-    const amount = BigNumber.from(decodedParams[1]).div(divisor)
-    return `Approve **${amount}** [COMP](https://etherscan.io/address/0xc00e94cb662c3520282e6f5717214004a7f26888) to **[${contractName}](https://etherscan.io/address/${decodedParams[0]})**`
-  },
-  'transfer(address,uint256)': async (
-    chain: CometChains,
-    transaction: ExecuteTransactionInfo,
-    decodedParams: string[]
-  ) => {
-    const divisor = constants.WeiPerEther
-    const amount = BigNumber.from(decodedParams[1]).div(divisor)
-    return `Transfer **${amount}** [COMP](https://etherscan.io/address/0xc00e94cb662c3520282e6f5717214004a7f26888) to [Wallet](https://etherscan.io/address/${decodedParams[0]})`
+
+    const { abi: compAddressAbi } = await getContractNameAndAbiFromFile(chain, transaction.target)
+    const compInstance = new Contract(transaction.target, compAddressAbi, customProvider(chain))
+    const symbol = await compInstance.callStatic.symbol()
+
+    const compToken = defactor(BigInt(decodedParams[1]))
+
+    return `\n\nApprove **${compToken.toFixed(2)} ${symbol}** tokens to [${contractName}](https://${platform}/address/${
+      decodedParams[0]
+    })`
   },
 }
