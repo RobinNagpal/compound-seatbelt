@@ -24,8 +24,8 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
 
     const compToken = defactor(BigInt(decodedParams[1]))
 
-    return `\n\nGrant ${compToken.toFixed(2)} [${symbol}](https://${platform}/address/${
+    return `\n\nGrant **${compToken.toFixed(2)} [${symbol}](https://${platform}/address/${
       transaction.target
-    }) tokens to [${contractName}](https://${platform}/address/${decodedParams[0]})`
+    })** tokens to [${contractName}](https://${platform}/address/${decodedParams[0]})`
   },
 }
