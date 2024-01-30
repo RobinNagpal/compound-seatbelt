@@ -2,7 +2,7 @@ import { BigNumber, Contract } from 'ethers'
 import { customProvider } from '../../../utils/clients/ethers'
 import { getContractNameAndAbiFromFile } from './../abi-utils'
 import { CometChains, ExecuteTransactionInfo, TransactionFormatter } from './../compound-types'
-import { annualize, defactor, calculateDifferenceOfDecimals } from './helper'
+import { annualize, defactor, calculateDifferenceOfDecimals, getPlatform } from './helper'
 
 async function getTextForChangeInInterestRate(
   chain: CometChains,
@@ -34,19 +34,6 @@ async function getTextForChangeInInterestRate(
   return `\n\nSet ${interestRateName} of [${symbol}](https://${platform}/address/${baseToken}) to ${currentRateInPercent}%. Previous value was ${previousRateInPercent}% and now it is getting ${
     changeInRate > 0 ? 'increased' : 'decreased'
   } by **${changeInRate}%**`
-}
-
-async function getPlatform(chain: CometChains) {
-  switch (chain) {
-    case CometChains.mainnet:
-      return 'etherscan.io'
-    case CometChains.polygon:
-      return 'polygonscan.com'
-    case CometChains.arbitrum:
-      return 'arbiscan.io'
-    case CometChains.base:
-      return ''
-  }
 }
 
 export const configuratorFormatters: { [functionName: string]: TransactionFormatter } = {
