@@ -17,11 +17,11 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
     const currentInstance = new Contract(transaction.target, abi, customProvider(chain))
     const symbol = await currentInstance.callStatic.symbol()
     const decimals = await currentInstance.callStatic.decimals()
-    const compToken = defactor(BigInt(decodedParams[1]), parseFloat(`1e${decimals}`))
+    const token = defactor(BigInt(decodedParams[1]), parseFloat(`1e${decimals}`))
 
-    return `\n\nTransfer **${compToken.toFixed(2)} [${symbol}](https://${platform}/address/${
-      transaction.target
-    })** to ${decodedParams[0]}.`
+    return `\n\nTransfer **${token.toFixed(2)} [${symbol}](https://${platform}/address/${transaction.target})** to ${
+      decodedParams[0]
+    }.`
   },
   'approve(address,uint256)': async (
     chain: CometChains,
@@ -37,9 +37,9 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
     const compInstance = new Contract(transaction.target, compAddressAbi, customProvider(chain))
     const symbol = await compInstance.callStatic.symbol()
 
-    const compToken = defactor(BigInt(decodedParams[1]))
+    const token = defactor(BigInt(decodedParams[1]))
 
-    return `\n\nApprove **${compToken.toFixed(2)} [${symbol}](https://${platform}/address/${
+    return `\n\nApprove **${token.toFixed(2)} [${symbol}](https://${platform}/address/${
       transaction.target
     })** tokens to [${contractName}](https://${platform}/address/${decodedParams[0]})`
   },
