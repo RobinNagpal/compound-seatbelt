@@ -2,7 +2,13 @@ import { BigNumber, Contract } from 'ethers'
 import { customProvider } from '../../../utils/clients/ethers'
 import { getContractNameAndAbiFromFile } from './../abi-utils'
 import { CometChains, ExecuteTransactionInfo, TransactionFormatter } from './../compound-types'
-import { annualize, defactor, calculateDifferenceOfDecimals, getPlatform } from './helper'
+import {
+  annualize,
+  defactor,
+  calculateDifferenceOfDecimals,
+  getPlatform,
+  getContractSymbolAndDecimalsFromFile,
+} from './helper'
 
 async function getTextForChangeInInterestRate(
   chain: CometChains,
@@ -19,7 +25,7 @@ async function getTextForChangeInInterestRate(
   const baseToken = await currentCometInstance.callStatic.baseToken()
   const { abi: baseTokenAbi } = await getContractNameAndAbiFromFile(chain, baseToken)
   const baseTokenInstance = new Contract(baseToken, baseTokenAbi, customProvider(chain))
-  const symbol = await baseTokenInstance.callStatic.symbol()
+  const { symbol } = await getContractSymbolAndDecimalsFromFile(baseToken, baseTokenInstance, chain)
 
   const prevInterestRate = annualize(await getInterestRateFunction(currentCometInstance))
   const previousRateInPercent = prevInterestRate * 100
@@ -119,7 +125,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     const baseToken = await currentCometInstance.callStatic.baseToken()
     const { abi: baseTokenAbi } = await getContractNameAndAbiFromFile(chain, baseToken)
     const baseTokenInstance = new Contract(baseToken, baseTokenAbi, customProvider(chain))
-    const symbol = await baseTokenInstance.callStatic.symbol()
+    const { symbol } = await getContractSymbolAndDecimalsFromFile(baseToken, baseTokenInstance, chain)
 
     return `\n\nDeploy and upgrade new implementation for [${symbol}](https://${platform}/address/${baseToken}) via [${contractName}](https://${platform}/address/${decodedParams[0]}).`
   },
