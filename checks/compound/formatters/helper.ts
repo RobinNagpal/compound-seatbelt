@@ -67,7 +67,7 @@ export async function getContractSymbolAndDecimalsFromFile(address: string, inst
   const addr = address.toLowerCase()
   let lookupData: SymbolAndDecimalsLookupData = {}
 
-  const filePath = `./checks/compound/erc20/${chain}SymbolAndDecimalsLookup.json`
+  const filePath = `./checks/compound/erc20/${chain}ERC20InfoLookup.json`
   if (fs.existsSync(filePath)) {
     const fileContent = fs.readFileSync(filePath, 'utf-8')
     lookupData = JSON.parse(fileContent || '{}')
