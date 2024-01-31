@@ -63,18 +63,17 @@ export async function getPlatform(chain: CometChains) {
   }
 }
 
-export async function getContractSymbolAndDecimalsFromFile(address: string, instance: Contract) {
-  const add = address.toLowerCase()
+export async function getContractSymbolAndDecimalsFromFile(address: string, instance: Contract, chain: CometChains) {
+  const addr = address.toLowerCase()
   let lookupData: SymbolAndDecimalsLookupData = {}
 
-  const filePath = '/checks/compound/lookup/symbolAndDecimalsLookup.json'
+  const filePath = `./checks/compound/erc20/${chain}SymbolAndDecimalsLookup.json`
   if (fs.existsSync(filePath)) {
-    console.log('file exists')
     const fileContent = fs.readFileSync(filePath, 'utf-8')
     lookupData = JSON.parse(fileContent || '{}')
   }
 
-  lookupData[address] ||= {
+  lookupData[addr] ||= {
     symbol: await instance.callStatic.symbol(),
     decimals: await instance.callStatic.decimals(),
   }
