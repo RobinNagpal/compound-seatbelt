@@ -196,8 +196,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
 
     const currentCometInstance = new Contract(decodedParams[0], abi, customProvider(chain))
-    // console.log('current comet instance', currentCometInstance)
-    console.log('chain', chain)
+
     const baseToken = await currentCometInstance.callStatic.baseToken()
     console.log('baseToken', baseToken)
     const { abi: baseTokenAbi } = await getContractNameAndAbiFromFile(chain, baseToken)
