@@ -2,7 +2,7 @@ import { Contract } from 'ethers'
 import { customProvider } from '../../../utils/clients/ethers'
 import { getContractNameAndAbiFromFile } from './../abi-utils'
 import { CometChains, ExecuteTransactionInfo, TransactionFormatter } from './../compound-types'
-import { defactor, getPlatform } from './helper'
+import { defactor, getContractSymbolAndDecimalsFromFile, getPlatform } from './helper'
 
 export const comptrollerFormatters: { [functionName: string]: TransactionFormatter } = {
   '_grantComp(address,uint256)': async (
@@ -20,7 +20,7 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     const compAddress = await currentInstance.callStatic.getCompAddress()
     const { abi: compAddressAbi } = await getContractNameAndAbiFromFile(chain, compAddress)
     const compInstance = new Contract(compAddress, compAddressAbi, customProvider(chain))
-    const symbol = await compInstance.callStatic.symbol()
+    const { symbol } = await getContractSymbolAndDecimalsFromFile(compAddress, compInstance, chain)
 
     const compToken = defactor(BigInt(decodedParams[1]))
 
