@@ -6,6 +6,7 @@ export const ETHERSCAN_API_KEY: string = process.env.ETHERSCAN_API_KEY!
 export const RPC_URL_MAINNET: string = process.env.RPC_URL_MAINNET!
 export const RPC_URL_POLYGON: string = process.env.RPC_URL_POLYGON!
 export const RPC_URL_BASE: string = process.env.RPC_URL_BASE!
+export const RPC_URL_ARBITRUM: string = process.env.RPC_URL_ARBITRUM!
 export const TENDERLY_ACCESS_TOKEN: string = process.env.TENDERLY_ACCESS_TOKEN!
 export const TENDERLY_USER: string = process.env.TENDERLY_USER!
 export const TENDERLY_PROJECT_SLUG: string = process.env.TENDERLY_PROJECT_SLUG!

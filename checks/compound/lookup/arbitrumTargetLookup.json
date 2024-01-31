@@ -4,7 +4,7 @@
     "functions": {
       "setBorrowKink(address,uint64)": {
         "description": "setBorrowKink(address,uint64)",
-        "transactionFormatter": "",
+        "transactionFormatter": "Configurator.setBorrowKink(address,uint64)",
         "proposals": {
           "207": [
             "0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf",
@@ -14,7 +14,7 @@
       },
       "setBorrowPerYearInterestRateSlopeLow(address,uint64)": {
         "description": "setBorrowPerYearInterestRateSlopeLow(address,uint64)",
-        "transactionFormatter": "",
+        "transactionFormatter": "Configurator.setBorrowPerYearInterestRateSlopeLow(address,uint64)",
         "proposals": {
           "207": [
             "0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf",
@@ -24,7 +24,7 @@
       },
       "setBorrowPerYearInterestRateSlopeHigh(address,uint64)": {
         "description": "setBorrowPerYearInterestRateSlopeHigh(address,uint64)",
-        "transactionFormatter": "",
+        "transactionFormatter": "Configurator.setBorrowPerYearInterestRateSlopeHigh(address,uint64)",
         "proposals": {
           "207": [
             "0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf",
@@ -34,7 +34,7 @@
       },
       "setSupplyKink(address,uint64)": {
         "description": "setSupplyKink(address,uint64)",
-        "transactionFormatter": "",
+        "transactionFormatter": "Configurator.setSupplyKink(address,uint64)",
         "proposals": {
           "207": [
             "0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf",
@@ -44,7 +44,7 @@
       },
       "setSupplyPerYearInterestRateSlopeLow(address,uint64)": {
         "description": "setSupplyPerYearInterestRateSlopeLow(address,uint64)",
-        "transactionFormatter": "",
+        "transactionFormatter": "Configurator.setSupplyPerYearInterestRateSlopeLow(address,uint64)",
         "proposals": {
           "207": [
             "0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf",
@@ -54,7 +54,7 @@
       },
       "setSupplyPerYearInterestRateSlopeHigh(address,uint64)": {
         "description": "setSupplyPerYearInterestRateSlopeHigh(address,uint64)",
-        "transactionFormatter": "",
+        "transactionFormatter": "Configurator.setSupplyPerYearInterestRateSlopeHigh(address,uint64)",
         "proposals": {
           "207": [
             "0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf",
@@ -78,7 +78,7 @@
       },
       "setBaseTrackingSupplySpeed(address,uint64)": {
         "description": "setBaseTrackingSupplySpeed(address,uint64)",
-        "transactionFormatter": "",
+        "transactionFormatter": "Configurator.setBaseTrackingSupplySpeed(address,uint64)",
         "proposals": {
           "173": [
             "0xA5EDBDD9646f8dFF606d7448e414884C7d905dCA",
@@ -106,7 +106,7 @@
       },
       "setBaseTrackingBorrowSpeed(address,uint64)": {
         "description": "setBaseTrackingBorrowSpeed(address,uint64)",
-        "transactionFormatter": "",
+        "transactionFormatter": "Configurator.setBaseTrackingBorrowSpeed(address,uint64)",
         "proposals": {
           "178": [
             "0xA5EDBDD9646f8dFF606d7448e414884C7d905dCA",
@@ -150,7 +150,7 @@
     "functions": {
       "deployAndUpgradeTo(address,address)": {
         "description": "deployAndUpgradeTo(address,address)",
-        "transactionFormatter": "",
+        "transactionFormatter": "Configurator.deployAndUpgradeTo(address,address)",
         "proposals": {
           "160": [
             "0xb21b06D71c75973babdE35b49fFDAc3F82Ad3775",

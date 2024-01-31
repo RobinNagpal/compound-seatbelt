@@ -42,6 +42,36 @@ async function getTextForChangeInInterestRate(
   } by **${changeInRate}%**`
 }
 
+async function getTextForChange(
+  chain: CometChains,
+  decodedParams: string[],
+  getFunction: (contract: Contract) => Promise<BigNumber>,
+  functionName: string,
+  platform: string
+) {
+  console.log(`decodedParams ${decodedParams.join(',')}`)
+
+  const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
+  const currentCometInstance = new Contract(decodedParams[0], abi, customProvider(chain))
+
+  const baseToken = await currentCometInstance.callStatic.baseToken()
+  const { abi: baseTokenAbi } = await getContractNameAndAbiFromFile(chain, baseToken)
+  const baseTokenInstance = new Contract(baseToken, baseTokenAbi, customProvider(chain))
+  const { symbol } = await getContractSymbolAndDecimalsFromFile(baseToken, baseTokenInstance, chain)
+
+  const prevValue = defactor(await getFunction(currentCometInstance))
+  console.log(`Previous BaseTrackingBorrowSpeed: ${prevValue}`)
+
+  const newValue = defactor(BigInt(decodedParams[1]))
+  console.log(`New BaseTrackingBorrowSpeed: ${newValue}`)
+
+  const changeInValues = calculateDifferenceOfDecimals(newValue, prevValue)
+
+  return `\n\nSet ${functionName} of [${symbol}](https://${platform}/address/${baseToken}) to ${newValue}%. Previous value was ${prevValue}% and now it is getting ${
+    changeInValues > 0 ? 'increased' : 'decreased'
+  } by **${changeInValues}%**`
+}
+
 export const configuratorFormatters: { [functionName: string]: TransactionFormatter } = {
   'setBorrowPerYearInterestRateBase(address,uint64)': async (
     chain: CometChains,
@@ -134,29 +164,51 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     transaction: ExecuteTransactionInfo,
     decodedParams: string[]
   ) => {
-    console.log(`decodedParams ${decodedParams.join(',')}`)
-    const platform = await getPlatform(chain)
-
-    const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
-    const currentCometInstance = new Contract(decodedParams[0], abi, customProvider(chain))
-
-    const baseToken = await currentCometInstance.callStatic.baseToken()
-    const { abi: baseTokenAbi } = await getContractNameAndAbiFromFile(chain, baseToken)
-    const baseTokenInstance = new Contract(baseToken, baseTokenAbi, customProvider(chain))
-    const { symbol } = await getContractSymbolAndDecimalsFromFile(baseToken, baseTokenInstance, chain)
-
-    const prevBorrowSpeed = defactor(await currentCometInstance.callStatic.baseTrackingBorrowSpeed())
-    // const previousRateInPercent = prevInterestRate * 100
-    console.log(`Previous BaseTrackingBorrowSpeed: ${prevBorrowSpeed}`)
-
-    const newBorrowSpeed = defactor(BigInt(decodedParams[1]))
-    // const currentRateInPercent = defactor(newInterestRate) * 100
-    console.log(`New BaseTrackingBorrowSpeed: ${newBorrowSpeed}`)
-
-    const changeInSpeed = calculateDifferenceOfDecimals(newBorrowSpeed, prevBorrowSpeed)
-
-    return `\n\nSet BaseTrackingBorrowSpeed of [${symbol}](https://${platform}/address/${baseToken}) to ${newBorrowSpeed}. Previous value was ${prevBorrowSpeed} and now it is getting ${
-      changeInSpeed > 0 ? 'increased' : 'decreased'
-    } by **${changeInSpeed}%**`
+    return getTextForChange(
+      chain,
+      decodedParams,
+      async (contract) => await contract.callStatic.baseTrackingBorrowSpeed(),
+      'BaseTrackingBorrowSpeed',
+      await getPlatform(chain)
+    )
+  },
+  'setBaseTrackingSupplySpeed(address,uint64)': async (
+    chain: CometChains,
+    transaction: ExecuteTransactionInfo,
+    decodedParams: string[]
+  ) => {
+    return getTextForChange(
+      chain,
+      decodedParams,
+      async (contract) => await contract.callStatic.baseTrackingSupplySpeed(),
+      'BaseTrackingSupplySpeed',
+      await getPlatform(chain)
+    )
+  },
+  'setBorrowKink(address,uint64)': async (
+    chain: CometChains,
+    transaction: ExecuteTransactionInfo,
+    decodedParams: string[]
+  ) => {
+    return getTextForChange(
+      chain,
+      decodedParams,
+      async (contract) => await contract.callStatic.borrowKink(),
+      'BorrowKink',
+      await getPlatform(chain)
+    )
+  },
+  'setSupplyKink(address,uint64)': async (
+    chain: CometChains,
+    transaction: ExecuteTransactionInfo,
+    decodedParams: string[]
+  ) => {
+    return getTextForChange(
+      chain,
+      decodedParams,
+      async (contract) => await contract.callStatic.supplyKink(),
+      'SupplyKink',
+      await getPlatform(chain)
+    )
   },
 }
