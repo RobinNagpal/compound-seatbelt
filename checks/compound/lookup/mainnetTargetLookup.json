@@ -496,7 +496,7 @@
       },
       "_setCompSpeeds(address[],uint256[],uint256[])": {
         "description": "_setCompSpeeds(address[],uint256[],uint256[])",
-        "transactionFormatter": "",
+        "transactionFormatter": "Comptroller._setCompSpeeds(address[],uint256[],uint256[])",
         "proposals": {
           "67": [
             "",
