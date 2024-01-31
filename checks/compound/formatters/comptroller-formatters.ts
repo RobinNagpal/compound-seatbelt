@@ -13,7 +13,10 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     console.log(`decodedParams ${decodedParams.join(',')}`)
     const platform = await getPlatform(chain)
 
-    const { contractName } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
+    let { contractName } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
+
+    contractName = contractName === '' ? 'Wallet' : contractName
+
     const { abi } = await getContractNameAndAbiFromFile(chain, transaction.target)
     const currentInstance = new Contract(transaction.target, abi, customProvider(chain))
 
@@ -26,6 +29,6 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
 
     return `\n\nGrant **${compToken.toFixed(2)} [${symbol}](https://${platform}/address/${
       transaction.target
-    })** tokens to [${contractName}](https://${platform}/address/${decodedParams[0]})`
+    })** tokens to [${contractName}](https://${platform}/address/${decodedParams[0]}).`
   },
 }
