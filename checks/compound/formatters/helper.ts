@@ -78,7 +78,7 @@ export async function getContractSymbolAndDecimalsFromFile(address: string, inst
     decimals: await instance.callStatic.decimals(),
   }
 
-  fs.writeFileSync(filePath, JSON.stringify(lookupData), 'utf-8')
+  fs.writeFileSync(filePath, JSON.stringify(lookupData, null, 2), 'utf-8')
 
   return { symbol: lookupData[addr].symbol, decimals: lookupData[addr].decimals }
 }
