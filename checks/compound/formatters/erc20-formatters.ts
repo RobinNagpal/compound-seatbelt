@@ -15,7 +15,7 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
 
     const { abi } = await getContractNameAndAbiFromFile(chain, transaction.target)
     const currentInstance = new Contract(transaction.target, abi, customProvider(chain))
-    const { symbol, decimals } = await getContractSymbolAndDecimalsFromFile(transaction.target, currentInstance)
+    const { symbol, decimals } = await getContractSymbolAndDecimalsFromFile(transaction.target, currentInstance, chain)
 
     const token = defactor(BigInt(decodedParams[1]), parseFloat(`1e${decimals}`))
 
