@@ -1,5 +1,7 @@
 import { BigNumber } from '@ethersproject/bignumber'
-import { CometChains } from '../compound-types'
+import { CometChains, SymbolAndDecimalsLookupData } from '../compound-types'
+import fs from 'fs'
+import { Contract } from 'ethers'
 
 export type Numeric = number | bigint
 export const factorDecimals = 18
@@ -59,4 +61,24 @@ export async function getPlatform(chain: CometChains) {
     case CometChains.base:
       return 'basescan.org'
   }
+}
+
+export async function getContractSymbolAndDecimalsFromFile(address: string, instance: Contract, chain: CometChains) {
+  const addr = address.toLowerCase()
+  let lookupData: SymbolAndDecimalsLookupData = {}
+
+  const filePath = `./checks/compound/erc20/${chain}ERC20InfoLookup.json`
+  if (fs.existsSync(filePath)) {
+    const fileContent = fs.readFileSync(filePath, 'utf-8')
+    lookupData = JSON.parse(fileContent || '{}')
+  }
+
+  lookupData[addr] ||= {
+    symbol: await instance.callStatic.symbol(),
+    decimals: await instance.callStatic.decimals(),
+  }
+
+  fs.writeFileSync(filePath, JSON.stringify(lookupData), 'utf-8')
+
+  return { symbol: lookupData[addr].symbol, decimals: lookupData[addr].decimals }
 }
