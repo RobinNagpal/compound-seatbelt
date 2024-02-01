@@ -77,4 +77,24 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
       3
     )} and now getting ${changeInBorrow > 0 ? 'increased' : 'decreased'} by **${changeInBorrow}%**.`
   },
+  '_setCollateralFactor(address,uint256)': async (
+    chain: CometChains,
+    transaction: ExecuteTransactionInfo,
+    decodedParams: string[]
+  ) => {
+    console.log(`decodedParams ${decodedParams.join(',')}`)
+    const platform = await getPlatform(chain)
+
+    const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
+    const coinInstance = new Contract(decodedParams[0], abi, customProvider(chain))
+
+    const { symbol } = await getContractSymbolAndDecimalsFromFile(decodedParams[0], coinInstance, chain)
+
+    const token = defactor(BigInt(decodedParams[1]))
+    const tokenInPercent = token * 100
+
+    return `\n\nSet [${symbol}](https://${platform}/address/${
+      decodedParams[0]
+    }) collateral factor to ${tokenInPercent.toFixed(1)}%`
+  },
 }
