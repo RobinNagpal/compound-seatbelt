@@ -70,5 +70,9 @@
   "0xccf4429db6322d5c611ee964527d42e5d685dd6a": {
     "symbol": "cWBTC",
     "decimals": "8"
+  },
+  "0xc00e94cb662c3520282e6f5717214004a7f26888": {
+    "symbol": "COMP",
+    "decimals": "18"
   }
 }
