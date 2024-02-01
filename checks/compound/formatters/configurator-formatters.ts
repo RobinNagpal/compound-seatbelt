@@ -211,4 +211,36 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       await getPlatform(chain)
     )
   },
+  'updateAssetLiquidationFactor(address,address,uint64)': async (
+    chain: CometChains,
+    transaction: ExecuteTransactionInfo,
+    decodedParams: string[]
+  ) => {
+    const platform = await getPlatform(chain)
+
+    console.log(`decodedParams ${decodedParams.join(',')}`)
+
+    const { contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
+
+    const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[1])
+    const tokenInstance = new Contract(decodedParams[1], abi, customProvider(chain))
+    const { symbol: tokenSymbol } = await getContractSymbolAndDecimalsFromFile(decodedParams[1], tokenInstance, chain)
+
+    const { abi: baseAbi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
+    const currentBaseTokenInstance = new Contract(decodedParams[0], baseAbi, customProvider(chain))
+    const baseToken = await currentBaseTokenInstance.callStatic.baseToken()
+
+    const { abi: baseTokenAbi } = await getContractNameAndAbiFromFile(chain, baseToken)
+    const baseTokenInstance = new Contract(baseToken, baseTokenAbi, customProvider(chain))
+    const { symbol: baseTokenSymbol } = await getContractSymbolAndDecimalsFromFile(baseToken, baseTokenInstance, chain)
+
+    const token = defactor(BigInt(decodedParams[2]))
+    const tokenInPercent = token * 100
+
+    return `\n\nSet liquidation factor for [${tokenSymbol}](https://${platform}/address/${
+      decodedParams[1]
+    }) on [${baseTokenSymbol}](https://${platform}/address/${baseToken}) via [${contractName}](https://${platform}/address/${
+      transaction.target
+    }) to ${tokenInPercent.toFixed(1)}%`
+  },
 }
