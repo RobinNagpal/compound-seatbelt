@@ -120,7 +120,7 @@
       },
       "updateAssetSupplyCap(address,address,uint128)": {
         "description": "updateAssetSupplyCap(address,address,uint128)",
-        "transactionFormatter": "",
+        "transactionFormatter": "Configurator.updateAssetSupplyCap(address,address,uint128)",
         "proposals": {
           "188": [
             "0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf",
