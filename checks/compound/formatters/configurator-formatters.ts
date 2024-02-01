@@ -211,4 +211,99 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       await getPlatform(chain)
     )
   },
+  'updateAssetLiquidationFactor(address,address,uint64)': async (
+    chain: CometChains,
+    transaction: ExecuteTransactionInfo,
+    decodedParams: string[]
+  ) => {
+    const platform = await getPlatform(chain)
+
+    console.log(`decodedParams ${decodedParams.join(',')}`)
+
+    const { contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
+
+    const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[1])
+    const tokenInstance = new Contract(decodedParams[1], abi, customProvider(chain))
+    const { symbol: tokenSymbol } = await getContractSymbolAndDecimalsFromFile(decodedParams[1], tokenInstance, chain)
+
+    const { abi: baseAbi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
+    const currentBaseTokenInstance = new Contract(decodedParams[0], baseAbi, customProvider(chain))
+    const baseToken = await currentBaseTokenInstance.callStatic.baseToken()
+
+    const { abi: baseTokenAbi } = await getContractNameAndAbiFromFile(chain, baseToken)
+    const baseTokenInstance = new Contract(baseToken, baseTokenAbi, customProvider(chain))
+    const { symbol: baseTokenSymbol } = await getContractSymbolAndDecimalsFromFile(baseToken, baseTokenInstance, chain)
+
+    const token = defactor(BigInt(decodedParams[2]))
+    const tokenInPercent = token * 100
+
+    return `\n\nSet liquidation factor for [${tokenSymbol}](https://${platform}/address/${
+      decodedParams[1]
+    }) on [${baseTokenSymbol}](https://${platform}/address/${baseToken}) via [${contractName}](https://${platform}/address/${
+      transaction.target
+    }) to ${tokenInPercent.toFixed(1)}%`
+  },
+  'updateAssetSupplyCap(address,address,uint128)': async (
+    chain: CometChains,
+    transaction: ExecuteTransactionInfo,
+    decodedParams: string[]
+  ) => {
+    const platform = await getPlatform(chain)
+
+    console.log(`decodedParams ${decodedParams.join(',')}`)
+
+    const { contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
+
+    const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[1])
+    const tokenInstance = new Contract(decodedParams[1], abi, customProvider(chain))
+    const { symbol: tokenSymbol, decimals } = await getContractSymbolAndDecimalsFromFile(
+      decodedParams[1],
+      tokenInstance,
+      chain
+    )
+
+    const { abi: baseAbi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
+    const currentBaseTokenInstance = new Contract(decodedParams[0], baseAbi, customProvider(chain))
+    const baseToken = await currentBaseTokenInstance.callStatic.baseToken()
+
+    const { abi: baseTokenAbi } = await getContractNameAndAbiFromFile(chain, baseToken)
+    const baseTokenInstance = new Contract(baseToken, baseTokenAbi, customProvider(chain))
+    const { symbol: baseTokenSymbol } = await getContractSymbolAndDecimalsFromFile(baseToken, baseTokenInstance, chain)
+
+    const token = defactor(BigInt(decodedParams[2]), parseFloat(`1e${decimals}`))
+
+    return `\n\nSet supply cap for [${tokenSymbol}](https://${platform}/address/${
+      decodedParams[1]
+    }) on [${baseTokenSymbol}](https://${platform}/address/${baseToken}) via [${contractName}](https://${platform}/address/${
+      transaction.target
+    }) to ${token.toFixed(2)}`
+  },
+  'setBaseBorrowMin(address,uint104)': async (
+    chain: CometChains,
+    transaction: ExecuteTransactionInfo,
+    decodedParams: string[]
+  ) => {
+    const platform = await getPlatform(chain)
+
+    console.log(`decodedParams ${decodedParams.join(',')}`)
+
+    const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
+    const currentInstance = new Contract(decodedParams[0], abi, customProvider(chain))
+
+    const baseToken = await currentInstance.callStatic.baseToken()
+    const { abi: baseTokenAbi } = await getContractNameAndAbiFromFile(chain, baseToken)
+    const baseTokenInstance = new Contract(baseToken, baseTokenAbi, customProvider(chain))
+    const { symbol, decimals } = await getContractSymbolAndDecimalsFromFile(baseToken, baseTokenInstance, chain)
+
+    const prevBaseBorrowMin = defactor(await currentInstance.callStatic.baseBorrowMin(), parseFloat(`1e${decimals}`))
+    const newBaseBorrowMin = defactor(BigInt(decodedParams[1]), parseFloat(`1e${decimals}`))
+
+    const changeInBaseBorrowMin = calculateDifferenceOfDecimals(newBaseBorrowMin, prevBaseBorrowMin)
+
+    return `\n\nSet BaseBorrowMin of [${symbol}](https://${platform}/address/${
+      decodedParams[0]
+    }) to ${newBaseBorrowMin}. Previous value was ${prevBaseBorrowMin} and now it is getting ${
+      changeInBaseBorrowMin > 0 ? 'increased' : 'decreased'
+    } by **${changeInBaseBorrowMin}**`
+  },
 }

@@ -104,7 +104,7 @@
       },
       "setBaseBorrowMin(address,uint104)": {
         "description": "setBaseBorrowMin(address,uint104)",
-        "transactionFormatter": "",
+        "transactionFormatter": "Configurator.setBaseBorrowMin(address,uint104)",
         "proposals": {
           "195": [
             "0x46e6b214b524310239732D51387075E0e70970bf",

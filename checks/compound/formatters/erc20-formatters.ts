@@ -43,4 +43,24 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
       transaction.target
     })** tokens to [${contractName}](https://${platform}/address/${decodedParams[0]})`
   },
+  '_setReserveFactor(uint256)': async (
+    chain: CometChains,
+    transaction: ExecuteTransactionInfo,
+    decodedParams: string[]
+  ) => {
+    console.log(`decodedParams ${decodedParams.join(',')}`)
+    const platform = await getPlatform(chain)
+
+    const { abi } = await getContractNameAndAbiFromFile(chain, transaction.target)
+    const coinInstance = new Contract(transaction.target, abi, customProvider(chain))
+
+    const { symbol } = await getContractSymbolAndDecimalsFromFile(transaction.target, coinInstance, chain)
+
+    const token = defactor(BigInt(decodedParams[0]))
+    const tokenInPercent = token * 100
+
+    return `\n\nSet reserve factor for [${symbol}](https://${platform}/address/${
+      transaction.target
+    }) to ${tokenInPercent.toFixed(1)}%`
+  },
 }
