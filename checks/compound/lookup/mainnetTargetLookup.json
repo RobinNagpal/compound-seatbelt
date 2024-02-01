@@ -125,7 +125,7 @@
       },
       "_setCollateralFactor(address,uint256)": {
         "description": "_setCollateralFactor(address,uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "Comptroller._setCollateralFactor(address,uint256)",
         "proposals": {
           "44": [
             "0x158079Ee67Fce2f58472A96584A73C7Ab9AC95c1",
@@ -238,6 +238,10 @@
           "200": [
             "0xB3319f5D18Bc0D84dD1b4825Dcde5d5f7266d407",
             "450000000000000000"
+          ],
+          "213": [
+            "0xB3319f5D18Bc0D84dD1b4825Dcde5d5f7266d407",
+            "400000000000000000"
           ]
         }
       },
@@ -700,7 +704,8 @@
       203,
       206,
       208,
-      210
+      210,
+      213
     ]
   },
   "0x12392f67bdf24fae0af363c24ac620a2f67dad86": {
@@ -1370,7 +1375,7 @@
       },
       "_setReserveFactor(uint256)": {
         "description": "_setReserveFactor(uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20._setReserveFactor(uint256)",
         "proposals": {
           "109": [
             "37500000000000000"
@@ -1386,6 +1391,9 @@
           ],
           "186": [
             "450000000000000000"
+          ],
+          "213": [
+            "600000000000000000"
           ]
         }
       }
@@ -1396,7 +1404,8 @@
       166,
       167,
       180,
-      186
+      186,
+      213
     ]
   },
   "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": {
