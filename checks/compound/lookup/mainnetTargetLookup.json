@@ -439,7 +439,7 @@
       },
       "_setMarketBorrowCaps(address[],uint256[])": {
         "description": "_setMarketBorrowCaps(address[],uint256[])",
-        "transactionFormatter": "",
+        "transactionFormatter": "Comptroller._setMarketBorrowCaps(address[],uint256[])",
         "proposals": {
           "53": [
             "0x95b4eF2869eBD94BEb4eEE400a99824BF5DC325b",
