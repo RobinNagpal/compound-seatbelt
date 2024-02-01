@@ -1,0 +1,14 @@
+{
+  "0x2791bca1f2de4661ed88a30c99a7a9449aa84174": {
+    "symbol": "USDC",
+    "decimals": "6"
+  },
+  "0xfa68fb4628dff1028cfec22b4162fccd0d45efb6": {
+    "symbol": "MaticX",
+    "decimals": "18"
+  },
+  "0x3a58a54c066fdc0f2d55fc9c89f0415c92ebf3c4": {
+    "symbol": "stMATIC",
+    "decimals": "18"
+  }
+}
