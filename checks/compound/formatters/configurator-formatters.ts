@@ -243,4 +243,39 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       transaction.target
     }) to ${tokenInPercent.toFixed(1)}%`
   },
+  'updateAssetSupplyCap(address,address,uint128)': async (
+    chain: CometChains,
+    transaction: ExecuteTransactionInfo,
+    decodedParams: string[]
+  ) => {
+    const platform = await getPlatform(chain)
+
+    console.log(`decodedParams ${decodedParams.join(',')}`)
+
+    const { contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
+
+    const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[1])
+    const tokenInstance = new Contract(decodedParams[1], abi, customProvider(chain))
+    const { symbol: tokenSymbol, decimals } = await getContractSymbolAndDecimalsFromFile(
+      decodedParams[1],
+      tokenInstance,
+      chain
+    )
+
+    const { abi: baseAbi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
+    const currentBaseTokenInstance = new Contract(decodedParams[0], baseAbi, customProvider(chain))
+    const baseToken = await currentBaseTokenInstance.callStatic.baseToken()
+
+    const { abi: baseTokenAbi } = await getContractNameAndAbiFromFile(chain, baseToken)
+    const baseTokenInstance = new Contract(baseToken, baseTokenAbi, customProvider(chain))
+    const { symbol: baseTokenSymbol } = await getContractSymbolAndDecimalsFromFile(baseToken, baseTokenInstance, chain)
+
+    const token = defactor(BigInt(decodedParams[2]), parseFloat(`1e${decimals}`))
+
+    return `\n\nSet supply cap for [${tokenSymbol}](https://${platform}/address/${
+      decodedParams[1]
+    }) on [${baseTokenSymbol}](https://${platform}/address/${baseToken}) via [${contractName}](https://${platform}/address/${
+      transaction.target
+    }) to ${token.toFixed(2)}`
+  },
 }
