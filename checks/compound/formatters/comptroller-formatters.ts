@@ -97,4 +97,31 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
       decodedParams[0]
     }) collateral factor to ${tokenInPercent.toFixed(1)}%`
   },
+  '_setMarketBorrowCaps(address[],uint256[])': async (
+    chain: CometChains,
+    transaction: ExecuteTransactionInfo,
+    decodedParams: string[]
+  ) => {
+    console.log(`decodedParams ${decodedParams.join(',')}`)
+    const platform = await getPlatform(chain)
+
+    const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
+    const currentInstance = new Contract(decodedParams[0], abi, customProvider(chain))
+
+    const { symbol } = await getContractSymbolAndDecimalsFromFile(decodedParams[0], currentInstance, chain)
+
+    const { abi: contractAbi } = await getContractNameAndAbiFromFile(chain, transaction.target)
+    const contractInstance = new Contract(transaction.target, contractAbi, customProvider(chain))
+
+    const prevValue = await contractInstance.callStatic.borrowCaps(decodedParams[0])
+    const newValue = Number(decodedParams[1])
+
+    const changeinCaps = calculateDifferenceOfDecimals(newValue, prevValue)
+
+    return `\n\nSet MarketBorrowCaps of [${symbol}](https://${platform}/address/${
+      decodedParams[0]
+    }) to ${newValue}. Previous value was ${prevValue} and now it is getting ${
+      changeinCaps > 0 ? 'increased' : 'decreased'
+    } by **${changeinCaps}**.`
+  },
 }
