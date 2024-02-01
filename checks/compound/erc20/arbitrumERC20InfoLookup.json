@@ -1,0 +1,14 @@
+{
+  "0xaf88d065e77c8cc2239327c5edb3a432268e5831": {
+    "symbol": "USDC",
+    "decimals": "6"
+  },
+  "0x912ce59144191c1204e64559fe8253a0e49e6548": {
+    "symbol": "ARB",
+    "decimals": "18"
+  },
+  "0x2f2a2543b76a4166549f7aab2e75bef0aefc5b0f": {
+    "symbol": "WBTC",
+    "decimals": "8"
+  }
+}
