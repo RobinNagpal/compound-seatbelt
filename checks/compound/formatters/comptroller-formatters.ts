@@ -107,14 +107,16 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
 
     const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
     const currentInstance = new Contract(decodedParams[0], abi, customProvider(chain))
-
-    const { symbol } = await getContractSymbolAndDecimalsFromFile(decodedParams[0], currentInstance, chain)
+    const { symbol, decimals } = await getContractSymbolAndDecimalsFromFile(decodedParams[0], currentInstance, chain)
 
     const { abi: contractAbi } = await getContractNameAndAbiFromFile(chain, transaction.target)
     const contractInstance = new Contract(transaction.target, contractAbi, customProvider(chain))
 
-    const prevValue = await contractInstance.callStatic.borrowCaps(decodedParams[0])
-    const newValue = Number(decodedParams[1])
+    const prevValue = defactor(
+      await contractInstance.callStatic.borrowCaps(decodedParams[0]),
+      parseFloat(`1e${decimals}`)
+    )
+    const newValue = defactor(BigInt(decodedParams[1]), parseFloat(`1e${decimals}`))
 
     const changeinCaps = calculateDifferenceOfDecimals(newValue, prevValue)
 
