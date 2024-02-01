@@ -62,5 +62,13 @@
   "0x39aa39c021dfbae8fac545936693ac917d5e7563": {
     "symbol": "cUSDC",
     "decimals": "8"
+  },
+  "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2": {
+    "symbol": "WETH",
+    "decimals": "18"
+  },
+  "0xccf4429db6322d5c611ee964527d42e5d685dd6a": {
+    "symbol": "cWBTC",
+    "decimals": "8"
   }
 }
