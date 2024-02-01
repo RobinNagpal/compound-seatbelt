@@ -278,4 +278,32 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       transaction.target
     }) to ${token.toFixed(2)}`
   },
+  'setBaseBorrowMin(address,uint104)': async (
+    chain: CometChains,
+    transaction: ExecuteTransactionInfo,
+    decodedParams: string[]
+  ) => {
+    const platform = await getPlatform(chain)
+
+    console.log(`decodedParams ${decodedParams.join(',')}`)
+
+    const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
+    const currentInstance = new Contract(decodedParams[0], abi, customProvider(chain))
+
+    const baseToken = await currentInstance.callStatic.baseToken()
+    const { abi: baseTokenAbi } = await getContractNameAndAbiFromFile(chain, baseToken)
+    const baseTokenInstance = new Contract(baseToken, baseTokenAbi, customProvider(chain))
+    const { symbol, decimals } = await getContractSymbolAndDecimalsFromFile(baseToken, baseTokenInstance, chain)
+
+    const prevBaseBorrowMin = defactor(await currentInstance.callStatic.baseBorrowMin(), parseFloat(`1e${decimals}`))
+    const newBaseBorrowMin = defactor(BigInt(decodedParams[1]), parseFloat(`1e${decimals}`))
+
+    const changeInBaseBorrowMin = calculateDifferenceOfDecimals(newBaseBorrowMin, prevBaseBorrowMin)
+
+    return `\n\nSet BaseBorrowMin of [${symbol}](https://${platform}/address/${
+      decodedParams[0]
+    }) to ${newBaseBorrowMin}. Previous value was ${prevBaseBorrowMin} and now it is getting ${
+      changeInBaseBorrowMin > 0 ? 'increased' : 'decreased'
+    } by **${changeInBaseBorrowMin}**`
+  },
 }
