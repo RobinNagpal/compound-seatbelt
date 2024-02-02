@@ -1,3 +1,4 @@
+import { BigNumber } from '@ethersproject/bignumber'
 import { Contract } from 'ethers'
 import { customProvider } from '../../../utils/clients/ethers'
 import { getContractNameAndAbiFromFile } from './../abi-utils'
@@ -10,7 +11,6 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     transaction: ExecuteTransactionInfo,
     decodedParams: string[]
   ) => {
-    console.log(`decodedParams ${decodedParams.join(',')}`)
     const platform = await getPlatform(chain)
 
     let { contractName } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
@@ -38,8 +38,6 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     transaction: ExecuteTransactionInfo,
     decodedParams: string[]
   ) => {
-    console.log(`decodedParams ${decodedParams.join(',')}`)
-
     const platform = await getPlatform(chain)
 
     const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
@@ -54,55 +52,86 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     const compInstance = new Contract(compAddress, compAddressAbi, customProvider(chain))
     const { symbol: compSymbol } = await getContractSymbolAndDecimalsFromFile(compAddress, compInstance, chain)
 
-    const prevCompBorrowSpeed = defactor(await currentTargetInstance.callStatic.compBorrowSpeeds(decodedParams[0]))
-    const prevCompSupplySpeed = defactor(await currentTargetInstance.callStatic.compSupplySpeeds(decodedParams[0]))
+    const previousBorrowSpeed = await currentTargetInstance.callStatic.compBorrowSpeeds(decodedParams[0])
+    const previousSupplySpeed = await currentTargetInstance.callStatic.compSupplySpeeds(decodedParams[0])
 
-    const newCompBorrowSpeed = defactor(BigInt(decodedParams[1]))
-    const newCompSupplySpeed = defactor(BigInt(decodedParams[2]))
+    const changeInSupply = calculateDifferenceOfDecimals(
+      getDefactoredCompSpeeds(decodedParams[2]),
+      getDefactoredCompSpeeds(previousSupplySpeed)
+    )
+    const changeInBorrow = calculateDifferenceOfDecimals(
+      getDefactoredCompSpeeds(decodedParams[1]),
+      getDefactoredCompSpeeds(previousBorrowSpeed)
+    )
 
-    const changeInSupply = calculateDifferenceOfDecimals(newCompSupplySpeed, prevCompSupplySpeed)
-    const changeInBorrow = calculateDifferenceOfDecimals(newCompBorrowSpeed, prevCompBorrowSpeed)
+    const prevFormattedBorrowSpeed = getFormattedCompSpeeds(previousBorrowSpeed)
+    const prevFormattedSupplySpeed = getFormattedCompSpeeds(previousSupplySpeed)
+    const newFormattedBorrowSpeed = getFormattedCompSpeeds(decodedParams[1])
+    const newFormattedSupplySpeed = getFormattedCompSpeeds(decodedParams[2])
 
-    return `\n\nSet CompSpeed of [${symbol}](https://${platform}/address/${
-      decodedParams[0]
-    }) to ${newCompSupplySpeed.toFixed(
-      3
-    )} [${compSymbol}](https://${platform}/address/${compAddress})/block (supply) which was previously ${prevCompSupplySpeed.toFixed(
-      3
-    )} and now getting ${
-      changeInSupply > 0 ? 'increased' : 'decreased'
-    } by **${changeInSupply}%** and ${newCompBorrowSpeed.toFixed(
-      3
-    )} [${compSymbol}](https://${platform}/address/${compAddress})/block (borrow) which was previously ${prevCompBorrowSpeed.toFixed(
-      3
-    )} and now getting ${changeInBorrow > 0 ? 'increased' : 'decreased'} by **${changeInBorrow}%**.`
+    const tokenUrl = `https://${platform}/address/${decodedParams[0]}`
+    const changeInSpeedsText = (
+      type: string,
+      changeInSpeed: number,
+      prevFormattedValue: string,
+      newFormattedValue: string
+    ) => {
+      const change = changeInSpeed
+        ? `It's now getting ${changeInSpeed > 0 ? 'increased' : 'decreased'} by **${changeInSpeed}%**.`
+        : 'It remains the same.'
+
+      return `${type} speed of [${symbol}](${tokenUrl}) to ${newFormattedValue} which was previously ${prevFormattedValue}(${change}).`
+    }
+
+    const baseText = `\n\nSet CompSpeed of [${symbol}](https://${platform}/address/${decodedParams[0]})`
+    const supplySpeedText = changeInSpeedsText(
+      'Supply',
+      changeInSupply,
+      prevFormattedSupplySpeed,
+      newFormattedSupplySpeed
+    )
+    const borrowSpeedText = changeInSpeedsText(
+      'Borrow',
+      changeInBorrow,
+      prevFormattedBorrowSpeed,
+      newFormattedBorrowSpeed
+    )
+
+    return `
+    ${baseText}. ${supplySpeedText} ${borrowSpeedText}
+    `
   },
   '_setCollateralFactor(address,uint256)': async (
     chain: CometChains,
     transaction: ExecuteTransactionInfo,
     decodedParams: string[]
   ) => {
-    console.log(`decodedParams ${decodedParams.join(',')}`)
     const platform = await getPlatform(chain)
+    const { abi: comptrollerAbi } = await getContractNameAndAbiFromFile(chain, transaction.target)
+    const comptrollerInstance = new Contract(transaction.target, comptrollerAbi, customProvider(chain))
+    const targetToken = decodedParams[0]
+    const currentValue = (await comptrollerInstance.callStatic.markets(targetToken))?.[1]
 
-    const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
-    const coinInstance = new Contract(decodedParams[0], abi, customProvider(chain))
+    const { abi } = await getContractNameAndAbiFromFile(chain, targetToken)
+    const coinInstance = new Contract(targetToken, abi, customProvider(chain))
 
-    const { symbol } = await getContractSymbolAndDecimalsFromFile(decodedParams[0], coinInstance, chain)
+    const { symbol } = await getContractSymbolAndDecimalsFromFile(targetToken, coinInstance, chain)
 
+    const newValue = getPercentageForCollateralFactor(decodedParams[1])
     const token = defactor(BigInt(decodedParams[1]))
-    const tokenInPercent = token * 100
 
-    return `\n\nSet [${symbol}](https://${platform}/address/${
-      decodedParams[0]
-    }) collateral factor to ${tokenInPercent.toFixed(1)}%`
+    if (currentValue) {
+      const prevValue = getPercentageForCollateralFactor(currentValue)
+      return `\n\nSet [${symbol}](https://${platform}/address/${targetToken}) collateral factor from ${prevValue} to ${newValue}%`
+    }
+
+    return `\n\nSet [${symbol}](https://${platform}/address/${targetToken}) collateral factor to ${newValue}%`
   },
   '_setMarketBorrowCaps(address[],uint256[])': async (
     chain: CometChains,
     transaction: ExecuteTransactionInfo,
     decodedParams: string[]
   ) => {
-    console.log(`decodedParams ${decodedParams.join(',')}`)
     const platform = await getPlatform(chain)
 
     const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
@@ -126,4 +155,17 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
       changeinCaps > 0 ? 'increased' : 'decreased'
     } by **${changeinCaps}**.`
   },
+}
+
+function getPercentageForCollateralFactor(value: BigNumber | string) {
+  return (defactor(BigInt(value.toString())) * 100).toFixed(1)
+}
+
+function getFormattedCompSpeeds(speedValue: BigNumber | string) {
+  const newCompSpeed = defactor(BigInt(speedValue.toString()))
+  return newCompSpeed.toFixed(3)
+}
+
+function getDefactoredCompSpeeds(speedValue: BigNumber | string) {
+  return defactor(BigInt(speedValue.toString()))
 }
