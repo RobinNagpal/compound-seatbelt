@@ -1665,7 +1665,7 @@
     "functions": {
       "updateAssetSupplyCap(address,address,uint128)": {
         "description": "updateAssetSupplyCap(address,address,uint128)",
-        "transactionFormatter": "",
+        "transactionFormatter": "Configurator.updateAssetSupplyCap(address,address,uint128)",
         "proposals": {
           "116": [
             "0xc3d688B66703497DAA19211EEdff47f25384cdc3",
@@ -1766,7 +1766,7 @@
       },
       "updateAssetLiquidationFactor(address,address,uint64)": {
         "description": "updateAssetLiquidationFactor(address,address,uint64)",
-        "transactionFormatter": "",
+        "transactionFormatter": "Configurator.updateAssetLiquidationFactor(address,address,uint64)",
         "proposals": {
           "140": [
             "0xc3d688B66703497DAA19211EEdff47f25384cdc3",
@@ -1811,7 +1811,7 @@
       },
       "setBorrowKink(address,uint64)": {
         "description": "setBorrowKink(address,uint64)",
-        "transactionFormatter": "",
+        "transactionFormatter": "Configurator.setBorrowKink(address,uint64)",
         "proposals": {
           "162": [
             "0xc3d688B66703497DAA19211EEdff47f25384cdc3",
@@ -1907,7 +1907,7 @@
       },
       "setSupplyKink(address,uint64)": {
         "description": "setSupplyKink(address,uint64)",
-        "transactionFormatter": "",
+        "transactionFormatter": "Configurator.setSupplyKink(address,uint64)",
         "proposals": {
           "162": [
             "0xc3d688B66703497DAA19211EEdff47f25384cdc3",
@@ -1969,7 +1969,7 @@
       },
       "setBaseTrackingSupplySpeed(address,uint64)": {
         "description": "setBaseTrackingSupplySpeed(address,uint64)",
-        "transactionFormatter": "",
+        "transactionFormatter": "Configurator.setBaseTrackingSupplySpeed(address,uint64)",
         "proposals": {
           "168": [
             "0xc3d688B66703497DAA19211EEdff47f25384cdc3",
@@ -1987,7 +1987,7 @@
       },
       "addAsset(address,tuple)": {
         "description": "addAsset(address,tuple)",
-        "transactionFormatter": "",
+        "transactionFormatter": "Configurator.addAsset(address,tuple)",
         "proposals": {
           "192": [
             "0xA17581A9E3356d9A858b789D68B4d866e593aE94",
