@@ -34,11 +34,11 @@ export const checkCompoundProposalDetails: ProposalCheck = {
 async function updateLookupFile(
   chain: CometChains,
   proposalId: number,
-  transactions: ExecuteTransactionsInfo,
+  transactions: ExecuteTransactionsInfo
 ): Promise<CheckResult> {
   const { targets, signatures, calldatas, values } = transactions
 
-  const targetLookupFilePath = `./checks/compound/lookup/${chain}TargetLookup.json`
+  const targetLookupFilePath = `./checks/compound/lookup/target/${chain}TargetLookup.json`
   let lookupData: TargetLookupData = {}
 
   if (fs.existsSync(targetLookupFilePath)) {
@@ -99,7 +99,7 @@ async function storeTargetInfo(
   chain: CometChains,
   proposalId: number,
   targetLookupData: TargetLookupData,
-  transactionInfo: ExecuteTransactionInfo,
+  transactionInfo: ExecuteTransactionInfo
 ) {
   const { target, value, signature, calldata } = transactionInfo
   if (value?.toString() && value?.toString() !== '0') {
@@ -143,7 +143,7 @@ async function storeTargetInfo(
 
     console.log(`Decoded target: ${target} signature: ${functionSignature} calldata:${decodedCalldata}`)
     targetLookupData[target].functions[functionSignature].proposals[proposalId.toString()] = decodedCalldata.map(
-      (data) => data.toString(),
+      (data) => data.toString()
     )
   } catch (e) {
     console.error(e)
@@ -155,7 +155,7 @@ async function getTransactionMessages(
   chain: CometChains,
   proposalId: number,
   targetLookupData: TargetLookupData,
-  transactionInfo: ExecuteTransactionInfo,
+  transactionInfo: ExecuteTransactionInfo
 ): Promise<TransactionMessage> {
   const { target, value, signature, calldata } = transactionInfo
   if (value?.toString() && value?.toString() !== '0') {
@@ -180,7 +180,7 @@ async function getTransactionMessages(
     const message = await formattersLookup[contractName][formatterName](
       chain,
       transactionInfo,
-      decodedCalldata.map((data) => data.toString()),
+      decodedCalldata.map((data) => data.toString())
     )
     return { info: message }
   }

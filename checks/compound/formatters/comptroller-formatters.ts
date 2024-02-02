@@ -7,6 +7,7 @@ import {
   calculateDifferenceOfDecimals,
   defactor,
   getContractSymbolAndDecimalsFromFile,
+  getFormatCompTokens,
   getPercentageForTokenFactor,
   getPlatform,
 } from './helper'
@@ -31,13 +32,9 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     const compInstance = new Contract(compAddress, compAddressAbi, customProvider(chain))
     const { symbol } = await getContractSymbolAndDecimalsFromFile(compAddress, compInstance, chain)
 
-    const compToken = defactor(BigInt(decodedParams[1]))
-
-    return `\n\nGrant **${compToken.toFixed(
-      2
-    )} [${symbol}](https://${platform}/address/${compAddress})** tokens to [${contractName}](https://${platform}/address/${
-      decodedParams[0]
-    }).`
+    const numberOfCompTokens = decodedParams[1]
+    const formattedCompTokens = getFormatCompTokens(numberOfCompTokens)
+    return `\n\nGrant **${formattedCompTokens} [${symbol}](https://${platform}/address/${compAddress})** tokens to [${contractName}](https://${platform}/address/${decodedParams[0]}).`
   },
   '_setCompSpeeds(address[],uint256[],uint256[])': async (
     chain: CometChains,

@@ -2,6 +2,8 @@ import { BigNumber } from '@ethersproject/bignumber'
 import { Contract } from 'ethers'
 import fs from 'fs'
 import { CometChains, SymbolAndDecimalsLookupData } from '../compound-types'
+import { customProvider } from './../../../utils/clients/ethers'
+import { getContractNameAndAbiFromFile } from './../abi-utils'
 
 export type Numeric = number | bigint
 export const factorDecimals = 18
@@ -85,4 +87,19 @@ export async function getContractSymbolAndDecimalsFromFile(address: string, inst
 
 export function getPercentageForTokenFactor(value: BigNumber | string) {
   return (defactor(BigInt(value.toString())) * 100).toFixed(1)
+}
+
+export function getFormatCompTokens(numberOfCompTokens: string) {
+  const compToken = defactor(BigInt(numberOfCompTokens))
+  return compToken.toFixed(2)
+}
+
+export async function getFormattedTokenWithLink(chain: CometChains, tokenAddress: string, value: string) {
+  const platform = await getPlatform(chain)
+  const { abi: compAddressAbi } = await getContractNameAndAbiFromFile(chain, tokenAddress)
+  const compInstance = new Contract(tokenAddress, compAddressAbi, customProvider(chain))
+  const { symbol } = await getContractSymbolAndDecimalsFromFile(tokenAddress, compInstance, chain)
+  const token = defactor(BigInt(value))
+
+  return `**${token.toFixed(2)} [${symbol}](https://${platform}/address/${tokenAddress})**`
 }
