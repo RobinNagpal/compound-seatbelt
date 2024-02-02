@@ -1,7 +1,7 @@
 import { BigNumber } from '@ethersproject/bignumber'
-import { CometChains, SymbolAndDecimalsLookupData } from '../compound-types'
-import fs from 'fs'
 import { Contract } from 'ethers'
+import fs from 'fs'
+import { CometChains, SymbolAndDecimalsLookupData } from '../compound-types'
 
 export type Numeric = number | bigint
 export const factorDecimals = 18
@@ -81,4 +81,8 @@ export async function getContractSymbolAndDecimalsFromFile(address: string, inst
   fs.writeFileSync(filePath, JSON.stringify(lookupData, null, 2), 'utf-8')
 
   return { symbol: lookupData[addr].symbol, decimals: lookupData[addr].decimals }
+}
+
+export function getPercentageForTokenFactor(value: BigNumber | string) {
+  return (defactor(BigInt(value.toString())) * 100).toFixed(1)
 }

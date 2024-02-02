@@ -3,7 +3,13 @@ import { Contract } from 'ethers'
 import { customProvider } from '../../../utils/clients/ethers'
 import { getContractNameAndAbiFromFile } from './../abi-utils'
 import { CometChains, ExecuteTransactionInfo, TransactionFormatter } from './../compound-types'
-import { calculateDifferenceOfDecimals, defactor, getContractSymbolAndDecimalsFromFile, getPlatform } from './helper'
+import {
+  calculateDifferenceOfDecimals,
+  defactor,
+  getContractSymbolAndDecimalsFromFile,
+  getPercentageForTokenFactor,
+  getPlatform,
+} from './helper'
 
 export const comptrollerFormatters: { [functionName: string]: TransactionFormatter } = {
   '_grantComp(address,uint256)': async (
@@ -117,11 +123,11 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
 
     const { symbol } = await getContractSymbolAndDecimalsFromFile(targetToken, coinInstance, chain)
 
-    const newValue = getPercentageForCollateralFactor(decodedParams[1])
+    const newValue = getPercentageForTokenFactor(decodedParams[1])
     const token = defactor(BigInt(decodedParams[1]))
 
     if (currentValue) {
-      const prevValue = getPercentageForCollateralFactor(currentValue)
+      const prevValue = getPercentageForTokenFactor(currentValue)
       return `\n\nSet [${symbol}](https://${platform}/address/${targetToken}) collateral factor from ${prevValue} to ${newValue}%`
     }
 
@@ -155,10 +161,6 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
       changeinCaps > 0 ? 'increased' : 'decreased'
     } by **${changeinCaps}**.`
   },
-}
-
-function getPercentageForCollateralFactor(value: BigNumber | string) {
-  return (defactor(BigInt(value.toString())) * 100).toFixed(1)
 }
 
 function getFormattedCompSpeeds(speedValue: BigNumber | string) {

@@ -2,7 +2,7 @@ import { Contract } from 'ethers'
 import { customProvider } from '../../../utils/clients/ethers'
 import { getContractNameAndAbiFromFile } from '../abi-utils'
 import { CometChains, ExecuteTransactionInfo, TransactionFormatter } from '../compound-types'
-import { defactor, getContractSymbolAndDecimalsFromFile, getPlatform } from './helper'
+import { defactor, getContractSymbolAndDecimalsFromFile, getPercentageForTokenFactor, getPlatform } from './helper'
 
 export const ERC20Formatters: { [functionName: string]: TransactionFormatter } = {
   'transfer(address,uint256)': async (
@@ -53,14 +53,15 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
 
     const { abi } = await getContractNameAndAbiFromFile(chain, transaction.target)
     const coinInstance = new Contract(transaction.target, abi, customProvider(chain))
-
+    const prevReserveFactor = await coinInstance.callStatic.reserveFactorMantissa()
     const { symbol } = await getContractSymbolAndDecimalsFromFile(transaction.target, coinInstance, chain)
 
-    const token = defactor(BigInt(decodedParams[0]))
-    const tokenInPercent = token * 100
-
-    return `\n\nSet reserve factor for [${symbol}](https://${platform}/address/${
-      transaction.target
-    }) to ${tokenInPercent.toFixed(1)}%`
+    const newReserveFactor = getPercentageForTokenFactor(decodedParams[0])
+    const tokenUrl = `https://${platform}/address/${transaction.target}`
+    if (prevReserveFactor) {
+      const prevReserve = getPercentageForTokenFactor(prevReserveFactor)
+      return `\n\nSet reserve factor for [${symbol}](${tokenUrl}) from ${prevReserve}% to ${newReserveFactor}%`
+    }
+    return `\n\nSet reserve factor for [${symbol}](${tokenUrl}) to ${newReserveFactor}%`
   },
 }
