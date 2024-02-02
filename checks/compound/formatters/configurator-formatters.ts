@@ -306,4 +306,69 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       changeInBaseBorrowMin > 0 ? 'increased' : 'decreased'
     } by **${changeInBaseBorrowMin}**`
   },
+  'addAsset(address,tuple)': async (
+    chain: CometChains,
+    transaction: ExecuteTransactionInfo,
+    decodedParams: string[]
+  ) => {
+    const platform = await getPlatform(chain)
+
+    console.log(`decodedParams ${decodedParams.join(',')}`)
+
+    const [address, tuple] = decodedParams
+
+    const { abi: contractAbi } = await getContractNameAndAbiFromFile(chain, address)
+    const contractInstance = new Contract(address, contractAbi, customProvider(chain))
+
+    const baseToken = await contractInstance.callStatic.baseToken()
+    const { abi: baseTokenAbi } = await getContractNameAndAbiFromFile(chain, baseToken)
+    const baseTokenInstance = new Contract(baseToken, baseTokenAbi, customProvider(chain))
+    const { symbol } = await getContractSymbolAndDecimalsFromFile(baseToken, baseTokenInstance, chain)
+
+    const { abi: assetAbi } = await getContractNameAndAbiFromFile(chain, tuple.split(',')[0])
+    const assetInstance = new Contract(tuple.split(',')[0], assetAbi, customProvider(chain))
+    const { symbol: assetSymbol, decimals: assetDecimals } = await getContractSymbolAndDecimalsFromFile(
+      tuple.split(',')[0],
+      assetInstance,
+      chain
+    )
+
+    const borrowCollateralFactor = defactor(BigInt(tuple.split(',')[3]), parseFloat(`1e${assetDecimals}`))
+    const liquidateCollateralFactor = defactor(BigInt(tuple.split(',')[4]), parseFloat(`1e${assetDecimals}`))
+    const liquidationFactor = defactor(BigInt(tuple.split(',')[5]), parseFloat(`1e${assetDecimals}`))
+    const supplyCap = defactor(BigInt(tuple.split(',')[6]), parseFloat(`1e${assetDecimals}`))
+
+    return `\n\nAdd new asset to market **[${symbol}](https://${platform}/address/${baseToken})** with following asset configuration: \n\n{\n\n**asset:** [${assetSymbol}](https://${platform}/address/${
+      tuple.split(',')[0]
+    }),\n\n**priceFeed:** ${
+      tuple.split(',')[1]
+    },\n\n**decimals:** ${assetDecimals},\n\n**borrowCollateralFactor:** ${borrowCollateralFactor.toFixed(
+      2
+    )},\n\n**liquidateCollateralFactor:** ${liquidateCollateralFactor.toFixed(
+      2
+    )},\n\n**liquidationFactor:** ${liquidationFactor.toFixed(2)},\n\n**supplyCap:** ${supplyCap.toFixed(2)}\n\n}`
+  },
+  'setRewardConfig(address,address)': async (
+    chain: CometChains,
+    transaction: ExecuteTransactionInfo,
+    decodedParams: string[]
+  ) => {
+    const platform = await getPlatform(chain)
+
+    console.log(`decodedParams ${decodedParams.join(',')}`)
+
+    const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
+    const currentInstance = new Contract(decodedParams[0], abi, customProvider(chain))
+
+    const baseToken = await currentInstance.callStatic.baseToken()
+    const { abi: baseTokenAbi } = await getContractNameAndAbiFromFile(chain, baseToken)
+    const baseTokenInstance = new Contract(baseToken, baseTokenAbi, customProvider(chain))
+    const { symbol: tokenSymbol } = await getContractSymbolAndDecimalsFromFile(baseToken, baseTokenInstance, chain)
+
+    const { abi: compAbi } = await getContractNameAndAbiFromFile(chain, decodedParams[1])
+    const compInstance = new Contract(decodedParams[1], compAbi, customProvider(chain))
+    const { symbol } = await getContractSymbolAndDecimalsFromFile(decodedParams[1], compInstance, chain)
+
+    return `\n\nSet reward token for market **[${tokenSymbol}](https://${platform}/address/${baseToken})** as **[${symbol}](https://${platform}/address/${decodedParams[1]})**`
+  },
 }

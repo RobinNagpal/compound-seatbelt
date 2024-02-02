@@ -76,7 +76,7 @@
       },
       "setConfiguration(address,tuple)": {
         "description": "setConfiguration(address,tuple)",
-        "transactionFormatter": "",
+        "transactionFormatter": "Configurator.setConfiguration(address,tuple)",
         "proposals": {
           "151": [
             "0xF25212E676D1F7F89Cd72fFEe66158f541246445",
@@ -86,7 +86,7 @@
       },
       "updateAssetSupplyCap(address,address,uint128)": {
         "description": "updateAssetSupplyCap(address,address,uint128)",
-        "transactionFormatter": "",
+        "transactionFormatter": "Configurator.updateAssetSupplyCap(address,address,uint128)",
         "proposals": {
           "161": [
             "0xF25212E676D1F7F89Cd72fFEe66158f541246445",
@@ -112,7 +112,7 @@
       },
       "addAsset(address,tuple)": {
         "description": "addAsset(address,tuple)",
-        "transactionFormatter": "",
+        "transactionFormatter": "Configurator.addAsset(address,tuple)",
         "proposals": {
           "172": [
             "0xF25212E676D1F7F89Cd72fFEe66158f541246445",
