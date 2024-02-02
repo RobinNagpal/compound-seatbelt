@@ -1752,7 +1752,7 @@
       },
       "setFactory(address,address)": {
         "description": "setFactory(address,address)",
-        "transactionFormatter": "",
+        "transactionFormatter": "Configurator.setFactory(address,address)",
         "proposals": {
           "132": [
             "0xc3d688B66703497DAA19211EEdff47f25384cdc3",
@@ -1787,7 +1787,7 @@
       },
       "setConfiguration(address,tuple)": {
         "description": "setConfiguration(address,tuple)",
-        "transactionFormatter": "",
+        "transactionFormatter": "Configurator.setConfiguration(address,tuple)",
         "proposals": {
           "144": [
             "0xA17581A9E3356d9A858b789D68B4d866e593aE94",
@@ -2297,7 +2297,7 @@
     "functions": {
       "setRewardConfig(address,address)": {
         "description": "setRewardConfig(address,address)",
-        "transactionFormatter": "",
+        "transactionFormatter": "Configurator.setRewardConfig(address,address)",
         "proposals": {
           "144": [
             "0xA17581A9E3356d9A858b789D68B4d866e593aE94",

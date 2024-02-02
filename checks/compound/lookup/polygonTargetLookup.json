@@ -76,7 +76,7 @@
       },
       "setConfiguration(address,tuple)": {
         "description": "setConfiguration(address,tuple)",
-        "transactionFormatter": "",
+        "transactionFormatter": "Configurator.setConfiguration(address,tuple)",
         "proposals": {
           "151": [
             "0xF25212E676D1F7F89Cd72fFEe66158f541246445",
