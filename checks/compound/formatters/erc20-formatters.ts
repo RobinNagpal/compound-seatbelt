@@ -3,10 +3,10 @@ import { customProvider } from '../../../utils/clients/ethers'
 import { getContractNameAndAbiFromFile } from '../abi-utils'
 import { CometChains, ExecuteTransactionInfo, TransactionFormatter } from '../compound-types'
 import {
-  getContractSymbolAndDecimalsFromFile,
+  getFormattedTokenNameWithLink,
   getFormattedTokenWithLink,
   getPercentageForTokenFactor,
-  getPlatform,
+  getRecipientNameWithLink,
 } from './helper'
 
 export const ERC20Formatters: { [functionName: string]: TransactionFormatter } = {
@@ -15,45 +15,36 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
     transaction: ExecuteTransactionInfo,
     decodedParams: string[]
   ) => {
-    console.log(`decodedParams ${decodedParams.join(',')}`)
-
     const formattedTokenWithLink = await getFormattedTokenWithLink(chain, transaction.target, decodedParams[1])
-
-    return `\n\nTransfer ${formattedTokenWithLink} to ${decodedParams[0]}.`
+    return `\n\nTransfer ${formattedTokenWithLink} to ${getRecipientNameWithLink(chain, decodedParams[0])}.`
   },
   'approve(address,uint256)': async (
     chain: CometChains,
     transaction: ExecuteTransactionInfo,
     decodedParams: string[]
   ) => {
-    console.log(`decodedParams ${decodedParams.join(',')}`)
-    const platform = await getPlatform(chain)
-
-    const { contractName } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
-
     const tokenAddress = transaction.target
     const formattedTokenWithLink = await getFormattedTokenWithLink(chain, tokenAddress, decodedParams[1])
-    return `\n\nApprove ${formattedTokenWithLink} tokens to [${contractName}](https://${platform}/address/${decodedParams[0]})`
+    return `\n\nApprove ${formattedTokenWithLink} tokens to ${getRecipientNameWithLink(chain, decodedParams[0])}`
   },
   '_setReserveFactor(uint256)': async (
     chain: CometChains,
     transaction: ExecuteTransactionInfo,
     decodedParams: string[]
   ) => {
-    console.log(`decodedParams ${decodedParams.join(',')}`)
-    const platform = await getPlatform(chain)
-
-    const { abi } = await getContractNameAndAbiFromFile(chain, transaction.target)
-    const coinInstance = new Contract(transaction.target, abi, customProvider(chain))
+    const tokenAddress = transaction.target
+    const { abi } = await getContractNameAndAbiFromFile(chain, tokenAddress)
+    const coinInstance = new Contract(tokenAddress, abi, customProvider(chain))
     const prevReserveFactor = await coinInstance.callStatic.reserveFactorMantissa()
-    const { symbol } = await getContractSymbolAndDecimalsFromFile(transaction.target, coinInstance, chain)
 
     const newReserveFactor = getPercentageForTokenFactor(decodedParams[0])
-    const tokenUrl = `https://${platform}/address/${transaction.target}`
+
+    const tokenNameWithLink = await getFormattedTokenNameWithLink(chain, tokenAddress)
     if (prevReserveFactor) {
       const prevReserve = getPercentageForTokenFactor(prevReserveFactor)
-      return `\n\nSet reserve factor for [${symbol}](${tokenUrl}) from ${prevReserve}% to ${newReserveFactor}%`
+      return `\n\nSet reserve factor for ${tokenNameWithLink} from ${prevReserve}% to ${newReserveFactor}%`
     }
-    return `\n\nSet reserve factor for [${symbol}](${tokenUrl}) to ${newReserveFactor}%`
+
+    return `\n\nSet reserve factor for ${tokenNameWithLink} to ${newReserveFactor}%`
   },
 }

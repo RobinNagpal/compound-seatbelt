@@ -52,7 +52,7 @@ export function calculateDifferenceOfDecimals(num1: number, num2: number): numbe
   return defactor(factor(num1) - factor(num2))
 }
 
-export async function getPlatform(chain: CometChains) {
+export function getPlatform(chain: CometChains) {
   switch (chain) {
     case CometChains.mainnet:
       return 'etherscan.io'
@@ -95,11 +95,27 @@ export function getFormatCompTokens(numberOfCompTokens: string) {
 }
 
 export async function getFormattedTokenWithLink(chain: CometChains, tokenAddress: string, value: string) {
+  const token = defactor(BigInt(value))
+  return `**${token.toFixed(2)} ${await getFormattedTokenNameWithLink(chain, tokenAddress)}**`
+}
+export async function getFormattedTokenNameWithLink(chain: CometChains, tokenAddress: string) {
   const platform = await getPlatform(chain)
   const { abi: compAddressAbi } = await getContractNameAndAbiFromFile(chain, tokenAddress)
   const compInstance = new Contract(tokenAddress, compAddressAbi, customProvider(chain))
   const { symbol } = await getContractSymbolAndDecimalsFromFile(tokenAddress, compInstance, chain)
-  const token = defactor(BigInt(value))
 
-  return `**${token.toFixed(2)} [${symbol}](https://${platform}/address/${tokenAddress})**`
+  return `[${symbol}](https://${platform}/address/${tokenAddress})`
+}
+
+export function getRecipientNameWithLink(chain: CometChains, recipient: string) {
+  let recipientName = recipient
+  const targetLookupFilePath = `./checks/compound/lookup/recipient/${chain}RecipientLookup.json`
+  if (fs.existsSync(targetLookupFilePath)) {
+    const fileContent = fs.readFileSync(targetLookupFilePath, 'utf-8')
+    const lookupData = JSON.parse(fileContent || '{}')
+    recipientName = lookupData[recipient.toLowerCase()] || recipient
+  }
+  const platform = getPlatform(chain)
+
+  return `[${recipientName}](https://${platform}/address/${recipient})`
 }
