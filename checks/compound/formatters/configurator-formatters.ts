@@ -8,6 +8,8 @@ import {
   calculateDifferenceOfDecimals,
   getPlatform,
   getContractSymbolAndDecimalsFromFile,
+  getPercentageForTokenFactor,
+  getFormattedTokenNameWithLink,
 } from './helper'
 
 interface AssetConfig {
@@ -497,5 +499,26 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       targetReserves: ${targetReserves.toFixed(2)},
       assetConfigs: ${JSON.stringify(assetConfigs, null, 2)}
     }`
+  },
+  'setStoreFrontPriceFactor(address,uint64)': async (
+    chain: CometChains,
+    transaction: ExecuteTransactionInfo,
+    decodedParams: string[]
+  ) => {
+    const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
+    const currentInstance = new Contract(decodedParams[0], abi, customProvider(chain))
+
+    const baseToken = await currentInstance.callStatic.baseToken()
+
+    const tokenNameWithLink = await getFormattedTokenNameWithLink(chain, baseToken)
+
+    const priceFactorOld = getPercentageForTokenFactor(await currentInstance.callStatic.storeFrontPriceFactor())
+    const priceFactorNew = getPercentageForTokenFactor(decodedParams[1])
+
+    const changeInFactor = calculateDifferenceOfDecimals(parseFloat(priceFactorNew), parseFloat(priceFactorOld))
+
+    return `\n\nSet StoreFrontPriceFactor for **${tokenNameWithLink}** to **${priceFactorNew}%**. Previous value was ${priceFactorOld}% and now it is getting ${
+      changeInFactor > 0 ? 'increased' : 'decreased'
+    } by **${changeInFactor}**%`
   },
 }
