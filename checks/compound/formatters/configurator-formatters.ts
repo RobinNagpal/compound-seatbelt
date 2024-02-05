@@ -70,10 +70,10 @@ async function getTextForChange(
   const { symbol } = await getContractSymbolAndDecimalsFromFile(baseToken, baseTokenInstance, chain)
 
   const prevValue = defactor(await getFunction(currentCometInstance))
-  console.log(`Previous BaseTrackingBorrowSpeed: ${prevValue}`)
+  console.log(`Previous ${functionName}: ${prevValue}`)
 
   const newValue = defactor(BigInt(decodedParams[1]))
-  console.log(`New BaseTrackingBorrowSpeed: ${newValue}`)
+  console.log(`New ${functionName}: ${newValue}`)
 
   const changeInValues = calculateDifferenceOfDecimals(newValue, prevValue)
 
