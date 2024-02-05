@@ -6,5 +6,13 @@
   "0xd9aaec86b65d86f6a7b5b1b0c42ffa531710b6ca": {
     "symbol": "USDbC",
     "decimals": "6"
+  },
+  "0x2ae3f1ec7f1f5012cfeab0185bfc7aa3cf0dec22": {
+    "symbol": "cbETH",
+    "decimals": "18"
+  },
+  "0x9e1028f5f1d5ede59748ffcee5532509976840e0": {
+    "symbol": "COMP",
+    "decimals": "18"
   }
 }
