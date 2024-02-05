@@ -1802,7 +1802,7 @@
       },
       "setStoreFrontPriceFactor(address,uint64)": {
         "description": "setStoreFrontPriceFactor(address,uint64)",
-        "transactionFormatter": "",
+        "transactionFormatter": "Configurator.setStoreFrontPriceFactor(address,uint64)",
         "proposals": {
           "152": [
             "0xc3d688B66703497DAA19211EEdff47f25384cdc3",
