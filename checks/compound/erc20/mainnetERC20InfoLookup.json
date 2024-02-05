@@ -94,5 +94,13 @@
   "0x5d3a536e4d6dbd6114cc1ead35777bab948e3643": {
     "symbol": "cDAI",
     "decimals": "8"
+  },
+  "0xf650c3d88d12db855b8bf7d11be6c55a4e07dcc9": {
+    "symbol": "cUSDT",
+    "decimals": "8"
+  },
+  "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599": {
+    "symbol": "WBTC",
+    "decimals": "8"
   }
 }

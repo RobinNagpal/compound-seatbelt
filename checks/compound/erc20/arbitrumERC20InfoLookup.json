@@ -14,5 +14,17 @@
   "0xff970a61a04b1ca14834a43f5de4533ebddb5cc8": {
     "symbol": "USDC",
     "decimals": "6"
+  },
+  "0xfc5a1a6eb076a2c7ad06ed22c90d7e710e35ad0a": {
+    "symbol": "GMX",
+    "decimals": "18"
+  },
+  "0x82af49447d8a07e3bd95bd0d56f35241523fbab1": {
+    "symbol": "WETH",
+    "decimals": "18"
+  },
+  "0x354a6da3fcde098f8389cad84b0182725c6c91de": {
+    "symbol": "COMP",
+    "decimals": "18"
   }
 }
