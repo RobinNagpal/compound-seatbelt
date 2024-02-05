@@ -82,5 +82,13 @@
   "0x4ddc2d193948926d02f9b1fe9e1daa0718270ed5": {
     "symbol": "cETH",
     "decimals": "8"
+  },
+  "0xbe9895146f7af43049ca1c1ae358b0541ea49704": {
+    "symbol": "cbETH",
+    "decimals": "18"
+  },
+  "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0": {
+    "symbol": "wstETH",
+    "decimals": "18"
   }
 }
