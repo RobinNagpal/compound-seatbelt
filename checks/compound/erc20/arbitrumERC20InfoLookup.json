@@ -10,5 +10,9 @@
   "0x2f2a2543b76a4166549f7aab2e75bef0aefc5b0f": {
     "symbol": "WBTC",
     "decimals": "8"
+  },
+  "0xff970a61a04b1ca14834a43f5de4533ebddb5cc8": {
+    "symbol": "USDC",
+    "decimals": "6"
   }
 }
