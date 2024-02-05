@@ -1436,7 +1436,7 @@
       },
       "approve(address,uint256)": {
         "description": "approve(address,uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20.approve(address,uint256)",
         "proposals": {
           "151": [
             "0x40ec5B33f54e0E8A33A975908C5BA1c14e5BbbDf",
@@ -2374,7 +2374,7 @@
     "functions": {
       "setText(bytes32,string,string)": {
         "description": "setText(bytes32,string,string)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20.setText(bytes32,string,string)",
         "proposals": {
           "148": [
             "0x7dcf87198fd673716e5a32b206d9379c4fcbad8875073f52bfd0656759bf89ed",
@@ -2517,7 +2517,7 @@
     "functions": {
       "depositForBurn(uint256,uint32,bytes32,address)": {
         "description": "depositForBurn(uint256,uint32,bytes32,address)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20.depositForBurn(uint256,uint32,bytes32,address)",
         "proposals": {
           "178": [
             "10000000000",
