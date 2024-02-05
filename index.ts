@@ -53,7 +53,11 @@ async function main() {
     governorType = await inferGovernorType(GOVERNOR_ADDRESS)
     // const proposalIds = await getProposalIds(governorType, GOVERNOR_ADDRESS, latestBlock.number)
     // const proposalIds: BigNumber[] = [BigNumber.from('213')]
-    const proposalIdsArr = [211] // [211, 210, 209, 208, 207, 206, 205, 204, 203, 202, 201, 200]
+    // const proposalIdsArr = [
+    //   214, 213, 212, 211, 210, 209, 208, 207, 206, 205, 204, 203, 202, 201, 200, 199, 198, 197, 196, 195, 194, 193, 192,
+    //   191, 190, 189, 188, 187, 186, 185, 184, 183, 182, 181, 180, 179, 178, 177, 176, 175, 174, 173, 172, 171, 170, 169,
+    // ]
+    const proposalIdsArr = [206]
     const proposalIds = proposalIdsArr.map((id) => BigNumber.from(id))
 
     governor = getGovernor(governorType, GOVERNOR_ADDRESS)
@@ -78,7 +82,7 @@ async function main() {
     console.log(
       `Simulating ${numProposals} ${DAO_NAME} proposals: IDs of ${simProposalsIds
         .map((id) => formatProposalId(governorType, id))
-        .join(', ')}`,
+        .join(', ')}`
     )
 
     for (const simProposal of simProposals) {
@@ -109,7 +113,7 @@ async function main() {
     const { sim, proposal, latestBlock, config } = simOutput
     console.log(`  Running for proposal ID ${formatProposalId(governorType, proposal.id!)}...`)
     const checksToRun = Object.keys(ALL_CHECKS).filter(
-      (k) => !process.env.CHECKS_ENABLED || process.env.CHECKS_ENABLED.split(',').includes(k),
+      (k) => !process.env.CHECKS_ENABLED || process.env.CHECKS_ENABLED.split(',').includes(k)
     )
     console.log(`Running ${checksToRun.length} checks: ${checksToRun.join(', ')} for proposal ID ${proposal.id!}`)
     const checkResults: AllCheckResults = Object.fromEntries(
@@ -120,8 +124,8 @@ async function main() {
             name: ALL_CHECKS[checkId].name,
             result: await ALL_CHECKS[checkId].checkProposal(proposal, sim, proposalData),
           },
-        ]),
-      ),
+        ])
+      )
     )
 
     // Generate markdown report.
@@ -138,7 +142,7 @@ async function main() {
       { start: startBlock, end: endBlock, current: latestBlock },
       proposal,
       checkResults,
-      dir,
+      dir
     )
   }
   console.log('Done!')

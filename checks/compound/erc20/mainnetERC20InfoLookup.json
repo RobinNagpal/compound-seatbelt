@@ -90,5 +90,9 @@
   "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0": {
     "symbol": "wstETH",
     "decimals": "18"
+  },
+  "0x5d3a536e4d6dbd6114cc1ead35777bab948e3643": {
+    "symbol": "cDAI",
+    "decimals": "8"
   }
 }
