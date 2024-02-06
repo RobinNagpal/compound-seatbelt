@@ -80,10 +80,24 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
     transaction: ExecuteTransactionInfo,
     decodedParams: string[]
   ) => {
-    const name =
+    const ENSSubdomain =
       decodedParams[0] === '0x7dcf87198fd673716e5a32b206d9379c4fcbad8875073f52bfd0656759bf89ed'
         ? 'v3-additional-grants.compound-community-licenses.eth'
         : 'Unknown ENS Name'
-    return `\n\nSet ENS text for ${name} with key: ${decodedParams[1]} and value:\n\n ${decodedParams[2]}`
+    return `\n\nSet ENS text for ${ENSSubdomain} with key: ${decodedParams[1]} and value:\n\n ${decodedParams[2]}`
+  },
+  'setSubnodeRecord(bytes32,bytes32,address,address,uint64)': async (
+    chain: CometChains,
+    transaction: ExecuteTransactionInfo,
+    decodedParams: string[]
+  ) => {
+    const platform = await getPlatform(chain)
+
+    const { contractName: ownerName } = await getContractNameAndAbiFromFile(chain, decodedParams[2])
+    const { contractName: resolverName } = await getContractNameAndAbiFromFile(chain, decodedParams[3])
+
+    const ENSName = 'compound-community-licenses.eth'
+    const ENSSubdomainLabel = 'v3-additional-grants'
+    return `\n\nCreate new ${ENSSubdomainLabel} ENS subdomain for ${ENSName} with [${ownerName}](https://${platform}/address/${decodedParams[2]}) as owner and [${resolverName}](https://${platform}/address/${decodedParams[3]}) as resolver and ttl = ${decodedParams[4]}`
   },
 }

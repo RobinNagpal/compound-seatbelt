@@ -2345,7 +2345,7 @@
     "functions": {
       "setSubnodeRecord(bytes32,bytes32,address,address,uint64)": {
         "description": "setSubnodeRecord(bytes32,bytes32,address,address,uint64)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20.setSubnodeRecord(bytes32,bytes32,address,address,uint64)",
         "proposals": {
           "148": [
             "0x835063cb5d9be2abff6e5960d1b21dc40959f6203b301bee8366afa131b7367a",
