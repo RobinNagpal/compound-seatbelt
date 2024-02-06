@@ -166,6 +166,21 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
       changeinCaps > 0 ? 'increased' : 'decreased'
     } by **${changeinCaps}**.`
   },
+  '_setPriceOracle(address)': async (
+    chain: CometChains,
+    transaction: ExecuteTransactionInfo,
+    decodedParams: string[]
+  ) => {
+    const platform = await getPlatform(chain)
+    const targetAddress = transaction.target
+    const { abi } = await getContractNameAndAbiFromFile(chain, targetAddress)
+    const targetInstance = new Contract(targetAddress, abi, customProvider(chain))
+
+    const prevValue = await targetInstance.callStatic.oracle()
+    const newValue = decodedParams[0]
+
+    return `\n\nSet new price oracle to [${newValue}](https://${platform}/address/${newValue}). Previous oracle was [${prevValue}](https://${platform}/address/${prevValue}).`
+  },
 }
 
 function getFormattedCompSpeeds(speedValue: BigNumber | string) {
