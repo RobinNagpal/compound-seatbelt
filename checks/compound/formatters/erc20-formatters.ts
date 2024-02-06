@@ -80,9 +80,10 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
     transaction: ExecuteTransactionInfo,
     decodedParams: string[]
   ) => {
-    const { abi } = await getContractNameAndAbiFromFile(chain, transaction.target)
-    const instance = new Contract(transaction.target, abi, customProvider(chain))
-    const name = await instance.callStatic.name(decodedParams[0])
-    return `\n\nSet ENS text with key: ${decodedParams[1]} and value:\n\n ${decodedParams[2]}`
+    const name =
+      decodedParams[0] === '0x7dcf87198fd673716e5a32b206d9379c4fcbad8875073f52bfd0656759bf89ed'
+        ? 'v3-additional-grants.compound-community-licenses.eth'
+        : 'Unknown ENS Name'
+    return `\n\nSet ENS text for ${name} with key: ${decodedParams[1]} and value:\n\n ${decodedParams[2]}`
   },
 }
