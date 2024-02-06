@@ -6,6 +6,7 @@ import { CometChains, ExecuteTransactionInfo, TransactionFormatter } from './../
 import {
   calculateDifferenceOfDecimals,
   defactor,
+  getChangeText,
   getContractSymbolAndDecimalsFromFile,
   getFormatCompTokens,
   getFormattedTokenNameWithLink,
@@ -133,7 +134,7 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
 
     if (currentValue) {
       const prevValue = getPercentageForTokenFactor(currentValue)
-      return `\n\nSet [${symbol}](https://${platform}/address/${targetToken}) collateral factor from ${prevValue} to ${newValue}%`
+      return `\n\nSet [${symbol}](https://${platform}/address/${targetToken}) collateral factor from ${prevValue}% to ${newValue}%`
     }
 
     return `\n\nSet [${symbol}](https://${platform}/address/${targetToken}) collateral factor to ${newValue}%`
@@ -149,7 +150,7 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     const currentInstance = new Contract(decodedParams[0], abi, customProvider(chain))
     const { symbol, decimals } = await getContractSymbolAndDecimalsFromFile(decodedParams[0], currentInstance, chain)
 
-    const { abi: contractAbi } = await getContractNameAndAbiFromFile(chain, transaction.target)
+    const { abi: contractAbi, contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
     const contractInstance = new Contract(transaction.target, contractAbi, customProvider(chain))
 
     const prevValue = defactor(
@@ -158,13 +159,13 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     )
     const newValue = defactor(BigInt(decodedParams[1]), parseFloat(`1e${decimals}`))
 
-    const changeinCaps = calculateDifferenceOfDecimals(newValue, prevValue)
+    const changeInCaps = calculateDifferenceOfDecimals(newValue, prevValue)
 
     return `\n\nSet MarketBorrowCaps of [${symbol}](https://${platform}/address/${
       decodedParams[0]
-    }) to ${newValue}. Previous value was ${prevValue} and now it is getting ${
-      changeinCaps > 0 ? 'increased' : 'decreased'
-    } by **${changeinCaps}**.`
+    }) to ${newValue} via [${contractName}](https://${platform}/address/${
+      transaction.target
+    }). Previous value was ${prevValue} and ${getChangeText(changeInCaps)}.`
   },
 }
 
