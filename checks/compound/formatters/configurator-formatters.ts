@@ -262,9 +262,6 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     decodedParams: string[]
   ) => {
     const platform = await getPlatform(chain)
-
-    console.log(`decodedParams ${decodedParams.join(',')}`)
-
     const { contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
 
     const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[1])
@@ -278,8 +275,6 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     const { abi: baseAbi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
     const currentBaseTokenInstance = new Contract(decodedParams[0], baseAbi, customProvider(chain))
     const assetInfo = await currentBaseTokenInstance.callStatic.getAssetInfoByAddress(decodedParams[1])
-    console.log('asset info', assetInfo)
-    console.log('asset info type', typeof assetInfo)
 
     const prevSupplyCap = defactor(assetInfo.supplyCap, parseFloat(`1e${decimals}`))
     const baseToken = await currentBaseTokenInstance.callStatic.baseToken()
