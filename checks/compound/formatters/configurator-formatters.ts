@@ -10,6 +10,7 @@ import {
   getContractSymbolAndDecimalsFromFile,
   getPercentageForTokenFactor,
   getFormattedTokenNameWithLink,
+  getChangeText,
 } from './helper'
 
 interface AssetConfig {
@@ -276,19 +277,28 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
 
     const { abi: baseAbi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
     const currentBaseTokenInstance = new Contract(decodedParams[0], baseAbi, customProvider(chain))
+    const assetInfo = await currentBaseTokenInstance.callStatic.getAssetInfoByAddress(decodedParams[1])
+    console.log('asset info', assetInfo)
+    console.log('asset info type', typeof assetInfo)
+
+    const prevSupplyCap = defactor(assetInfo.supplyCap, parseFloat(`1e${decimals}`))
     const baseToken = await currentBaseTokenInstance.callStatic.baseToken()
 
     const { abi: baseTokenAbi } = await getContractNameAndAbiFromFile(chain, baseToken)
     const baseTokenInstance = new Contract(baseToken, baseTokenAbi, customProvider(chain))
     const { symbol: baseTokenSymbol } = await getContractSymbolAndDecimalsFromFile(baseToken, baseTokenInstance, chain)
 
-    const token = defactor(BigInt(decodedParams[2]), parseFloat(`1e${decimals}`))
+    const newSupplyCap = defactor(BigInt(decodedParams[2]), parseFloat(`1e${decimals}`))
+
+    const changeInSupplyCap = calculateDifferenceOfDecimals(newSupplyCap, prevSupplyCap)
 
     return `\n\nSet supply cap for [${tokenSymbol}](https://${platform}/address/${
       decodedParams[1]
     }) on [${baseTokenSymbol}](https://${platform}/address/${baseToken}) via [${contractName}](https://${platform}/address/${
       transaction.target
-    }) to ${token.toFixed(2)}`
+    }) to ${newSupplyCap.toFixed(2)}. Previous value was ${prevSupplyCap.toFixed(2)} and ${getChangeText(
+      changeInSupplyCap
+    )}`
   },
   'setBaseBorrowMin(address,uint104)': async (
     chain: CometChains,
