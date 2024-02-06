@@ -251,7 +251,7 @@
       },
       "_setPriceOracle(address)": {
         "description": "_setPriceOracle(address)",
-        "transactionFormatter": "",
+        "transactionFormatter": "Comptroller._setPriceOracle(address)",
         "proposals": {
           "45": [
             "0x4007B71e01424b2314c020fB0344b03A7C499E1A"
