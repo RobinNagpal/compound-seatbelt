@@ -229,9 +229,6 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     decodedParams: string[]
   ) => {
     const platform = await getPlatform(chain)
-
-    console.log(`decodedParams ${decodedParams.join(',')}`)
-
     const { contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
 
     const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[1])
@@ -240,20 +237,29 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
 
     const { abi: baseAbi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
     const currentBaseTokenInstance = new Contract(decodedParams[0], baseAbi, customProvider(chain))
+
+    const assetInfo = await currentBaseTokenInstance.callStatic.getAssetInfoByAddress(decodedParams[1])
+
+    const prevLiquidationFactor = getPercentageForTokenFactor(assetInfo.liquidationFactor)
+    const newLiquidationFactor = getPercentageForTokenFactor(decodedParams[2])
     const baseToken = await currentBaseTokenInstance.callStatic.baseToken()
 
     const { abi: baseTokenAbi } = await getContractNameAndAbiFromFile(chain, baseToken)
     const baseTokenInstance = new Contract(baseToken, baseTokenAbi, customProvider(chain))
     const { symbol: baseTokenSymbol } = await getContractSymbolAndDecimalsFromFile(baseToken, baseTokenInstance, chain)
 
-    const token = defactor(BigInt(decodedParams[2]))
-    const tokenInPercent = token * 100
+    const changeInLiquidationFactor = calculateDifferenceOfDecimals(
+      parseFloat(newLiquidationFactor),
+      parseFloat(prevLiquidationFactor)
+    )
 
     return `\n\nSet liquidation factor for [${tokenSymbol}](https://${platform}/address/${
       decodedParams[1]
     }) on [${baseTokenSymbol}](https://${platform}/address/${baseToken}) via [${contractName}](https://${platform}/address/${
       transaction.target
-    }) to ${tokenInPercent.toFixed(1)}%`
+    }) to ${newLiquidationFactor}%, Previous was ${prevLiquidationFactor}% and now it is getting ${
+      changeInLiquidationFactor > 0 ? 'increased' : 'decreased'
+    } by **${changeInLiquidationFactor}%**.`
   },
   'updateAssetSupplyCap(address,address,uint128)': async (
     chain: CometChains,
