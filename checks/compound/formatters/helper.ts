@@ -119,3 +119,7 @@ export function getRecipientNameWithLink(chain: CometChains, recipient: string) 
 
   return `[${recipientName}](https://${platform}/address/${recipient})`
 }
+
+export function getChangeText(change: number): string {
+  return `now it is getting ${change > 0 ? 'increased' : 'decreased'} by **${change}**`
+}
