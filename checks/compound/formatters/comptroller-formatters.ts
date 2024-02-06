@@ -8,6 +8,7 @@ import {
   defactor,
   getContractSymbolAndDecimalsFromFile,
   getFormatCompTokens,
+  getFormattedTokenNameWithLink,
   getPercentageForTokenFactor,
   getPlatform,
 } from './helper'
@@ -41,8 +42,6 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     transaction: ExecuteTransactionInfo,
     decodedParams: string[]
   ) => {
-    const platform = await getPlatform(chain)
-
     const addresses = decodedParams[0].split(',')
     const borrowSpeeds = decodedParams[1].split(',')
     const supplySpeeds = decodedParams[2].split(',')
@@ -54,14 +53,15 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
       const currentBorrowSpeed = borrowSpeeds[i]
       const currentSupplySpeed = supplySpeeds[i]
 
-      const { abi } = await getContractNameAndAbiFromFile(chain, currentAddress)
-      const currentInstance = new Contract(currentAddress, abi, customProvider(chain))
-      const { symbol } = await getContractSymbolAndDecimalsFromFile(currentAddress, currentInstance, chain)
+      const symbol = await getFormattedTokenNameWithLink(chain, currentAddress)
 
       const { abi: targetAbi } = await getContractNameAndAbiFromFile(chain, transaction.target)
       const currentTargetInstance = new Contract(transaction.target, targetAbi, customProvider(chain))
 
-      const baseText = `\n\nSet CompSpeed for [${symbol}](https://${platform}/address/${currentAddress})`
+      const compAddress = await currentTargetInstance.callStatic.getCompAddress()
+      const compSymbol = await getFormattedTokenNameWithLink(chain, compAddress)
+
+      const baseText = `\n\nSet CompSpeeds for ${symbol}`
 
       const previousBorrowSpeed = await currentTargetInstance.callStatic.compBorrowSpeeds(currentAddress)
       const previousSupplySpeed = await currentTargetInstance.callStatic.compSupplySpeeds(currentAddress)
@@ -81,7 +81,6 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
       const newFormattedBorrowSpeed = getFormattedCompSpeeds(currentBorrowSpeed)
       const newFormattedSupplySpeed = getFormattedCompSpeeds(currentSupplySpeed)
 
-      const tokenUrl = `https://${platform}/address/${currentAddress}`
       const changeInSpeedsText = (
         type: string,
         changeInSpeed: number,
@@ -89,10 +88,10 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
         newFormattedValue: string
       ) => {
         const change = changeInSpeed
-          ? `It's now getting ${changeInSpeed > 0 ? 'increased' : 'decreased'} by **${changeInSpeed}%**.`
+          ? `It's now getting ${changeInSpeed > 0 ? 'increased' : 'decreased'} by **${changeInSpeed}%**`
           : 'It remains the same.'
 
-        return `${type} speed of [${symbol}](${tokenUrl}) to ${newFormattedValue} COMP/block which was previously ${prevFormattedValue} (${change}).`
+        return `${type} speed of ${symbol} to ${newFormattedValue} ${compSymbol}/block which was previously ${prevFormattedValue} ${compSymbol}/block (${change}).`
       }
 
       const supplySpeedText = changeInSpeedsText(
