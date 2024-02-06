@@ -12,6 +12,7 @@ import {
   getFormattedTokenNameWithLink,
   getPercentageForTokenFactor,
   getPlatform,
+  getRecipientNameWithLink,
 } from './helper'
 
 export const comptrollerFormatters: { [functionName: string]: TransactionFormatter } = {
@@ -36,7 +37,10 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
 
     const numberOfCompTokens = decodedParams[1]
     const formattedCompTokens = getFormatCompTokens(numberOfCompTokens)
-    return `\n\nGrant **${formattedCompTokens} [${symbol}](https://${platform}/address/${compAddress})** tokens to [${contractName}](https://${platform}/address/${decodedParams[0]}).`
+    return `\n\nGrant **${formattedCompTokens} [${symbol}](https://${platform}/address/${compAddress})** tokens to ${getRecipientNameWithLink(
+      chain,
+      decodedParams[0]
+    )}.`
   },
   '_setCompSpeeds(address[],uint256[],uint256[])': async (
     chain: CometChains,
