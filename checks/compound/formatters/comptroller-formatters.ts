@@ -6,11 +6,13 @@ import { CometChains, ExecuteTransactionInfo, TransactionFormatter } from './../
 import {
   calculateDifferenceOfDecimals,
   defactor,
+  getChangeText,
   getContractSymbolAndDecimalsFromFile,
   getFormatCompTokens,
   getFormattedTokenNameWithLink,
   getPercentageForTokenFactor,
   getPlatform,
+  getRecipientNameWithLink,
 } from './helper'
 
 export const comptrollerFormatters: { [functionName: string]: TransactionFormatter } = {
@@ -20,10 +22,6 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     decodedParams: string[]
   ) => {
     const platform = await getPlatform(chain)
-
-    let { contractName } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
-
-    contractName = contractName === '' ? 'Wallet' : contractName
 
     const { abi } = await getContractNameAndAbiFromFile(chain, transaction.target)
     const currentInstance = new Contract(transaction.target, abi, customProvider(chain))
@@ -35,7 +33,10 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
 
     const numberOfCompTokens = decodedParams[1]
     const formattedCompTokens = getFormatCompTokens(numberOfCompTokens)
-    return `\n\nGrant **${formattedCompTokens} [${symbol}](https://${platform}/address/${compAddress})** tokens to [${contractName}](https://${platform}/address/${decodedParams[0]}).`
+    return `\n\nGrant **${formattedCompTokens} [${symbol}](https://${platform}/address/${compAddress})** tokens to ${getRecipientNameWithLink(
+      chain,
+      decodedParams[0]
+    )}.`
   },
   '_setCompSpeeds(address[],uint256[],uint256[])': async (
     chain: CometChains,
@@ -133,7 +134,7 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
 
     if (currentValue) {
       const prevValue = getPercentageForTokenFactor(currentValue)
-      return `\n\nSet [${symbol}](https://${platform}/address/${targetToken}) collateral factor from ${prevValue} to ${newValue}%`
+      return `\n\nSet [${symbol}](https://${platform}/address/${targetToken}) collateral factor from ${prevValue}% to ${newValue}%`
     }
 
     return `\n\nSet [${symbol}](https://${platform}/address/${targetToken}) collateral factor to ${newValue}%`
@@ -149,7 +150,7 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     const currentInstance = new Contract(decodedParams[0], abi, customProvider(chain))
     const { symbol, decimals } = await getContractSymbolAndDecimalsFromFile(decodedParams[0], currentInstance, chain)
 
-    const { abi: contractAbi } = await getContractNameAndAbiFromFile(chain, transaction.target)
+    const { abi: contractAbi, contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
     const contractInstance = new Contract(transaction.target, contractAbi, customProvider(chain))
 
     const prevValue = defactor(
@@ -158,13 +159,28 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     )
     const newValue = defactor(BigInt(decodedParams[1]), parseFloat(`1e${decimals}`))
 
-    const changeinCaps = calculateDifferenceOfDecimals(newValue, prevValue)
+    const changeInCaps = calculateDifferenceOfDecimals(newValue, prevValue)
 
     return `\n\nSet MarketBorrowCaps of [${symbol}](https://${platform}/address/${
       decodedParams[0]
-    }) to ${newValue}. Previous value was ${prevValue} and now it is getting ${
-      changeinCaps > 0 ? 'increased' : 'decreased'
-    } by **${changeinCaps}**.`
+    }) to ${newValue} via [${contractName}](https://${platform}/address/${
+      transaction.target
+    }). Previous value was ${prevValue} and ${getChangeText(changeInCaps)}.`
+  },
+  '_setPriceOracle(address)': async (
+    chain: CometChains,
+    transaction: ExecuteTransactionInfo,
+    decodedParams: string[]
+  ) => {
+    const platform = await getPlatform(chain)
+    const targetAddress = transaction.target
+    const { abi } = await getContractNameAndAbiFromFile(chain, targetAddress)
+    const targetInstance = new Contract(targetAddress, abi, customProvider(chain))
+
+    const prevValue = await targetInstance.callStatic.oracle()
+    const newValue = decodedParams[0]
+
+    return `\n\nSet new price oracle to [${newValue}](https://${platform}/address/${newValue}). Previous oracle was [${prevValue}](https://${platform}/address/${prevValue}).`
   },
 }
 
