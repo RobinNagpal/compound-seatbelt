@@ -23,10 +23,6 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
   ) => {
     const platform = await getPlatform(chain)
 
-    let { contractName } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
-
-    contractName = contractName === '' ? 'Wallet' : contractName
-
     const { abi } = await getContractNameAndAbiFromFile(chain, transaction.target)
     const currentInstance = new Contract(transaction.target, abi, customProvider(chain))
 
