@@ -30,8 +30,6 @@ async function getTextForChangeInInterestRate(
   interestRateName: string,
   platform: string
 ) {
-  console.log(`decodedParams ${decodedParams.join(',')}`)
-
   const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
   const currentCometInstance = new Contract(decodedParams[0], abi, customProvider(chain))
 
@@ -42,11 +40,9 @@ async function getTextForChangeInInterestRate(
 
   const prevInterestRate = annualize(await getInterestRateFunction(currentCometInstance))
   const previousRateInPercent = prevInterestRate * 100
-  console.log(`Previous ${interestRateName} ${previousRateInPercent}`)
 
   const newInterestRate = BigInt(decodedParams[1])
   const currentRateInPercent = defactor(newInterestRate) * 100
-  console.log(`New ${interestRateName}: ${currentRateInPercent}`)
 
   const changeInRate = calculateDifferenceOfDecimals(currentRateInPercent, previousRateInPercent)
 
@@ -62,8 +58,6 @@ async function getTextForChange(
   functionName: string,
   platform: string
 ) {
-  console.log(`decodedParams ${decodedParams.join(',')}`)
-
   const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
   const currentCometInstance = new Contract(decodedParams[0], abi, customProvider(chain))
 
@@ -73,10 +67,8 @@ async function getTextForChange(
   const { symbol } = await getContractSymbolAndDecimalsFromFile(baseToken, baseTokenInstance, chain)
 
   const prevValue = defactor(await getFunction(currentCometInstance))
-  console.log(`Previous ${functionName}: ${prevValue}`)
 
   const newValue = defactor(BigInt(decodedParams[1]))
-  console.log(`New ${functionName}: ${newValue}`)
 
   const changeInValues = calculateDifferenceOfDecimals(newValue, prevValue)
 
@@ -157,8 +149,6 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     decodedParams: string[]
   ) => {
     const platform = await getPlatform(chain)
-
-    console.log(`decodedParams ${decodedParams.join(',')}`)
 
     const { contractName } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
 
@@ -308,8 +298,6 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
   ) => {
     const platform = await getPlatform(chain)
 
-    console.log(`decodedParams ${decodedParams.join(',')}`)
-
     const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
     const currentInstance = new Contract(decodedParams[0], abi, customProvider(chain))
 
@@ -335,8 +323,6 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     decodedParams: string[]
   ) => {
     const platform = await getPlatform(chain)
-
-    console.log(`decodedParams ${decodedParams.join(',')}`)
 
     const [address, tuple] = decodedParams
     const tupleList = tuple.split(',')
@@ -379,8 +365,6 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
   ) => {
     const platform = await getPlatform(chain)
 
-    console.log(`decodedParams ${decodedParams.join(',')}`)
-
     const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
     const currentInstance = new Contract(decodedParams[0], abi, customProvider(chain))
 
@@ -402,8 +386,6 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
   ) => {
     const platform = await getPlatform(chain)
 
-    console.log(`decodedParams ${decodedParams.join(',')}`)
-
     const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
     const currentInstance = new Contract(decodedParams[0], abi, customProvider(chain))
 
@@ -422,8 +404,6 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     decodedParams: string[]
   ) => {
     const platform = await getPlatform(chain)
-
-    console.log(`decodedParams ${decodedParams.join(',')}`)
 
     const [address, tuple] = decodedParams
     const tupleList = tuple.split(',')
