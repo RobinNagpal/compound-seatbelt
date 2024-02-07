@@ -1481,7 +1481,7 @@
       },
       "_setInterestRateModel(address)": {
         "description": "_setInterestRateModel(address)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20._setInterestRateModel(address)",
         "proposals": {
           "122": [
             "0xF9583618169920c544Ec89795a346F487cB5a227"
@@ -1606,7 +1606,7 @@
       },
       "_setInterestRateModel(address)": {
         "description": "_setInterestRateModel(address)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20._setInterestRateModel(address)",
         "proposals": {
           "130": [
             "0xd956188795ca6F4A74092ddca33E0Ea4cA3a1395"
@@ -2172,7 +2172,7 @@
     "functions": {
       "_setInterestRateModel(address)": {
         "description": "_setInterestRateModel(address)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20._setInterestRateModel(address)",
         "proposals": {
           "130": [
             "0xd88B94128Ff2B8Cf2d7886cd1C1E46757418cA2A"
