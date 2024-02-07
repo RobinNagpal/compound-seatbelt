@@ -110,5 +110,9 @@
   "0x35a18000230da775cac24873d00ff85bccded550": {
     "symbol": "cUNI",
     "decimals": "8"
+  },
+  "0x514910771af9ca656af840dff83e8264ecf986ca": {
+    "symbol": "LINK",
+    "decimals": "18"
   }
 }
