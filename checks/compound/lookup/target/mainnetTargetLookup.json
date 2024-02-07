@@ -85,7 +85,7 @@
     "functions": {
       "_setBorrowPaused(address,bool)": {
         "description": "_setBorrowPaused(address,bool)",
-        "transactionFormatter": "",
+        "transactionFormatter": "Comptroller._setBorrowPaused(address,bool)",
         "proposals": {
           "44": [
             "0xC11b1268C1A384e55C48c2391d8d480264A3A7F4",
