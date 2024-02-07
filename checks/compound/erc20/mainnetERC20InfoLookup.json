@@ -106,5 +106,9 @@
   "0x7713dd9ca933848f6819f38b8352d9a15ea73f67": {
     "symbol": "cFEI",
     "decimals": "8"
+  },
+  "0x35a18000230da775cac24873d00ff85bccded550": {
+    "symbol": "cUNI",
+    "decimals": "8"
   }
 }
