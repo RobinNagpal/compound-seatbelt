@@ -114,5 +114,25 @@
   "0x514910771af9ca656af840dff83e8264ecf986ca": {
     "symbol": "LINK",
     "decimals": "18"
+  },
+  "0x158079ee67fce2f58472a96584a73c7ab9ac95c1": {
+    "symbol": "cREP",
+    "decimals": "8"
+  },
+  "0xc11b1268c1a384e55c48c2391d8d480264a3a7f4": {
+    "symbol": "cWBTC",
+    "decimals": "8"
+  },
+  "0xf5dce57282a584d2746faf1593d3121fcac444dc": {
+    "symbol": "cDAI",
+    "decimals": "8"
+  },
+  "0x1985365e9f78359a9b6ad760e32412f4a445e862": {
+    "symbol": "REP",
+    "decimals": "18"
+  },
+  "0x89d24a6b4ccb1b6faa2625fe562bdd9a23260359": {
+    "symbol": "0x4441490000000000000000000000000000000000000000000000000000000000",
+    "decimals": "18"
   }
 }
