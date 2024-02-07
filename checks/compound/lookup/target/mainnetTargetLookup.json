@@ -600,7 +600,7 @@
       },
       "_setSeizePaused(bool)": {
         "description": "_setSeizePaused(bool)",
-        "transactionFormatter": "",
+        "transactionFormatter": "Comptroller._setSeizePaused(bool)",
         "proposals": {
           "120": [
             "true"
