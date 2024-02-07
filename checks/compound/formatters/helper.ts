@@ -121,5 +121,7 @@ export function getRecipientNameWithLink(chain: CometChains, recipient: string) 
 }
 
 export function getChangeText(change: number): string {
-  return `now it is getting ${change > 0 ? 'increased' : 'decreased'} by **${change}**`
+  return `${
+    change == 0 ? 'it remains the same' : `now it is getting ${change > 0 ? 'increased' : 'decreased'} by **${change}**`
+  } `
 }
