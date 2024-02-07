@@ -3,6 +3,7 @@ import { customProvider } from '../../../utils/clients/ethers'
 import { getContractNameAndAbiFromFile } from '../abi-utils'
 import { CometChains, ExecuteTransactionInfo, TransactionFormatter } from '../compound-types'
 import {
+  calculateDifferenceOfDecimals,
   defactor,
   getContractSymbolAndDecimalsFromFile,
   getFormatCompTokens,
@@ -123,5 +124,39 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
     const coinLink = await getFormattedTokenNameWithLink(chain, transaction.target)
 
     return `\n\nSet [interest rate model](https://${platform}/address/${decodedParams[0]}) for ${coinLink}.`
+  },
+  '_reduceReserves(uint256)': async (
+    chain: CometChains,
+    transaction: ExecuteTransactionInfo,
+    decodedParams: string[]
+  ) => {
+    const platform = await getPlatform(chain)
+
+    const cTokenAddress = transaction.target
+    const { abi: cTokenAbi } = await getContractNameAndAbiFromFile(chain, cTokenAddress)
+    const cTokenInstance = new Contract(cTokenAddress, cTokenAbi, customProvider(chain))
+    const { symbol: cTokenSymbol, decimals: cTokenDecimals } = await getContractSymbolAndDecimalsFromFile(
+      cTokenAddress,
+      cTokenInstance,
+      chain
+    )
+
+    const underlyingAssetAddress = await cTokenInstance.callStatic.underlying()
+    const totalReserves = await cTokenInstance.callStatic.totalReserves()
+
+    const { abi: assetAbi } = await getContractNameAndAbiFromFile(chain, underlyingAssetAddress)
+    const assetInstance = new Contract(underlyingAssetAddress, assetAbi, customProvider(chain))
+    const { symbol: assetSymbol, decimals: assetDecimals } = await getContractSymbolAndDecimalsFromFile(
+      underlyingAssetAddress,
+      assetInstance,
+      chain
+    )
+
+    const totalReservesFormatted = defactor(totalReserves, parseFloat(`1e${cTokenDecimals}`))
+    const reduceValue = defactor(BigInt(decodedParams[0]), parseFloat(`1e${assetDecimals}`))
+
+    const totalReservesNew = calculateDifferenceOfDecimals(totalReservesFormatted, reduceValue)
+
+    return `\n\nReduce reserves of [${cTokenSymbol}](https://${platform}/address/${cTokenAddress}) by ${reduceValue} [${assetSymbol}](https://${platform}/address/${underlyingAssetAddress}). Remaining total reserves would be ${totalReservesNew}`
   },
 }
