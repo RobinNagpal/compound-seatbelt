@@ -219,6 +219,28 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
       decodedParams[0] === 'true' ? 'Pause' : 'Unpause'
     } market liquidation via [${contractName}](https://${platform}/address/${transaction.target}).`
   },
+  '_setContributorCompSpeed(address,uint256)': async (
+    chain: CometChains,
+    transaction: ExecuteTransactionInfo,
+    decodedParams: string[]
+  ) => {
+    const platform = await getPlatform(chain)
+
+    const { abi, contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
+
+    const targetInstance = new Contract(transaction.target, abi, customProvider(chain))
+
+    const prevValue = await targetInstance.callStatic.compContributorSpeeds(decodedParams[0])
+    const newValue = parseFloat(decodedParams[1])
+
+    const changeInSpeed = calculateDifferenceOfDecimals(newValue, prevValue)
+
+    return `\n\nSet ContributorCompSpeed for [${decodedParams[0]}](https://${platform}/address/${
+      decodedParams[0]
+    }) to **${newValue}** via [${contractName}](https://${platform}/address/${
+      transaction.target
+    }). Previous value was **${prevValue}** and ${getChangeText(changeInSpeed)}.`
+  },
 }
 
 function getFormattedCompSpeeds(speedValue: BigNumber | string) {
