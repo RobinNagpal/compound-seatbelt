@@ -100,4 +100,15 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
     const ENSSubdomainLabel = 'v3-additional-grants'
     return `\n\nCreate new ${ENSSubdomainLabel} ENS subdomain for ${ENSName} with [${ownerName}](https://${platform}/address/${decodedParams[2]}) as owner and [${resolverName}](https://${platform}/address/${decodedParams[3]}) as resolver and ttl = ${decodedParams[4]}`
   },
+  '_setInterestRateModel(address)': async (
+    chain: CometChains,
+    transaction: ExecuteTransactionInfo,
+    decodedParams: string[]
+  ) => {
+    const platform = await getPlatform(chain)
+
+    const coinLink = await getFormattedTokenNameWithLink(chain, transaction.target)
+
+    return `\n\nSet [interest rate model](https://${platform}/address/${decodedParams[0]}) for ${coinLink}.`
+  },
 }
