@@ -192,7 +192,9 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     const coinLink = await getFormattedTokenNameWithLink(chain, decodedParams[0])
     const { contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
 
-    return `\n\nSet MintPaused for ${coinLink} to ${decodedParams[1]} via [${contractName}](https://${platform}/address/${transaction.target}).`
+    return `\n\n${
+      decodedParams[1] === 'true' ? 'Pause' : 'Resume'
+    } minting for ${coinLink} via [${contractName}](https://${platform}/address/${transaction.target}).`
   },
 }
 
