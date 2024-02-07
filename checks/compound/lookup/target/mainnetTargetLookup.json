@@ -67,7 +67,7 @@
       },
       "_reduceReserves(uint256)": {
         "description": "_reduceReserves(uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20._reduceReserves(uint256)",
         "proposals": {
           "138": [
             "708880250"
@@ -868,7 +868,7 @@
     "functions": {
       "_reduceReserves(uint256)": {
         "description": "_reduceReserves(uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20._reduceReserves(uint256)",
         "proposals": {
           "59": [
             "6817797961061626144874170"
@@ -1334,7 +1334,7 @@
       },
       "_reduceReserves(uint256)": {
         "description": "_reduceReserves(uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20._reduceReserves(uint256)",
         "proposals": {
           "138": [
             "6324340499474616104642"
@@ -1371,7 +1371,7 @@
     "functions": {
       "_reduceReserves(uint256)": {
         "description": "_reduceReserves(uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20._reduceReserves(uint256)",
         "proposals": {
           "104": [
             "79764360000"
@@ -1542,7 +1542,7 @@
       },
       "_reduceReserves(uint256)": {
         "description": "_reduceReserves(uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20._reduceReserves(uint256)",
         "proposals": {
           "187": [
             "555555000000000000000000"
@@ -1569,7 +1569,7 @@
       },
       "_reduceReserves(uint256)": {
         "description": "_reduceReserves(uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20._reduceReserves(uint256)",
         "proposals": {
           "187": [
             "1694915000000000000000000"
@@ -2189,7 +2189,7 @@
     "functions": {
       "_reduceReserves(uint256)": {
         "description": "_reduceReserves(uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20._reduceReserves(uint256)",
         "proposals": {
           "138": [
             "515499155166335008592"
@@ -2206,7 +2206,7 @@
     "functions": {
       "_reduceReserves(uint256)": {
         "description": "_reduceReserves(uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20._reduceReserves(uint256)",
         "proposals": {
           "138": [
             "26684572352947457780274"
