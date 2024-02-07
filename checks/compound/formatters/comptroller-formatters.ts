@@ -210,6 +210,15 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
       decodedParams[1] === 'true' ? 'Pause' : 'Resume'
     } ${coinLink} borrowing via [${contractName}](https://${platform}/address/${transaction.target}).`
   },
+  '_setSeizePaused(bool)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
+    const platform = await getPlatform(chain)
+
+    const { contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
+
+    return `\n\n${
+      decodedParams[0] === 'true' ? 'Pause' : 'Unpause'
+    } market liquidation via [${contractName}](https://${platform}/address/${transaction.target}).`
+  },
 }
 
 function getFormattedCompSpeeds(speedValue: BigNumber | string) {
