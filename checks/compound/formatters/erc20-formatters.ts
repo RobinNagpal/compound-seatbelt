@@ -44,8 +44,8 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
     const newReserveFactor = getPercentageForTokenFactor(decodedParams[0])
 
     const tokenNameWithLink = await getFormattedTokenNameWithLink(chain, tokenAddress)
-    if (prevReserveFactor) {
-      const prevReserve = getPercentageForTokenFactor(prevReserveFactor)
+    const prevReserve = getPercentageForTokenFactor(prevReserveFactor)
+    if (prevReserveFactor && prevReserve !== newReserveFactor) {
       return `\n\nSet reserve factor for ${tokenNameWithLink} from ${prevReserve}% to ${newReserveFactor}%`
     }
 
