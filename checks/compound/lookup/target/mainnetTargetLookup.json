@@ -381,7 +381,7 @@
       },
       "_setContributorCompSpeed(address,uint256)": {
         "description": "_setContributorCompSpeed(address,uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "Comptroller._setContributorCompSpeed(address,uint256)",
         "proposals": {
           "51": [
             "0x9B68c14e936104e9a7a24c712BEecdc220002984",
