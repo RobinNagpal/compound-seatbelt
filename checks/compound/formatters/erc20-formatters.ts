@@ -19,8 +19,21 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
     transaction: ExecuteTransactionInfo,
     decodedParams: string[]
   ) => {
-    const formattedTokenWithLink = await getFormattedTokenWithLink(chain, transaction.target, decodedParams[1])
-    return `\n\nTransfer ${formattedTokenWithLink} to ${getRecipientNameWithLink(chain, decodedParams[0])}.`
+    const platform = await getPlatform(chain)
+
+    const coinAddress = transaction.target
+    const { abi } = await getContractNameAndAbiFromFile(chain, coinAddress)
+    const tokenInstance = new Contract(coinAddress, abi, customProvider(chain))
+    const { symbol, decimals } = await getContractSymbolAndDecimalsFromFile(coinAddress, tokenInstance, chain)
+
+    const amount = defactor(BigInt(decodedParams[1]), parseFloat(`1e${decimals}`))
+
+    return `\n\nTransfer **${amount.toFixed(
+      2
+    )} [${symbol}](https://${platform}/address/${coinAddress})** to ${getRecipientNameWithLink(
+      chain,
+      decodedParams[0]
+    )}.`
   },
   'approve(address,uint256)': async (
     chain: CometChains,
