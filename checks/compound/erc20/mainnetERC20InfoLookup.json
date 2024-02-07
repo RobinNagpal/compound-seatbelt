@@ -102,5 +102,9 @@
   "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599": {
     "symbol": "WBTC",
     "decimals": "8"
+  },
+  "0x7713dd9ca933848f6819f38b8352d9a15ea73f67": {
+    "symbol": "cFEI",
+    "decimals": "8"
   }
 }
