@@ -182,6 +182,18 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
 
     return `\n\nSet new price oracle to [${newValue}](https://${platform}/address/${newValue}). Previous oracle was [${prevValue}](https://${platform}/address/${prevValue}).`
   },
+  '_setMintPaused(address,bool)': async (
+    chain: CometChains,
+    transaction: ExecuteTransactionInfo,
+    decodedParams: string[]
+  ) => {
+    const platform = await getPlatform(chain)
+
+    const coinLink = await getFormattedTokenNameWithLink(chain, decodedParams[0])
+    const { contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
+
+    return `\n\nSet MintPaused for ${coinLink} to ${decodedParams[1]} via [${contractName}](https://${platform}/address/${transaction.target}).`
+  },
 }
 
 function getFormattedCompSpeeds(speedValue: BigNumber | string) {
