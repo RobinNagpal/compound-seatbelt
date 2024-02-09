@@ -134,5 +134,13 @@
   "0x89d24a6b4ccb1b6faa2625fe562bdd9a23260359": {
     "symbol": "DAI",
     "decimals": "18"
+  },
+  "0x944dd1c7ce133b75880cee913d513f8c07312393": {
+    "symbol": "cMATIC",
+    "decimals": "8"
+  },
+  "0x12392f67bdf24fae0af363c24ac620a2f67dad86": {
+    "symbol": "cTUSD",
+    "decimals": "8"
   }
 }
