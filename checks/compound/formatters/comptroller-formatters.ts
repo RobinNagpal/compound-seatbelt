@@ -43,6 +43,9 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     transaction: ExecuteTransactionInfo,
     decodedParams: string[]
   ) => {
+    if (decodedParams.length === 0 || decodedParams.some((param) => param === '')) {
+      return 'No data provided for Comp speeds.'
+    }
     const addresses = decodedParams[0].split(',')
     const borrowSpeeds = decodedParams[1].split(',')
     const supplySpeeds = decodedParams[2].split(',')
