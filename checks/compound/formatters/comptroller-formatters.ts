@@ -253,6 +253,18 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
 
     return `\n\nSupport ${marketLink} on Compound.`
   },
+  '_setPauseGuardian(address)': async (
+    chain: CometChains,
+    transaction: ExecuteTransactionInfo,
+    decodedParams: string[]
+  ) => {
+    const platform = await getPlatform(chain)
+
+    const { contractName: targetContractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
+    const { contractName: guardianContractName } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
+
+    return `\n\nSet the Pause Guardian address to [${guardianContractName}](https://${platform}/address/${decodedParams[0]}) via [${targetContractName}](https://${platform}/address/${transaction.target}).`
+  },
 }
 
 function getFormattedCompSpeeds(speedValue: BigNumber | string) {
