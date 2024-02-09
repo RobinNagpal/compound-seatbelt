@@ -23,13 +23,15 @@ export const governorBravoFormatters: { [functionName: string]: TransactionForma
 
     const name = await governanceInstance.callStatic.name()
 
-    const prevThreshold = await governanceInstance.callStatic.proposalThreshold()
-    const newThreshold = decodedParams[0]
+    const prevThreshold = parseFloat(await governanceInstance.callStatic.proposalThreshold())
+    const newThreshold = parseFloat(decodedParams[0])
 
-    const changeInThreshold = calculateDifferenceOfDecimals(parseFloat(newThreshold), prevThreshold)
+    const changeInThreshold = calculateDifferenceOfDecimals(newThreshold, prevThreshold)
 
     return `\n\nSet proposal threshold of [${name}](https://${platform}/address/${
       transaction.target
-    }) to ${newThreshold}. Previous value was ${prevThreshold} and ${getChangeText(changeInThreshold)}.`
+    }) to ${newThreshold.toLocaleString()}. Previous value was ${prevThreshold.toLocaleString()} and ${getChangeText(
+      changeInThreshold
+    )}.`
   },
 }
