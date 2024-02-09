@@ -37,7 +37,7 @@
       },
       "_setWhitelistGuardian(address)": {
         "description": "_setWhitelistGuardian(address)",
-        "transactionFormatter": "",
+        "transactionFormatter": "GovernorBravo._setWhitelistGuardian(address)",
         "proposals": {
           "60": [
             "0xbbf3f1421D886E9b2c5D716B5192aC998af2012c"
@@ -485,7 +485,7 @@
       },
       "_setPauseGuardian(address)": {
         "description": "_setPauseGuardian(address)",
-        "transactionFormatter": "",
+        "transactionFormatter": "Comptroller._setPauseGuardian(address)",
         "proposals": {
           "57": [
             "0xbbf3f1421D886E9b2c5D716B5192aC998af2012c"
