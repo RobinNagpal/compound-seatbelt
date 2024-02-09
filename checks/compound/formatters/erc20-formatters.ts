@@ -162,4 +162,31 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
       2
     )}`
   },
+  'redeem(uint256)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
+    const platform = await getPlatform(chain)
+
+    const cTokenAddress = transaction.target
+    const { abi: cTokenAbi } = await getContractNameAndAbiFromFile(chain, cTokenAddress)
+    const cTokenInstance = new Contract(cTokenAddress, cTokenAbi, customProvider(chain))
+    const { symbol: cTokenSymbol, decimals: cTokenDecimals } = await getContractSymbolAndDecimalsFromFile(
+      cTokenAddress,
+      cTokenInstance,
+      chain
+    )
+
+    const underlyingAssetAddress = await cTokenInstance.callStatic.underlying()
+
+    const { abi: assetAbi } = await getContractNameAndAbiFromFile(chain, underlyingAssetAddress)
+    const assetInstance = new Contract(underlyingAssetAddress, assetAbi, customProvider(chain))
+    const { symbol: assetSymbol, decimals: assetDecimals } = await getContractSymbolAndDecimalsFromFile(
+      underlyingAssetAddress,
+      assetInstance,
+      chain
+    )
+
+    const cTokens = defactor(BigInt(decodedParams[0]), parseFloat(`1e${cTokenDecimals}`))
+    const underlyingAssetTokens = defactor(BigInt(decodedParams[0]), parseFloat(`1e${assetDecimals}`))
+
+    return `\n\nRedeem ${cTokens} [${cTokenSymbol}](https://${platform}/address/${transaction.target}) cTokens in exchange for ${underlyingAssetTokens} [${assetSymbol}](https://${platform}/address/${underlyingAssetAddress})`
+  },
 }
