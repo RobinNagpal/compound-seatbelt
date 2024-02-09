@@ -147,28 +147,41 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     transaction: ExecuteTransactionInfo,
     decodedParams: string[]
   ) => {
+    if (decodedParams.length === 0 || decodedParams.some((param) => param === '')) {
+      return 'No data provided for Borrow Caps.'
+    }
     const platform = await getPlatform(chain)
 
-    const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
-    const currentInstance = new Contract(decodedParams[0], abi, customProvider(chain))
-    const { symbol, decimals } = await getContractSymbolAndDecimalsFromFile(decodedParams[0], currentInstance, chain)
+    const addresses = decodedParams[0].split(',')
+    const values = decodedParams[1].split(',')
 
-    const { abi: contractAbi, contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
-    const contractInstance = new Contract(transaction.target, contractAbi, customProvider(chain))
+    let finalText = ''
 
-    const prevValue = defactor(
-      await contractInstance.callStatic.borrowCaps(decodedParams[0]),
-      parseFloat(`1e${decimals}`)
-    )
-    const newValue = defactor(BigInt(decodedParams[1]), parseFloat(`1e${decimals}`))
+    for (let i = 0; i < addresses.length; i++) {
+      const currentAddress = addresses[i]
+      const currentValue = values[i]
 
-    const changeInCaps = calculateDifferenceOfDecimals(newValue, prevValue)
+      const { abi } = await getContractNameAndAbiFromFile(chain, currentAddress)
+      const currentInstance = new Contract(currentAddress, abi, customProvider(chain))
+      const { symbol, decimals } = await getContractSymbolAndDecimalsFromFile(currentAddress, currentInstance, chain)
 
-    return `\n\nSet MarketBorrowCaps of [${symbol}](https://${platform}/address/${
-      decodedParams[0]
-    }) to ${newValue} via [${contractName}](https://${platform}/address/${
-      transaction.target
-    }). Previous value was ${prevValue} and ${getChangeText(changeInCaps)}.`
+      const { abi: contractAbi, contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
+      const contractInstance = new Contract(transaction.target, contractAbi, customProvider(chain))
+
+      const prevValue = defactor(
+        await contractInstance.callStatic.borrowCaps(currentAddress),
+        parseFloat(`1e${decimals}`)
+      )
+      const newValue = defactor(BigInt(currentValue), parseFloat(`1e${decimals}`))
+
+      const changeInCaps = calculateDifferenceOfDecimals(newValue, prevValue)
+
+      finalText += `\n\nSet MarketBorrowCaps of [${symbol}](https://${platform}/address/${currentAddress}) to ${newValue} via [${contractName}](https://${platform}/address/${
+        transaction.target
+      }). Previous value was ${prevValue} and ${getChangeText(changeInCaps)}.`
+    }
+
+    return finalText
   },
   '_setPriceOracle(address)': async (
     chain: CometChains,
