@@ -22,7 +22,7 @@
       },
       "_setProposalThreshold(uint256)": {
         "description": "_setProposalThreshold(uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "GovernorBravo._setProposalThreshold(uint256)",
         "proposals": {
           "52": [
             "65000000000000000000000"
