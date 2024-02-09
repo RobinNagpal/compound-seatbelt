@@ -162,17 +162,24 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
       const currentValue = values[i]
 
       const { abi } = await getContractNameAndAbiFromFile(chain, currentAddress)
-      const currentInstance = new Contract(currentAddress, abi, customProvider(chain))
-      const { symbol, decimals } = await getContractSymbolAndDecimalsFromFile(currentAddress, currentInstance, chain)
-
+      const cTokenInstance = new Contract(currentAddress, abi, customProvider(chain))
+      const { symbol } = await getContractSymbolAndDecimalsFromFile(currentAddress, cTokenInstance, chain)
+      const underlyingAssetAddress = await cTokenInstance.callStatic.underlying()
+      const { abi: assetAbi } = await getContractNameAndAbiFromFile(chain, underlyingAssetAddress)
+      const assetInstance = new Contract(underlyingAssetAddress, assetAbi, customProvider(chain))
+      const { decimals: assetDecimals } = await getContractSymbolAndDecimalsFromFile(
+        underlyingAssetAddress,
+        assetInstance,
+        chain
+      )
       const { abi: contractAbi, contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
       const contractInstance = new Contract(transaction.target, contractAbi, customProvider(chain))
 
       const prevValue = defactor(
         await contractInstance.callStatic.borrowCaps(currentAddress),
-        parseFloat(`1e${decimals}`)
+        parseFloat(`1e${assetDecimals}`)
       )
-      const newValue = defactor(BigInt(currentValue), parseFloat(`1e${decimals}`))
+      const newValue = defactor(BigInt(currentValue), parseFloat(`1e${assetDecimals}`))
 
       const changeInCaps = calculateDifferenceOfDecimals(newValue, prevValue)
 
