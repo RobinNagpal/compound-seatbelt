@@ -189,4 +189,22 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
 
     return `\n\nRedeem ${cTokens} [${cTokenSymbol}](https://${platform}/address/${transaction.target}) cTokens in exchange for ${underlyingAssetTokens} [${assetSymbol}](https://${platform}/address/${underlyingAssetAddress})`
   },
+  'migrateFromLegacyReputationToken()': async (
+    chain: CometChains,
+    transaction: ExecuteTransactionInfo,
+    decodedParams: string[]
+  ) => {
+    const platform = await getPlatform(chain)
+    const newTokenAddress = transaction.target
+    const { abi: newTokenAbi } = await getContractNameAndAbiFromFile(chain, newTokenAddress)
+    const newTokenInstance = new Contract(newTokenAddress, newTokenAbi, customProvider(chain))
+    const { symbol: newTokenSymbol } = await getContractSymbolAndDecimalsFromFile(
+      newTokenAddress,
+      newTokenInstance,
+      chain
+    )
+    const legacyTokenAddress = await newTokenInstance.callStatic.legacyRepToken()
+    const legacyTokenLink = await getFormattedTokenNameWithLink(chain, legacyTokenAddress)
+    return `\n\nMigrate the balance of legacy reputation token ${legacyTokenLink} to new reputation token [${newTokenSymbol}](https://${platform}/address/${transaction.target}).`
+  },
 }
