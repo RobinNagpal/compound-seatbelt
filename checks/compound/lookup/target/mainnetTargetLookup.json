@@ -2276,7 +2276,7 @@
     "functions": {
       "migrateFromLegacyReputationToken()": {
         "description": "migrateFromLegacyReputationToken()",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20.migrateFromLegacyReputationToken()",
         "proposals": {
           "138": []
         }
