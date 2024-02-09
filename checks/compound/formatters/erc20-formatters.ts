@@ -6,7 +6,6 @@ import {
   calculateDifferenceOfDecimals,
   defactor,
   getContractSymbolAndDecimalsFromFile,
-  getFormatCompTokens,
   getFormattedTokenNameWithLink,
   getFormattedTokenWithLink,
   getPercentageForTokenFactor,
@@ -157,6 +156,10 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
 
     const totalReservesNew = calculateDifferenceOfDecimals(totalReservesFormatted, reduceValue)
 
-    return `\n\nReduce reserves of [${cTokenSymbol}](https://${platform}/address/${cTokenAddress}) by ${reduceValue} [${assetSymbol}](https://${platform}/address/${underlyingAssetAddress}). Remaining total reserves would be ${totalReservesNew}`
+    return `\n\nReduce reserves of [${cTokenSymbol}](https://${platform}/address/${cTokenAddress}) by ${reduceValue.toFixed(
+      2
+    )} [${assetSymbol}](https://${platform}/address/${underlyingAssetAddress}). Remaining total reserves would be ${totalReservesNew.toFixed(
+      2
+    )}`
   },
 }
