@@ -1,5 +1,5 @@
 import { BigNumber } from '@ethersproject/bignumber'
-import { Contract } from 'ethers'
+import { Contract, ethers } from 'ethers'
 import fs from 'fs'
 import { CometChains, SymbolAndDecimalsLookupData } from '../compound-types'
 import { customProvider } from './../../../utils/clients/ethers'
@@ -65,6 +65,16 @@ export function getPlatform(chain: CometChains) {
   }
 }
 
+async function getSymbol(instance: Contract) {
+  const symbol = await instance.callStatic.symbol()
+
+  if (symbol.length === 66 && symbol.slice(0, 2) === '0x') {
+    return ethers.utils.parseBytes32String(symbol)
+  } else {
+    return symbol
+  }
+}
+
 export async function getContractSymbolAndDecimalsFromFile(address: string, instance: Contract, chain: CometChains) {
   const addr = address.toLowerCase()
   let lookupData: SymbolAndDecimalsLookupData = {}
@@ -76,7 +86,7 @@ export async function getContractSymbolAndDecimalsFromFile(address: string, inst
   }
 
   lookupData[addr] ||= {
-    symbol: await instance.callStatic.symbol(),
+    symbol: await getSymbol(instance),
     decimals: Number(await instance.callStatic.decimals()).toString(),
   }
 
