@@ -241,6 +241,15 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
       transaction.target
     }). Previous value was **${prevValue}** and ${getChangeText(changeInSpeed)}.`
   },
+  '_supportMarket(address)': async (
+    chain: CometChains,
+    transaction: ExecuteTransactionInfo,
+    decodedParams: string[]
+  ) => {
+    const marketLink = await getFormattedTokenNameWithLink(chain, decodedParams[0])
+
+    return `\n\nSupport ${marketLink} on Compound.`
+  },
 }
 
 function getFormattedCompSpeeds(speedValue: BigNumber | string) {
