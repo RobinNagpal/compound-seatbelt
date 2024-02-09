@@ -886,7 +886,7 @@
       },
       "redeem(uint256)": {
         "description": "redeem(uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20.redeem(uint256)",
         "proposals": {
           "138": [
             "3347050774458"
@@ -905,7 +905,7 @@
     "functions": {
       "approve(address,uint256)": {
         "description": "approve(address,uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20.approve(address,uint256)",
         "proposals": {
           "59": [
             "0x0634ca1D878a050eB525ed08852Cc3BaD7f5a1DC",
@@ -1615,7 +1615,7 @@
       },
       "redeem(uint256)": {
         "description": "redeem(uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20.redeem(uint256)",
         "proposals": {
           "138": [
             "9087425872149"
@@ -2223,7 +2223,7 @@
     "functions": {
       "approve(address,uint256)": {
         "description": "approve(address,uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20.approve(address,uint256)",
         "proposals": {
           "138": [
             "0xBda109309f9FafA6Dd6A9CB9f1Df4085B27Ee8eF",
@@ -2258,7 +2258,7 @@
     "functions": {
       "approve(address,uint256)": {
         "description": "approve(address,uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20.approve(address,uint256)",
         "proposals": {
           "138": [
             "0x221657776846890989a759BA2973e427DfF5C9bB",
@@ -2598,7 +2598,7 @@
     "functions": {
       "approve(address,uint256)": {
         "description": "approve(address,uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20.approve(address,uint256)",
         "proposals": {
           "187": [
             "0x3D6eEf6A92b15361697698695334E98C5db91D6b",
@@ -2627,7 +2627,7 @@
     "functions": {
       "approve(address,uint256)": {
         "description": "approve(address,uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20.approve(address,uint256)",
         "proposals": {
           "187": [
             "0x3D6eEf6A92b15361697698695334E98C5db91D6b",
