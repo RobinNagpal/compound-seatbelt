@@ -4,7 +4,7 @@
     "functions": {
       "_setVotingDelay(uint256)": {
         "description": "_setVotingDelay(uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "GovernorBravo._setVotingDelay(uint256)",
         "proposals": {
           "43": [
             "13140"
@@ -13,7 +13,7 @@
       },
       "_setVotingPeriod(uint256)": {
         "description": "_setVotingPeriod(uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "GovernorBravo._setVotingPeriod(uint256)",
         "proposals": {
           "43": [
             "19710"
@@ -22,7 +22,7 @@
       },
       "_setProposalThreshold(uint256)": {
         "description": "_setProposalThreshold(uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "GovernorBravo._setProposalThreshold(uint256)",
         "proposals": {
           "52": [
             "65000000000000000000000"
@@ -37,7 +37,7 @@
       },
       "_setWhitelistGuardian(address)": {
         "description": "_setWhitelistGuardian(address)",
-        "transactionFormatter": "",
+        "transactionFormatter": "GovernorBravo._setWhitelistGuardian(address)",
         "proposals": {
           "60": [
             "0xbbf3f1421D886E9b2c5D716B5192aC998af2012c"
@@ -58,7 +58,7 @@
     "functions": {
       "_setReserveFactor(uint256)": {
         "description": "_setReserveFactor(uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20._setReserveFactor(uint256)",
         "proposals": {
           "44": [
             "1000000000000000000"
@@ -67,7 +67,7 @@
       },
       "_reduceReserves(uint256)": {
         "description": "_reduceReserves(uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20._reduceReserves(uint256)",
         "proposals": {
           "138": [
             "708880250"
@@ -85,7 +85,7 @@
     "functions": {
       "_setBorrowPaused(address,bool)": {
         "description": "_setBorrowPaused(address,bool)",
-        "transactionFormatter": "",
+        "transactionFormatter": "Comptroller._setBorrowPaused(address,bool)",
         "proposals": {
           "44": [
             "0xC11b1268C1A384e55C48c2391d8d480264A3A7F4",
@@ -99,7 +99,7 @@
       },
       "_setMintPaused(address,bool)": {
         "description": "_setMintPaused(address,bool)",
-        "transactionFormatter": "",
+        "transactionFormatter": "Comptroller._setMintPaused(address,bool)",
         "proposals": {
           "44": [
             "0xC11b1268C1A384e55C48c2391d8d480264A3A7F4",
@@ -284,7 +284,7 @@
       },
       "_supportMarket(address)": {
         "description": "_supportMarket(address)",
-        "transactionFormatter": "",
+        "transactionFormatter": "Comptroller._supportMarket(address)",
         "proposals": {
           "45": [
             "0x12392F67bdf24faE0AF363c24aC620a2f67DAd86"
@@ -381,7 +381,7 @@
       },
       "_setContributorCompSpeed(address,uint256)": {
         "description": "_setContributorCompSpeed(address,uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "Comptroller._setContributorCompSpeed(address,uint256)",
         "proposals": {
           "51": [
             "0x9B68c14e936104e9a7a24c712BEecdc220002984",
@@ -485,7 +485,7 @@
       },
       "_setPauseGuardian(address)": {
         "description": "_setPauseGuardian(address)",
-        "transactionFormatter": "",
+        "transactionFormatter": "Comptroller._setPauseGuardian(address)",
         "proposals": {
           "57": [
             "0xbbf3f1421D886E9b2c5D716B5192aC998af2012c"
@@ -600,7 +600,7 @@
       },
       "_setSeizePaused(bool)": {
         "description": "_setSeizePaused(bool)",
-        "transactionFormatter": "",
+        "transactionFormatter": "Comptroller._setSeizePaused(bool)",
         "proposals": {
           "120": [
             "true"
@@ -718,7 +718,7 @@
     "functions": {
       "_setReserveFactor(uint256)": {
         "description": "_setReserveFactor(uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20._setReserveFactor(uint256)",
         "proposals": {
           "45": [
             "75000000000000000"
@@ -739,7 +739,7 @@
     "functions": {
       "_setReserveFactor(uint256)": {
         "description": "_setReserveFactor(uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20._setReserveFactor(uint256)",
         "proposals": {
           "46": [
             "250000000000000000"
@@ -777,7 +777,7 @@
     "functions": {
       "_setReserveFactor(uint256)": {
         "description": "_setReserveFactor(uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20._setReserveFactor(uint256)",
         "proposals": {
           "53": [
             "250000000000000000"
@@ -794,7 +794,7 @@
     "functions": {
       "_setReserveFactor(uint256)": {
         "description": "_setReserveFactor(uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20._setReserveFactor(uint256)",
         "proposals": {
           "54": [
             "250000000000000000"
@@ -811,7 +811,7 @@
     "functions": {
       "_setReserveFactor(uint256)": {
         "description": "_setReserveFactor(uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20._setReserveFactor(uint256)",
         "proposals": {
           "54": [
             "250000000000000000"
@@ -828,7 +828,7 @@
     "functions": {
       "_setReserveFactor(uint256)": {
         "description": "_setReserveFactor(uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20._setReserveFactor(uint256)",
         "proposals": {
           "54": [
             "250000000000000000"
@@ -868,7 +868,7 @@
     "functions": {
       "_reduceReserves(uint256)": {
         "description": "_reduceReserves(uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20._reduceReserves(uint256)",
         "proposals": {
           "59": [
             "6817797961061626144874170"
@@ -877,7 +877,7 @@
       },
       "_setReserveFactor(uint256)": {
         "description": "_setReserveFactor(uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20._setReserveFactor(uint256)",
         "proposals": {
           "109": [
             "100000000000000000"
@@ -886,7 +886,7 @@
       },
       "redeem(uint256)": {
         "description": "redeem(uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20.redeem(uint256)",
         "proposals": {
           "138": [
             "3347050774458"
@@ -905,7 +905,7 @@
     "functions": {
       "approve(address,uint256)": {
         "description": "approve(address,uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20.approve(address,uint256)",
         "proposals": {
           "59": [
             "0x0634ca1D878a050eB525ed08852Cc3BaD7f5a1DC",
@@ -1021,7 +1021,7 @@
     "functions": {
       "_setReserveFactor(uint256)": {
         "description": "_setReserveFactor(uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20._setReserveFactor(uint256)",
         "proposals": {
           "73": [
             "250000000000000000"
@@ -1319,7 +1319,7 @@
     "functions": {
       "_setReserveFactor(uint256)": {
         "description": "_setReserveFactor(uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20._setReserveFactor(uint256)",
         "proposals": {
           "83": [
             "250000000000000000"
@@ -1334,7 +1334,7 @@
       },
       "_reduceReserves(uint256)": {
         "description": "_reduceReserves(uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20._reduceReserves(uint256)",
         "proposals": {
           "138": [
             "6324340499474616104642"
@@ -1354,7 +1354,7 @@
     "functions": {
       "_setReserveFactor(uint256)": {
         "description": "_setReserveFactor(uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20._setReserveFactor(uint256)",
         "proposals": {
           "86": [
             "250000000000000000"
@@ -1371,7 +1371,7 @@
     "functions": {
       "_reduceReserves(uint256)": {
         "description": "_reduceReserves(uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20._reduceReserves(uint256)",
         "proposals": {
           "104": [
             "79764360000"
@@ -1472,7 +1472,7 @@
     "functions": {
       "_setReserveFactor(uint256)": {
         "description": "_setReserveFactor(uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20._setReserveFactor(uint256)",
         "proposals": {
           "109": [
             "150000000000000000"
@@ -1481,7 +1481,7 @@
       },
       "_setInterestRateModel(address)": {
         "description": "_setInterestRateModel(address)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20._setInterestRateModel(address)",
         "proposals": {
           "122": [
             "0xF9583618169920c544Ec89795a346F487cB5a227"
@@ -1499,7 +1499,7 @@
     "functions": {
       "_setReserveFactor(uint256)": {
         "description": "_setReserveFactor(uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20._setReserveFactor(uint256)",
         "proposals": {
           "109": [
             "150000000000000000"
@@ -1516,7 +1516,7 @@
     "functions": {
       "_setReserveFactor(uint256)": {
         "description": "_setReserveFactor(uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20._setReserveFactor(uint256)",
         "proposals": {
           "109": [
             "37500000000000000"
@@ -1533,7 +1533,7 @@
     "functions": {
       "_setReserveFactor(uint256)": {
         "description": "_setReserveFactor(uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20._setReserveFactor(uint256)",
         "proposals": {
           "109": [
             "200000000000000000"
@@ -1542,7 +1542,7 @@
       },
       "_reduceReserves(uint256)": {
         "description": "_reduceReserves(uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20._reduceReserves(uint256)",
         "proposals": {
           "187": [
             "555555000000000000000000"
@@ -1560,7 +1560,7 @@
     "functions": {
       "_setReserveFactor(uint256)": {
         "description": "_setReserveFactor(uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20._setReserveFactor(uint256)",
         "proposals": {
           "109": [
             "200000000000000000"
@@ -1569,7 +1569,7 @@
       },
       "_reduceReserves(uint256)": {
         "description": "_reduceReserves(uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20._reduceReserves(uint256)",
         "proposals": {
           "187": [
             "1694915000000000000000000"
@@ -1587,7 +1587,7 @@
     "functions": {
       "_setReserveFactor(uint256)": {
         "description": "_setReserveFactor(uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20._setReserveFactor(uint256)",
         "proposals": {
           "109": [
             "200000000000000000"
@@ -1606,7 +1606,7 @@
       },
       "_setInterestRateModel(address)": {
         "description": "_setInterestRateModel(address)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20._setInterestRateModel(address)",
         "proposals": {
           "130": [
             "0xd956188795ca6F4A74092ddca33E0Ea4cA3a1395"
@@ -1615,7 +1615,7 @@
       },
       "redeem(uint256)": {
         "description": "redeem(uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20.redeem(uint256)",
         "proposals": {
           "138": [
             "9087425872149"
@@ -2172,7 +2172,7 @@
     "functions": {
       "_setInterestRateModel(address)": {
         "description": "_setInterestRateModel(address)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20._setInterestRateModel(address)",
         "proposals": {
           "130": [
             "0xd88B94128Ff2B8Cf2d7886cd1C1E46757418cA2A"
@@ -2189,7 +2189,7 @@
     "functions": {
       "_reduceReserves(uint256)": {
         "description": "_reduceReserves(uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20._reduceReserves(uint256)",
         "proposals": {
           "138": [
             "515499155166335008592"
@@ -2206,7 +2206,7 @@
     "functions": {
       "_reduceReserves(uint256)": {
         "description": "_reduceReserves(uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20._reduceReserves(uint256)",
         "proposals": {
           "138": [
             "26684572352947457780274"
@@ -2223,7 +2223,7 @@
     "functions": {
       "approve(address,uint256)": {
         "description": "approve(address,uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20.approve(address,uint256)",
         "proposals": {
           "138": [
             "0xBda109309f9FafA6Dd6A9CB9f1Df4085B27Ee8eF",
@@ -2258,7 +2258,7 @@
     "functions": {
       "approve(address,uint256)": {
         "description": "approve(address,uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20.approve(address,uint256)",
         "proposals": {
           "138": [
             "0x221657776846890989a759BA2973e427DfF5C9bB",
@@ -2276,7 +2276,7 @@
     "functions": {
       "migrateFromLegacyReputationToken()": {
         "description": "migrateFromLegacyReputationToken()",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20.migrateFromLegacyReputationToken()",
         "proposals": {
           "138": []
         }
@@ -2598,7 +2598,7 @@
     "functions": {
       "approve(address,uint256)": {
         "description": "approve(address,uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20.approve(address,uint256)",
         "proposals": {
           "187": [
             "0x3D6eEf6A92b15361697698695334E98C5db91D6b",
@@ -2627,7 +2627,7 @@
     "functions": {
       "approve(address,uint256)": {
         "description": "approve(address,uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20.approve(address,uint256)",
         "proposals": {
           "187": [
             "0x3D6eEf6A92b15361697698695334E98C5db91D6b",

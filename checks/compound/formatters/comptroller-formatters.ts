@@ -43,6 +43,9 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     transaction: ExecuteTransactionInfo,
     decodedParams: string[]
   ) => {
+    if (decodedParams.length === 0 || decodedParams.some((param) => param === '')) {
+      return 'No data provided for Comp speeds.'
+    }
     const addresses = decodedParams[0].split(',')
     const borrowSpeeds = decodedParams[1].split(',')
     const supplySpeeds = decodedParams[2].split(',')
@@ -144,28 +147,48 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     transaction: ExecuteTransactionInfo,
     decodedParams: string[]
   ) => {
+    if (decodedParams.length === 0 || decodedParams.some((param) => param === '')) {
+      return 'No data provided for Borrow Caps.'
+    }
     const platform = await getPlatform(chain)
 
-    const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
-    const currentInstance = new Contract(decodedParams[0], abi, customProvider(chain))
-    const { symbol, decimals } = await getContractSymbolAndDecimalsFromFile(decodedParams[0], currentInstance, chain)
+    const addresses = decodedParams[0].split(',')
+    const values = decodedParams[1].split(',')
 
-    const { abi: contractAbi, contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
-    const contractInstance = new Contract(transaction.target, contractAbi, customProvider(chain))
+    let finalText = ''
 
-    const prevValue = defactor(
-      await contractInstance.callStatic.borrowCaps(decodedParams[0]),
-      parseFloat(`1e${decimals}`)
-    )
-    const newValue = defactor(BigInt(decodedParams[1]), parseFloat(`1e${decimals}`))
+    for (let i = 0; i < addresses.length; i++) {
+      const currentAddress = addresses[i]
+      const currentValue = values[i]
 
-    const changeInCaps = calculateDifferenceOfDecimals(newValue, prevValue)
+      const { abi } = await getContractNameAndAbiFromFile(chain, currentAddress)
+      const cTokenInstance = new Contract(currentAddress, abi, customProvider(chain))
+      const { symbol } = await getContractSymbolAndDecimalsFromFile(currentAddress, cTokenInstance, chain)
+      const underlyingAssetAddress = await cTokenInstance.callStatic.underlying()
+      const { abi: assetAbi } = await getContractNameAndAbiFromFile(chain, underlyingAssetAddress)
+      const assetInstance = new Contract(underlyingAssetAddress, assetAbi, customProvider(chain))
+      const { decimals: assetDecimals } = await getContractSymbolAndDecimalsFromFile(
+        underlyingAssetAddress,
+        assetInstance,
+        chain
+      )
+      const { abi: contractAbi, contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
+      const contractInstance = new Contract(transaction.target, contractAbi, customProvider(chain))
 
-    return `\n\nSet MarketBorrowCaps of [${symbol}](https://${platform}/address/${
-      decodedParams[0]
-    }) to ${newValue} via [${contractName}](https://${platform}/address/${
-      transaction.target
-    }). Previous value was ${prevValue} and ${getChangeText(changeInCaps)}.`
+      const prevValue = defactor(
+        await contractInstance.callStatic.borrowCaps(currentAddress),
+        parseFloat(`1e${assetDecimals}`)
+      )
+      const newValue = defactor(BigInt(currentValue), parseFloat(`1e${assetDecimals}`))
+
+      const changeInCaps = calculateDifferenceOfDecimals(newValue, prevValue)
+
+      finalText += `\n\nSet MarketBorrowCaps of [${symbol}](https://${platform}/address/${currentAddress}) to ${newValue} via [${contractName}](https://${platform}/address/${
+        transaction.target
+      }). Previous value was ${prevValue} and ${getChangeText(changeInCaps)}.`
+    }
+
+    return finalText
   },
   '_setPriceOracle(address)': async (
     chain: CometChains,
@@ -181,6 +204,86 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     const newValue = decodedParams[0]
 
     return `\n\nSet new price oracle to [${newValue}](https://${platform}/address/${newValue}). Previous oracle was [${prevValue}](https://${platform}/address/${prevValue}).`
+  },
+  '_setMintPaused(address,bool)': async (
+    chain: CometChains,
+    transaction: ExecuteTransactionInfo,
+    decodedParams: string[]
+  ) => {
+    const platform = await getPlatform(chain)
+
+    const coinLink = await getFormattedTokenNameWithLink(chain, decodedParams[0])
+    const { contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
+
+    return `\n\n${
+      decodedParams[1] === 'true' ? 'Pause' : 'Resume'
+    } minting for ${coinLink} via [${contractName}](https://${platform}/address/${transaction.target}).`
+  },
+  '_setBorrowPaused(address,bool)': async (
+    chain: CometChains,
+    transaction: ExecuteTransactionInfo,
+    decodedParams: string[]
+  ) => {
+    const platform = await getPlatform(chain)
+
+    const coinLink = await getFormattedTokenNameWithLink(chain, decodedParams[0])
+    const { contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
+
+    return `\n\n${
+      decodedParams[1] === 'true' ? 'Pause' : 'Resume'
+    } ${coinLink} borrowing via [${contractName}](https://${platform}/address/${transaction.target}).`
+  },
+  '_setSeizePaused(bool)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
+    const platform = await getPlatform(chain)
+
+    const { contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
+
+    return `\n\n${
+      decodedParams[0] === 'true' ? 'Pause' : 'Unpause'
+    } market liquidation via [${contractName}](https://${platform}/address/${transaction.target}).`
+  },
+  '_setContributorCompSpeed(address,uint256)': async (
+    chain: CometChains,
+    transaction: ExecuteTransactionInfo,
+    decodedParams: string[]
+  ) => {
+    const platform = await getPlatform(chain)
+
+    const { abi, contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
+
+    const targetInstance = new Contract(transaction.target, abi, customProvider(chain))
+
+    const prevValue = await targetInstance.callStatic.compContributorSpeeds(decodedParams[0])
+    const newValue = parseFloat(decodedParams[1])
+
+    const changeInSpeed = calculateDifferenceOfDecimals(newValue, prevValue)
+
+    return `\n\nSet ContributorCompSpeed for [${decodedParams[0]}](https://${platform}/address/${
+      decodedParams[0]
+    }) to **${newValue}** via [${contractName}](https://${platform}/address/${
+      transaction.target
+    }). Previous value was **${prevValue}** and ${getChangeText(changeInSpeed)}.`
+  },
+  '_supportMarket(address)': async (
+    chain: CometChains,
+    transaction: ExecuteTransactionInfo,
+    decodedParams: string[]
+  ) => {
+    const marketLink = await getFormattedTokenNameWithLink(chain, decodedParams[0])
+
+    return `\n\nSupport ${marketLink} on Compound.`
+  },
+  '_setPauseGuardian(address)': async (
+    chain: CometChains,
+    transaction: ExecuteTransactionInfo,
+    decodedParams: string[]
+  ) => {
+    const platform = await getPlatform(chain)
+
+    const { contractName: targetContractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
+    const { contractName: guardianContractName } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
+
+    return `\n\nSet the Pause Guardian to [${guardianContractName}](https://${platform}/address/${decodedParams[0]}) via [${targetContractName}](https://${platform}/address/${transaction.target}).`
   },
 }
 
