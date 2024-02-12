@@ -5,6 +5,7 @@ import { configuratorFormatters } from './formatters/configurator-formatters'
 import { ERC20Formatters } from './formatters/erc20-formatters'
 import { bridgeFormatters } from './formatters/bridge-formatters'
 import { governorBravoFormatters } from './formatters/governor-bravo-formatters'
+import { L1Formatters } from './formatters/L1-formatters'
 
 export const formattersLookup: {
   [contractName: string]: {
@@ -17,4 +18,5 @@ export const formattersLookup: {
   ERC20: ERC20Formatters,
   BridgeFormatters: bridgeFormatters,
   GovernorBravo: governorBravoFormatters,
+  L1Formatters: L1Formatters,
 }
