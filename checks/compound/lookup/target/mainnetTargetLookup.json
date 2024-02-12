@@ -2460,7 +2460,7 @@
     "functions": {
       "outboundTransferCustomRefund(address,address,address,uint256,uint256,uint256,bytes)": {
         "description": "outboundTransferCustomRefund(address,address,address,uint256,uint256,uint256,bytes)",
-        "transactionFormatter": "L1Formatters.outboundTransferCustomRefund(address,address,address,uint256,uint256,uint256,bytes)",
+        "transactionFormatter": "BridgeFormatters.outboundTransferCustomRefund(address,address,address,uint256,uint256,uint256,bytes)",
         "proposals": {
           "160": [
             "0xc00e94Cb662C3520282E6f5717214004A7f26888",

@@ -377,7 +377,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     const compInstance = new Contract(decodedParams[1], compAbi, customProvider(chain))
     const { symbol } = await getContractSymbolAndDecimalsFromFile(decodedParams[1], compInstance, chain)
 
-    return `\n\nSet reward token for market **[${tokenSymbol}](https://${platform}/address/${baseToken})** as **[${symbol}](https://${platform}/address/${decodedParams[1]})**`
+    return `\n\nSet reward token for market **[${tokenSymbol}](https://${platform}/address/${baseToken})** as **[${symbol}](https://${platform}/address/${decodedParams[1]})**.`
   },
   'setFactory(address,address)': async (
     chain: CometChains,
