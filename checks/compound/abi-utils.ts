@@ -50,7 +50,6 @@ async function getContractNameAndAbi(chain: CometChains, address: string): Promi
       contractName: implResult.ContractName,
       abi: abi,
     }
-    console.log(`Found contract name and ABI for address: ${address} on chain: ${chain} :`, contractNameAndAbi)
     return contractNameAndAbi
   } else {
     const abi = contractResult.ABI
@@ -62,7 +61,6 @@ async function getContractNameAndAbi(chain: CometChains, address: string): Promi
       contractName: contractResult.ContractName,
       abi: abi,
     }
-    console.log(`Found contract name and ABI for address: ${address} on chain: ${chain} :`, contractNameAndAbi)
     return contractNameAndAbi
   }
 }
@@ -112,7 +110,6 @@ export async function getFunctionFragmentAndDecodedCalldata(
     } else {
       fun = iface.getFunction(calldata.slice(0, 10))
       const data = calldata.slice(10)
-      console.error('data:', data)
       decodedCalldata = iface._decodeParams(fun.inputs, `0x${data}`)
     }
   } catch (e) {

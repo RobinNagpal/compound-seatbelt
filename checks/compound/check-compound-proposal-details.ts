@@ -61,14 +61,12 @@ async function updateLookupFile(
       const l2TransactionsInfo = await getDecodedBytesForChain(cometChain, proposalId, transactionInfo)
       const l2CheckResults = await updateLookupFile(cometChain, proposalId, l2TransactionsInfo)
       const l2Messages = nestCheckResultsForChain(cometChain, l2CheckResults)
-      console.log('l2Messages:', l2Messages)
       pushMessageToCheckResults(checkResults, { info: l2Messages })
       continue
     }
 
     await storeTargetInfo(chain, proposalId, lookupData, transactionInfo)
     const message = await getTransactionMessages(chain, proposalId, lookupData, transactionInfo)
-    console.log('message:', message)
     pushMessageToCheckResults(checkResults, message)
   }
 
@@ -136,12 +134,8 @@ async function storeTargetInfo(
 
     if (!targetLookupData[target].proposals.includes(proposalId)) {
       targetLookupData[target].proposals.push(proposalId)
-      console.log('Added proposalID to proposals array')
-    } else {
-      console.log('ProposalID already exists in proposals array')
     }
 
-    console.log(`Decoded target: ${target} signature: ${functionSignature} calldata:${decodedCalldata}`)
     targetLookupData[target].functions[functionSignature].proposals[proposalId.toString()] = decodedCalldata.map(
       (data) => data.toString()
     )

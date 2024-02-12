@@ -1,4 +1,6 @@
+import { hexZeroPad, hexStripZeros } from '@ethersproject/bytes'
 import { Contract } from 'ethers'
+
 import { customProvider } from '../../../utils/clients/ethers'
 import { getContractNameAndAbiFromFile } from '../abi-utils'
 import { CometChains, ExecuteTransactionInfo, TransactionFormatter } from '../compound-types'
@@ -12,6 +14,9 @@ import {
   getPlatform,
   getRecipientNameWithLink,
 } from './helper'
+
+// @ts-ignore
+import namehash from '@ensdomains/eth-ens-namehash'
 
 export const ERC20Formatters: { [functionName: string]: TransactionFormatter } = {
   'transfer(address,uint256)': async (
@@ -69,11 +74,13 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
       chain
     )
 
+    const normalized = hexStripZeros(decodedParams[2])
+
     const amount = defactor(BigInt(decodedParams[0]), parseFloat(`1e${decimals}`))
 
     return `\n\nSet DepositforBurn of ${contractName} for the Burn contract [${tokenSymbol}](https://${platform}/address/${burnContractAddress}) with amount ${amount.toFixed(
       2
-    )}, destination domain ${decodedParams[1]} and the Mint recipient ${decodedParams[2]}`
+    )}, destination domain ${decodedParams[1]} and the Mint recipient ${normalized}`
   },
   'setText(bytes32,string,string)': async (
     chain: CometChains,
