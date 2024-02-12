@@ -11,6 +11,7 @@ import {
 } from './compound-types'
 import { getDecodedBytesForChain, l2Bridges } from './l2-utils'
 import { formattersLookup } from './transaction-formatter'
+import { defactor } from './formatters/helper'
 // @ts-ignore
 const fetchUrl = mftch.default
 
@@ -61,12 +62,14 @@ async function updateLookupFile(
       const l2TransactionsInfo = await getDecodedBytesForChain(cometChain, proposalId, transactionInfo)
       const l2CheckResults = await updateLookupFile(cometChain, proposalId, l2TransactionsInfo)
       const l2Messages = nestCheckResultsForChain(cometChain, l2CheckResults)
+      console.log('l2Messages:', l2Messages)
       pushMessageToCheckResults(checkResults, { info: l2Messages })
       continue
     }
 
     await storeTargetInfo(chain, proposalId, lookupData, transactionInfo)
     const message = await getTransactionMessages(chain, proposalId, lookupData, transactionInfo)
+    console.log('message:', message)
     pushMessageToCheckResults(checkResults, message)
   }
 
@@ -101,7 +104,7 @@ async function storeTargetInfo(
 ) {
   const { target, value, signature, calldata } = transactionInfo
   if (value?.toString() && value?.toString() !== '0') {
-    console.error('Error Error Error Error', value)
+    console.error('Error Error Error Error in storeTargetInfo', value)
     return
   }
   if (isRemovedFunction(target, signature)) {
@@ -135,7 +138,7 @@ async function storeTargetInfo(
     if (!targetLookupData[target].proposals.includes(proposalId)) {
       targetLookupData[target].proposals.push(proposalId)
     }
-
+    console.log(`Decoded target: ${target} signature: ${functionSignature} calldata:${decodedCalldata}`)
     targetLookupData[target].functions[functionSignature].proposals[proposalId.toString()] = decodedCalldata.map(
       (data) => data.toString()
     )
@@ -153,8 +156,8 @@ async function getTransactionMessages(
 ): Promise<TransactionMessage> {
   const { target, value, signature, calldata } = transactionInfo
   if (value?.toString() && value?.toString() !== '0') {
-    console.error('Error Error Error Error', value)
-    return { error: 'Error Error Error Error' }
+    console.error('Error Error Error Error in getTransactionMessages', value)
+    return { info: `\n\n${defactor(value)} ETH to ${target}` }
   }
   if (isRemovedFunction(target, signature)) {
     console.log(`Function ${signature} is removed from ${target} contract`)
