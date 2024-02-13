@@ -1234,7 +1234,7 @@
     "functions": {
       "createStream(address,uint256,address,uint256,uint256)": {
         "description": "createStream(address,uint256,address,uint256,uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "BridgeFormatters.createStream(address,uint256,address,uint256,uint256)",
         "proposals": {
           "79": [
             "0x57C970568668087c05352456a3F59B58B0330066",
