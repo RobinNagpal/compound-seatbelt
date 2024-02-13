@@ -62,14 +62,12 @@ async function updateLookupFile(
       const l2TransactionsInfo = await getDecodedBytesForChain(cometChain, proposalId, transactionInfo)
       const l2CheckResults = await updateLookupFile(cometChain, proposalId, l2TransactionsInfo)
       const l2Messages = nestCheckResultsForChain(cometChain, l2CheckResults)
-      console.log('l2Messages:', l2Messages)
       pushMessageToCheckResults(checkResults, { info: l2Messages })
       continue
     }
 
     await storeTargetInfo(chain, proposalId, lookupData, transactionInfo)
     const message = await getTransactionMessages(chain, proposalId, lookupData, transactionInfo)
-    console.log('message:', message)
     pushMessageToCheckResults(checkResults, message)
   }
 
@@ -89,8 +87,9 @@ function pushMessageToCheckResults(checkResults: CheckResult, message: Transacti
 }
 
 function nestCheckResultsForChain(chain: CometChains, checkResult: CheckResult): string {
+  const capitalizedChain = `${chain.charAt(0).toUpperCase()}${chain.slice(1)}`
   return `
-### ${chain} Updates
+### ${capitalizedChain} Updates
   
 ${checkResult.info.join('\n')}
 `
@@ -104,11 +103,9 @@ async function storeTargetInfo(
 ) {
   const { target, value, signature, calldata } = transactionInfo
   if (value?.toString() && value?.toString() !== '0') {
-    console.error('Error Error Error Error in storeTargetInfo', value)
     return
   }
   if (isRemovedFunction(target, signature)) {
-    console.log(`Function ${signature} is removed from ${target} contract`)
     return
   }
   try {
@@ -138,7 +135,6 @@ async function storeTargetInfo(
     if (!targetLookupData[target].proposals.includes(proposalId)) {
       targetLookupData[target].proposals.push(proposalId)
     }
-    console.log(`Decoded target: ${target} signature: ${functionSignature} calldata:${decodedCalldata}`)
     targetLookupData[target].functions[functionSignature].proposals[proposalId.toString()] = decodedCalldata.map(
       (data) => data.toString()
     )
@@ -156,12 +152,16 @@ async function getTransactionMessages(
 ): Promise<TransactionMessage> {
   const { target, value, signature, calldata } = transactionInfo
   if (value?.toString() && value?.toString() !== '0') {
-    console.error('Error Error Error Error in getTransactionMessages', value)
-    return { info: `\n\n${defactor(value)} ETH to ${target}` }
+    if (signature == '') {
+      return { info: `\n\nTransfer ${defactor(value)} ETH to ${target}` }
+    } else {
+      return {
+        info: `\n\n${target}.${signature.split('(')[0]}(${calldata})\n\nTransfer ${defactor(value)} ETH to ${target}`,
+      }
+    }
   }
   if (isRemovedFunction(target, signature)) {
-    console.log(`Function ${signature} is removed from ${target} contract`)
-    return { error: `Function ${signature} is removed from ${target} contract` }
+    return { info: `Function ${signature} is removed from ${target} contract` }
   }
 
   const { fun, decodedCalldata } = await getFunctionFragmentAndDecodedCalldata(proposalId, chain, transactionInfo)
