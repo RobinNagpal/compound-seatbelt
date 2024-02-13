@@ -91,11 +91,10 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
         prevFormattedValue: string,
         newFormattedValue: string
       ) => {
-        const change = changeInSpeed
-          ? `It's now getting ${changeInSpeed > 0 ? 'increased' : 'decreased'} by **${changeInSpeed}%**`
-          : 'It remains the same.'
-
-        return `${type} speed of ${symbol} to ${newFormattedValue} ${compSymbol}/block which was previously ${prevFormattedValue} ${compSymbol}/block (${change}).`
+        return `${type} speed of ${symbol} to ${newFormattedValue} ${compSymbol}/block which was previously ${prevFormattedValue} ${compSymbol}/block ${getChangeText(
+          changeInSpeed,
+          true
+        )}`
       }
 
       const supplySpeedText = changeInSpeedsText(
@@ -185,7 +184,7 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
 
       finalText += `\n\nSet MarketBorrowCaps of [${symbol}](https://${platform}/address/${currentAddress}) to ${newValue} via [${contractName}](https://${platform}/address/${
         transaction.target
-      }). Previous value was ${prevValue} and ${getChangeText(changeInCaps)}.`
+      }). Previous value was ${prevValue} ${getChangeText(changeInCaps)}`
     }
 
     return finalText
@@ -262,7 +261,7 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
       decodedParams[0]
     }) to **${newValue}** via [${contractName}](https://${platform}/address/${
       transaction.target
-    }). Previous value was **${prevValue}** and ${getChangeText(changeInSpeed)}.`
+    }). Previous value was **${prevValue}** ${getChangeText(changeInSpeed)}`
   },
   '_supportMarket(address)': async (
     chain: CometChains,

@@ -39,16 +39,16 @@ async function getTextForChangeInInterestRate(
   const { symbol } = await getContractSymbolAndDecimalsFromFile(baseToken, baseTokenInstance, chain)
 
   const prevInterestRate = annualize(await getInterestRateFunction(currentCometInstance))
-  const previousRateInPercent = prevInterestRate * 100
+  const previousRateInPercent = parseFloat((prevInterestRate * 100).toPrecision(3))
 
   const newInterestRate = BigInt(decodedParams[1])
   const currentRateInPercent = defactor(newInterestRate) * 100
 
   const changeInRate = calculateDifferenceOfDecimals(currentRateInPercent, previousRateInPercent)
 
-  return `\n\nSet ${interestRateName} of [${symbol}](https://${platform}/address/${baseToken}) to ${currentRateInPercent}%. Previous value was ${previousRateInPercent}% and now it is getting ${
-    changeInRate > 0 ? 'increased' : 'decreased'
-  } by **${changeInRate}%**`
+  return `\n\nSet ${interestRateName} of [${symbol}](https://${platform}/address/${baseToken}) from ${previousRateInPercent} to ${currentRateInPercent} ${getChangeText(
+    changeInRate
+  )}`
 }
 
 async function getTextForChange(
@@ -72,9 +72,9 @@ async function getTextForChange(
 
   const changeInValues = calculateDifferenceOfDecimals(newValue, prevValue)
 
-  return `\n\nSet ${functionName} of [${symbol}](https://${platform}/address/${baseToken}) to ${newValue}%. Previous value was ${prevValue}% and now it is getting ${
-    changeInValues > 0 ? 'increased' : 'decreased'
-  } by **${changeInValues}%**`
+  return `\n\nSet ${functionName} of [${symbol}](https://${platform}/address/${baseToken}) from ${prevValue} to ${newValue} ${getChangeText(
+    changeInValues
+  )}`
 }
 
 export const configuratorFormatters: { [functionName: string]: TransactionFormatter } = {
@@ -287,7 +287,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       decodedParams[1]
     }) on [${baseTokenSymbol}](https://${platform}/address/${baseToken}) via [${contractName}](https://${platform}/address/${
       transaction.target
-    }) to ${newSupplyCap.toFixed(2)}. Previous value was ${prevSupplyCap.toFixed(2)} and ${getChangeText(
+    }) to ${newSupplyCap.toFixed(2)}. Previous value was ${prevSupplyCap.toFixed(2)} ${getChangeText(
       changeInSupplyCap
     )}`
   },
@@ -313,9 +313,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
 
     return `\n\nSet BaseBorrowMin of [${symbol}](https://${platform}/address/${
       decodedParams[0]
-    }) to ${newBaseBorrowMin}. Previous value was ${prevBaseBorrowMin} and now it is getting ${
-      changeInBaseBorrowMin > 0 ? 'increased' : 'decreased'
-    } by **${changeInBaseBorrowMin}**`
+    }) to ${newBaseBorrowMin}. Previous value was ${prevBaseBorrowMin} ${getChangeText(changeInBaseBorrowMin)}`
   },
   'addAsset(address,tuple)': async (
     chain: CometChains,
