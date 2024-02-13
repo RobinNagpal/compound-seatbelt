@@ -3,6 +3,7 @@ import { getContractNameAndAbiFromFile } from '../abi-utils'
 import { CometChains, ExecuteTransactionInfo, TransactionFormatter } from './../compound-types'
 import {
   defactor,
+  formatTimestamp,
   getContractSymbolAndDecimalsFromFile,
   getFormattedTokenWithLink,
   getPlatform,
@@ -47,5 +48,36 @@ export const bridgeFormatters: { [functionName: string]: TransactionFormatter } 
     return `\n\nBridge ${amount.toFixed(
       2
     )} [${tokenSymbol}](https://${platform}/address/${tokenAddress}) tokens over Arbitrum to ${recipientWithLink}.`
+  },
+  'createStream(address,uint256,address,uint256,uint256)': async (
+    chain: CometChains,
+    transaction: ExecuteTransactionInfo,
+    decodedParams: string[]
+  ) => {
+    const platform = await getPlatform(chain)
+    const senderAddress = transaction.target
+    const recipientAddress = decodedParams[0]
+    const { contractName: senderName } = await getContractNameAndAbiFromFile(chain, transaction.target)
+    const { abi: recipientAbi } = await getContractNameAndAbiFromFile(chain, recipientAddress)
+    const recipientInstance = new Contract(recipientAddress, recipientAbi, customProvider(chain))
+
+    const name = await recipientInstance.callStatic.NAME()
+
+    const tokenAddress = decodedParams[2]
+    const { abi: tokenAbi } = await getContractNameAndAbiFromFile(chain, tokenAddress)
+    const tokenInstance = new Contract(tokenAddress, tokenAbi, customProvider(chain))
+    const { symbol: tokenSymbol, decimals: tokenDecimals } = await getContractSymbolAndDecimalsFromFile(
+      tokenAddress,
+      tokenInstance,
+      chain
+    )
+
+    const amount = defactor(BigInt(decodedParams[1]), parseFloat(`1e${tokenDecimals}`))
+
+    return `\n\n[${senderName}](https://${platform}/address/${senderAddress}) create a stream to transfer **${amount.toFixed(
+      2
+    )} [${tokenSymbol}](https://${platform}/address/${tokenAddress})** to [${name}](https://${platform}/address/${recipientAddress}). The stream will start at ${formatTimestamp(
+      decodedParams[3]
+    )} and end at ${formatTimestamp(decodedParams[4])}.`
   },
 }
