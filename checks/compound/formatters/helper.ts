@@ -144,3 +144,23 @@ export function formatTimestamp(timestampString: string) {
   const date = new Date(timestamp * 1000)
   return date.toLocaleString()
 }
+
+export function getCriticalitySignForPercentages(change: number) {
+  if (change <= -30 || change >= 30) {
+    return '🛑'
+  } else if (change <= -15 || change >= 15) {
+    return '⚠️'
+  } else {
+    return ''
+  }
+}
+
+export function getCriticalitySignForValues(change: number, optimumChange: number) {
+  if (change <= -2 * optimumChange || change >= 2 * optimumChange) {
+    return '🛑'
+  } else if (change <= -optimumChange || change >= optimumChange) {
+    return '⚠️'
+  } else {
+    return ''
+  }
+}
