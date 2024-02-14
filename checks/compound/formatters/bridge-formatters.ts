@@ -58,10 +58,6 @@ export const bridgeFormatters: { [functionName: string]: TransactionFormatter } 
     const senderAddress = transaction.target
     const recipientAddress = decodedParams[0]
     const { contractName: senderName } = await getContractNameAndAbiFromFile(chain, transaction.target)
-    const { abi: recipientAbi } = await getContractNameAndAbiFromFile(chain, recipientAddress)
-    const recipientInstance = new Contract(recipientAddress, recipientAbi, customProvider(chain))
-
-    const name = await recipientInstance.callStatic.NAME()
 
     const tokenAddress = decodedParams[2]
     const { abi: tokenAbi } = await getContractNameAndAbiFromFile(chain, tokenAddress)
@@ -74,9 +70,11 @@ export const bridgeFormatters: { [functionName: string]: TransactionFormatter } 
 
     const amount = defactor(BigInt(decodedParams[1]), parseFloat(`1e${tokenDecimals}`))
 
-    return `\n\n[${senderName}](https://${platform}/address/${senderAddress}) create a stream to transfer **${amount.toFixed(
+    const recipientWithLink = getRecipientNameWithLink(chain, recipientAddress)
+
+    return `\n\nCreate a stream on [${senderName}](https://${platform}/address/${senderAddress}) to transfer **${amount.toFixed(
       2
-    )} [${tokenSymbol}](https://${platform}/address/${tokenAddress})** to [${name}](https://${platform}/address/${recipientAddress}). The stream will start at ${formatTimestamp(
+    )}** [${tokenSymbol}](https://${platform}/address/${tokenAddress}) to ${recipientWithLink}. The stream will start at ${formatTimestamp(
       decodedParams[3]
     )} and end at ${formatTimestamp(decodedParams[4])}.`
   },
