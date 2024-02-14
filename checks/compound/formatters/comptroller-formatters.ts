@@ -33,7 +33,7 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
 
     const numberOfCompTokens = decodedParams[1]
     const formattedCompTokens = getFormatCompTokens(numberOfCompTokens)
-    return `\n\nGrant **${formattedCompTokens} [${symbol}](https://${platform}/address/${compAddress})** tokens to ${getRecipientNameWithLink(
+    return `\n\nGrant **${formattedCompTokens}** [${symbol}](https://${platform}/address/${compAddress}) tokens to ${getRecipientNameWithLink(
       chain,
       decodedParams[0]
     )}.`
@@ -182,9 +182,9 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
 
       const changeInCaps = calculateDifferenceOfDecimals(newValue, prevValue)
 
-      finalText += `\n\nSet MarketBorrowCaps of [${symbol}](https://${platform}/address/${currentAddress}) to ${newValue} via [${contractName}](https://${platform}/address/${
-        transaction.target
-      }). Previous value was ${prevValue} ${getChangeText(changeInCaps)}`
+      finalText += `\n\nSet MarketBorrowCaps of [${symbol}](https://${platform}/address/${currentAddress}) from ${prevValue} to ${newValue} ${getChangeText(
+        changeInCaps
+      )} via [${contractName}](https://${platform}/address/${transaction.target}).`
     }
 
     return finalText
@@ -259,9 +259,9 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
 
     return `\n\nSet ContributorCompSpeed for [${decodedParams[0]}](https://${platform}/address/${
       decodedParams[0]
-    }) to **${newValue}** via [${contractName}](https://${platform}/address/${
-      transaction.target
-    }). Previous value was **${prevValue}** ${getChangeText(changeInSpeed)}`
+    }) from **${prevValue}** to **${newValue}** ${getChangeText(
+      changeInSpeed
+    )} via [${contractName}](https://${platform}/address/${transaction.target}).`
   },
   '_supportMarket(address)': async (
     chain: CometChains,

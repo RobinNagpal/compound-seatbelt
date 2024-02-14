@@ -35,7 +35,7 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
 
     return `\n\nTransfer **${amount.toFixed(
       2
-    )} [${symbol}](https://${platform}/address/${coinAddress})** to ${getRecipientNameWithLink(
+    )}** [${symbol}](https://${platform}/address/${coinAddress}) to ${getRecipientNameWithLink(
       chain,
       decodedParams[0]
     )}.`
@@ -56,7 +56,7 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
 
     return `\n\nApprove **${amount.toFixed(
       2
-    )} [${symbol}](https://${platform}/address/${tokenAddress})** tokens to ${getRecipientNameWithLink(
+    )}** [${symbol}](https://${platform}/address/${tokenAddress}) tokens to ${getRecipientNameWithLink(
       chain,
       decodedParams[0]
     )}`
