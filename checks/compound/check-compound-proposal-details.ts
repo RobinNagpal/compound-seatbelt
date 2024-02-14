@@ -11,6 +11,7 @@ import {
 } from './compound-types'
 import { getDecodedBytesForChain, l2Bridges } from './l2-utils'
 import { formattersLookup } from './transaction-formatter'
+import { defactor } from './formatters/helper'
 // @ts-ignore
 const fetchUrl = mftch.default
 
@@ -86,8 +87,9 @@ function pushMessageToCheckResults(checkResults: CheckResult, message: Transacti
 }
 
 function nestCheckResultsForChain(chain: CometChains, checkResult: CheckResult): string {
+  const capitalizedChain = `${chain.charAt(0).toUpperCase()}${chain.slice(1)}`
   return `
-### ${chain} Updates
+### ${capitalizedChain} Updates
   
 ${checkResult.info.join('\n')}
 `
@@ -101,11 +103,9 @@ async function storeTargetInfo(
 ) {
   const { target, value, signature, calldata } = transactionInfo
   if (value?.toString() && value?.toString() !== '0') {
-    console.error('Error Error Error Error', value)
     return
   }
   if (isRemovedFunction(target, signature)) {
-    console.log(`Function ${signature} is removed from ${target} contract`)
     return
   }
   try {
@@ -135,7 +135,6 @@ async function storeTargetInfo(
     if (!targetLookupData[target].proposals.includes(proposalId)) {
       targetLookupData[target].proposals.push(proposalId)
     }
-
     targetLookupData[target].functions[functionSignature].proposals[proposalId.toString()] = decodedCalldata.map(
       (data) => data.toString()
     )
@@ -153,12 +152,19 @@ async function getTransactionMessages(
 ): Promise<TransactionMessage> {
   const { target, value, signature, calldata } = transactionInfo
   if (value?.toString() && value?.toString() !== '0') {
-    console.error('Error Error Error Error', value)
-    return { error: 'Error Error Error Error' }
+    if (!signature) {
+      return { info: `\n\nTransfer ${defactor(value)} ETH to ${target}` }
+    } else {
+      const { decodedCalldata } = await getFunctionFragmentAndDecodedCalldata(proposalId, chain, transactionInfo)
+      return {
+        info: `\n\n${target}.${signature.split('(')[0]}(${decodedCalldata.join(',')}) and Transfer ${defactor(
+          value
+        )} ETH to ${target}`,
+      }
+    }
   }
   if (isRemovedFunction(target, signature)) {
-    console.log(`Function ${signature} is removed from ${target} contract`)
-    return { error: `Function ${signature} is removed from ${target} contract` }
+    return { info: `⚠️ Function ${signature} is removed from ${target} contract` }
   }
 
   const { fun, decodedCalldata } = await getFunctionFragmentAndDecodedCalldata(proposalId, chain, transactionInfo)

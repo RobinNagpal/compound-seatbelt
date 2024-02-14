@@ -130,8 +130,17 @@ export function getRecipientNameWithLink(chain: CometChains, recipient: string) 
   return `[${recipientName}](https://${platform}/address/${recipient})`
 }
 
-export function getChangeText(change: number): string {
+export function getChangeText(change: number, isPercentage: boolean = false): string {
+  const percentageSign = isPercentage ? '%' : ''
   return `${
-    change == 0 ? 'it remains the same' : `now it is getting ${change > 0 ? 'increased' : 'decreased'} by **${change}**`
+    change == 0
+      ? `(It remains the same)`
+      : `(It's is getting ${change > 0 ? 'increased' : 'decreased'} by **${change}${percentageSign}**)`
   } `
+}
+
+export function formatTimestamp(timestampString: string) {
+  const timestamp = parseInt(timestampString)
+  const date = new Date(timestamp * 1000)
+  return date.toLocaleString()
 }

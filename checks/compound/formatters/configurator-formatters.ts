@@ -39,16 +39,16 @@ async function getTextForChangeInInterestRate(
   const { symbol } = await getContractSymbolAndDecimalsFromFile(baseToken, baseTokenInstance, chain)
 
   const prevInterestRate = annualize(await getInterestRateFunction(currentCometInstance))
-  const previousRateInPercent = prevInterestRate * 100
+  const previousRateInPercent = parseFloat((prevInterestRate * 100).toPrecision(3))
 
   const newInterestRate = BigInt(decodedParams[1])
   const currentRateInPercent = defactor(newInterestRate) * 100
 
   const changeInRate = calculateDifferenceOfDecimals(currentRateInPercent, previousRateInPercent)
 
-  return `\n\nSet ${interestRateName} of [${symbol}](https://${platform}/address/${baseToken}) to ${currentRateInPercent}%. Previous value was ${previousRateInPercent}% and now it is getting ${
-    changeInRate > 0 ? 'increased' : 'decreased'
-  } by **${changeInRate}%**`
+  return `\n\nSet ${interestRateName} of [${symbol}](https://${platform}/address/${baseToken}) from ${previousRateInPercent} to ${currentRateInPercent} ${getChangeText(
+    changeInRate
+  )}`
 }
 
 async function getTextForChange(
@@ -72,9 +72,9 @@ async function getTextForChange(
 
   const changeInValues = calculateDifferenceOfDecimals(newValue, prevValue)
 
-  return `\n\nSet ${functionName} of [${symbol}](https://${platform}/address/${baseToken}) to ${newValue}%. Previous value was ${prevValue}% and now it is getting ${
-    changeInValues > 0 ? 'increased' : 'decreased'
-  } by **${changeInValues}%**`
+  return `\n\nSet ${functionName} of [${symbol}](https://${platform}/address/${baseToken}) from ${prevValue} to ${newValue} ${getChangeText(
+    changeInValues
+  )}`
 }
 
 export const configuratorFormatters: { [functionName: string]: TransactionFormatter } = {
@@ -248,9 +248,10 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       decodedParams[1]
     }) on [${baseTokenSymbol}](https://${platform}/address/${baseToken}) via [${contractName}](https://${platform}/address/${
       transaction.target
-    }) to ${newLiquidationFactor}%, Previous was ${prevLiquidationFactor}% and now it is getting ${
-      changeInLiquidationFactor > 0 ? 'increased' : 'decreased'
-    } by **${changeInLiquidationFactor}%**.`
+    }) from **${prevLiquidationFactor}%** to **${newLiquidationFactor}%** ${getChangeText(
+      changeInLiquidationFactor,
+      true
+    )}`
   },
   'updateAssetSupplyCap(address,address,uint128)': async (
     chain: CometChains,
@@ -287,9 +288,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       decodedParams[1]
     }) on [${baseTokenSymbol}](https://${platform}/address/${baseToken}) via [${contractName}](https://${platform}/address/${
       transaction.target
-    }) to ${newSupplyCap.toFixed(2)}. Previous value was ${prevSupplyCap.toFixed(2)} and ${getChangeText(
-      changeInSupplyCap
-    )}`
+    }) from **${prevSupplyCap.toFixed(2)}** to **${newSupplyCap.toFixed(2)}** ${getChangeText(changeInSupplyCap)}`
   },
   'setBaseBorrowMin(address,uint104)': async (
     chain: CometChains,
@@ -313,9 +312,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
 
     return `\n\nSet BaseBorrowMin of [${symbol}](https://${platform}/address/${
       decodedParams[0]
-    }) to ${newBaseBorrowMin}. Previous value was ${prevBaseBorrowMin} and now it is getting ${
-      changeInBaseBorrowMin > 0 ? 'increased' : 'decreased'
-    } by **${changeInBaseBorrowMin}**`
+    }) from **${prevBaseBorrowMin}** to **${newBaseBorrowMin}** ${getChangeText(changeInBaseBorrowMin)}`
   },
   'addAsset(address,tuple)': async (
     chain: CometChains,
@@ -348,7 +345,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     const liquidationFactor = defactor(BigInt(tupleList[5]), parseFloat(`1e${assetDecimals}`))
     const supplyCap = defactor(BigInt(tupleList[6]), parseFloat(`1e${assetDecimals}`))
 
-    return `\n\nAdd new asset to market **[${symbol}](https://${platform}/address/${baseToken})** with following asset configuration: \n\n{\n\n**asset:** [${assetSymbol}](https://${platform}/address/${
+    return `\n\nAdd new asset to market [${symbol}](https://${platform}/address/${baseToken}) with following asset configuration: \n\n{\n\n**asset:** [${assetSymbol}](https://${platform}/address/${
       tupleList[0]
     }),\n\n**priceFeed:** ${
       tupleList[1]
@@ -377,7 +374,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     const compInstance = new Contract(decodedParams[1], compAbi, customProvider(chain))
     const { symbol } = await getContractSymbolAndDecimalsFromFile(decodedParams[1], compInstance, chain)
 
-    return `\n\nSet reward token for market **[${tokenSymbol}](https://${platform}/address/${baseToken})** as **[${symbol}](https://${platform}/address/${decodedParams[1]})**`
+    return `\n\nSet reward token for market [${tokenSymbol}](https://${platform}/address/${baseToken}) as [${symbol}](https://${platform}/address/${decodedParams[1]}).`
   },
   'setFactory(address,address)': async (
     chain: CometChains,
@@ -396,7 +393,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
 
     const { contractName } = await getContractNameAndAbiFromFile(chain, decodedParams[1])
 
-    return `\n\nSet factory of **[${tokenSymbol}](https://${platform}/address/${baseToken})** to **[${contractName}](https://${platform}/address/${decodedParams[1]})**`
+    return `\n\nSet factory of [${tokenSymbol}](https://${platform}/address/${baseToken}) to [${contractName}](https://${platform}/address/${decodedParams[1]})`
   },
   'setConfiguration(address,tuple)': async (
     chain: CometChains,
@@ -467,7 +464,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       assetConfigs.push(assetConfigBlock)
     }
 
-    return `\n\nSet configuration for **[${contractBaseSymbol}](https://${platform}/address/${contractBaseToken})** to: \n\n{
+    return `\n\nSet configuration for [${contractBaseSymbol}](https://${platform}/address/${contractBaseToken}) to: \n\n{
       governor: [${governor}](https://${platform}/address/${tupleList[0]}),
       pauseGuardian: [${pauseGuardian}](https://${platform}/address/${tupleList[1]}),
       baseToken: [${baseSymbol}](https://${platform}/address/${tupleList[2]}),
@@ -508,8 +505,9 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
 
     const changeInFactor = calculateDifferenceOfDecimals(parseFloat(priceFactorNew), parseFloat(priceFactorOld))
 
-    return `\n\nSet StoreFrontPriceFactor for **${tokenNameWithLink}** to **${priceFactorNew}%**. Previous value was ${priceFactorOld}% and now it is getting ${
-      changeInFactor > 0 ? 'increased' : 'decreased'
-    } by **${changeInFactor}**%`
+    return `\n\nSet StoreFrontPriceFactor for ${tokenNameWithLink} from **${priceFactorOld}%** to **${priceFactorNew}%** ${getChangeText(
+      changeInFactor,
+      true
+    )}`
   },
 }

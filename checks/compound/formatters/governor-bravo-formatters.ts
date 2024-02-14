@@ -30,9 +30,9 @@ export const governorBravoFormatters: { [functionName: string]: TransactionForma
 
     return `\n\nSet proposal threshold of [${name}](https://${platform}/address/${
       transaction.target
-    }) to ${newThreshold.toLocaleString()}. Previous value was ${prevThreshold.toLocaleString()} and ${getChangeText(
+    }) from **${prevThreshold.toLocaleString()}** to **${newThreshold.toLocaleString()}** ${getChangeText(
       changeInThreshold
-    )}.`
+    )}`
   },
   '_setWhitelistGuardian(address)': async (
     chain: CometChains,
@@ -67,9 +67,9 @@ export const governorBravoFormatters: { [functionName: string]: TransactionForma
 
     const changeInVotingDelay = await calculateDifferenceOfDecimals(newVotingDelay, prevVotingDelay)
 
-    return `\n\nNumber of Ethereum blocks to wait before voting on a proposal may begin (Voting Delay) for [${name}](https://${platform}/address/${governanceAddress}) is set to ${newVotingDelay} blocks. Previous value was ${prevVotingDelay} blocks and ${getChangeText(
+    return `\n\nNumber of Ethereum blocks to wait before voting on a proposal may begin (Voting Delay) for [${name}](https://${platform}/address/${governanceAddress}) is changed from **${prevVotingDelay}** blocks to **${newVotingDelay}** blocks ${getChangeText(
       changeInVotingDelay
-    )}.`
+    )}`
   },
   '_setVotingPeriod(uint256)': async (
     chain: CometChains,
@@ -88,8 +88,8 @@ export const governorBravoFormatters: { [functionName: string]: TransactionForma
 
     const changeInVotingPeriod = await calculateDifferenceOfDecimals(newVotingPeriod, prevVotingPeriod)
 
-    return `\n\nThe duration of voting on a proposal in terms of Ethereum blocks (Voting Period) of [${name}](https://${platform}/address/${governanceAddress}) is set to ${newVotingPeriod} blocks. Previous value was ${prevVotingPeriod} blocks and ${getChangeText(
+    return `\n\nThe duration of voting on a proposal in terms of Ethereum blocks (Voting Period) of [${name}](https://${platform}/address/${governanceAddress}) is changed from **${prevVotingPeriod}** blocks to **${newVotingPeriod}** blocks ${getChangeText(
       changeInVotingPeriod
-    )}.`
+    )}`
   },
 }
