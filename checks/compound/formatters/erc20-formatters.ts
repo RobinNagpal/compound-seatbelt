@@ -33,7 +33,7 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
 
     const amount = defactor(BigInt(decodedParams[1]), parseFloat(`1e${decimals}`))
 
-    return `Transfer **${amount.toFixed(
+    return `🛑 Transfer **${amount.toFixed(
       2
     )}** [${symbol}](https://${platform}/address/${coinAddress}) to ${getRecipientNameWithLink(
       chain,
@@ -54,7 +54,7 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
 
     const amount = defactor(BigInt(decodedParams[1]), parseFloat(`1e${decimals}`))
 
-    return `Approve **${amount.toFixed(
+    return `🛑 Approve **${amount.toFixed(
       2
     )}** [${symbol}](https://${platform}/address/${tokenAddress}) tokens to ${getRecipientNameWithLink(
       chain,

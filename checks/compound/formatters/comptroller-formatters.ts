@@ -5,6 +5,7 @@ import { getContractNameAndAbiFromFile } from './../abi-utils'
 import { CometChains, ExecuteTransactionInfo, TransactionFormatter } from './../compound-types'
 import {
   calculateDifferenceOfDecimals,
+  getCriticalitySignForPercentages,
   defactor,
   getChangeText,
   getContractSymbolAndDecimalsFromFile,
@@ -13,6 +14,7 @@ import {
   getPercentageForTokenFactor,
   getPlatform,
   getRecipientNameWithLink,
+  getCriticalitySignForValues,
 } from './helper'
 
 export const comptrollerFormatters: { [functionName: string]: TransactionFormatter } = {
@@ -33,7 +35,7 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
 
     const numberOfCompTokens = decodedParams[1]
     const formattedCompTokens = getFormatCompTokens(numberOfCompTokens)
-    return `Grant **${formattedCompTokens}** [${symbol}](https://${platform}/address/${compAddress}) tokens to ${getRecipientNameWithLink(
+    return `🛑 Grant **${formattedCompTokens}** [${symbol}](https://${platform}/address/${compAddress}) tokens to ${getRecipientNameWithLink(
       chain,
       decodedParams[0]
     )}.`
@@ -110,7 +112,10 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
         newFormattedBorrowSpeed
       )
 
-      finalText += `${baseText}. ${supplySpeedText} ${borrowSpeedText}\n`
+      finalText += `${baseText}. ${supplySpeedText} ${borrowSpeedText}`
+      if (i < addresses.length - 1) {
+        finalText += '\n\n'
+      }
     }
 
     return finalText
@@ -132,11 +137,20 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     const { symbol } = await getContractSymbolAndDecimalsFromFile(targetToken, coinInstance, chain)
 
     const newValue = getPercentageForTokenFactor(decodedParams[1])
-    const token = defactor(BigInt(decodedParams[1]))
 
     if (currentValue) {
       const prevValue = getPercentageForTokenFactor(currentValue)
-      return `Set [${symbol}](https://${platform}/address/${targetToken}) collateral factor from ${prevValue}% to ${newValue}%`
+      const changeInFactor = calculateDifferenceOfDecimals(
+        defactor(BigInt(decodedParams[1])),
+        defactor(BigInt(currentValue))
+      )
+
+      return `${getCriticalitySignForPercentages(
+        changeInFactor * 100
+      )} Set [${symbol}](https://${platform}/address/${targetToken}) collateral factor from ${prevValue}% to ${newValue}% ${getChangeText(
+        changeInFactor * 100,
+        true
+      )}`
     }
 
     return `Set [${symbol}](https://${platform}/address/${targetToken}) collateral factor to ${newValue}%`
@@ -182,9 +196,16 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
 
       const changeInCaps = calculateDifferenceOfDecimals(newValue, prevValue)
 
-      finalText += `Set MarketBorrowCaps of [${symbol}](https://${platform}/address/${currentAddress}) from ${prevValue} to ${newValue} ${getChangeText(
+      finalText += `${getCriticalitySignForValues(
+        changeInCaps,
+        100
+      )} Set MarketBorrowCaps of [${symbol}](https://${platform}/address/${currentAddress}) from ${prevValue} to ${newValue} ${getChangeText(
         changeInCaps
-      )} via [${contractName}](https://${platform}/address/${transaction.target}). `
+      )} via [${contractName}](https://${platform}/address/${transaction.target}).`
+
+      if (i < addresses.length - 1) {
+        finalText += '\n\n'
+      }
     }
 
     return finalText
@@ -202,7 +223,7 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     const prevValue = await targetInstance.callStatic.oracle()
     const newValue = decodedParams[0]
 
-    return `Set new price oracle to [${newValue}](https://${platform}/address/${newValue}). Previous oracle was [${prevValue}](https://${platform}/address/${prevValue}).`
+    return `⚠️ Set new price oracle to [${newValue}](https://${platform}/address/${newValue}). Previous oracle was [${prevValue}](https://${platform}/address/${prevValue}).`
   },
   '_setMintPaused(address,bool)': async (
     chain: CometChains,
@@ -214,7 +235,7 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     const coinLink = await getFormattedTokenNameWithLink(chain, decodedParams[0])
     const { contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
 
-    return `${
+    return `⚠️ ${
       decodedParams[1] === 'true' ? 'Pause' : 'Resume'
     } minting for ${coinLink} via [${contractName}](https://${platform}/address/${transaction.target}).`
   },
@@ -228,7 +249,7 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     const coinLink = await getFormattedTokenNameWithLink(chain, decodedParams[0])
     const { contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
 
-    return `${
+    return `⚠️ ${
       decodedParams[1] === 'true' ? 'Pause' : 'Resume'
     } ${coinLink} borrowing via [${contractName}](https://${platform}/address/${transaction.target}).`
   },
@@ -237,7 +258,7 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
 
     const { contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
 
-    return `${
+    return `⚠️ ${
       decodedParams[0] === 'true' ? 'Pause' : 'Unpause'
     } market liquidation via [${contractName}](https://${platform}/address/${transaction.target}).`
   },

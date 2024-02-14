@@ -172,7 +172,7 @@ async function getTransactionMessages(
     }
   }
   if (isRemovedFunction(target, signature)) {
-    return { info: `⚠️ Function ${signature} is removed from ${target} contract` }
+    return { info: `🛑 Function ${signature} is removed from ${target} contract` }
   }
 
   const { fun, decodedCalldata } = await getFunctionFragmentAndDecodedCalldata(proposalId, chain, transactionInfo)
