@@ -28,7 +28,7 @@ export const governorBravoFormatters: { [functionName: string]: TransactionForma
 
     const changeInThreshold = calculateDifferenceOfDecimals(newThreshold, prevThreshold)
 
-    return `\n\nSet proposal threshold of [${name}](https://${platform}/address/${
+    return `Set proposal threshold of [${name}](https://${platform}/address/${
       transaction.target
     }) from **${prevThreshold.toLocaleString()}** to **${newThreshold.toLocaleString()}** ${getChangeText(
       changeInThreshold
@@ -48,7 +48,7 @@ export const governorBravoFormatters: { [functionName: string]: TransactionForma
     const name = await governanceInstance.callStatic.name()
     const { contractName: guardianContractName } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
 
-    return `\n\nSet the Whitelist Guardian of [${name}](https://${platform}/address/${governanceAddress}) to [${guardianContractName}](https://${platform}/address/${decodedParams[0]}).`
+    return `Set the Whitelist Guardian of [${name}](https://${platform}/address/${governanceAddress}) to [${guardianContractName}](https://${platform}/address/${decodedParams[0]}).`
   },
   '_setVotingDelay(uint256)': async (
     chain: CometChains,
@@ -67,7 +67,7 @@ export const governorBravoFormatters: { [functionName: string]: TransactionForma
 
     const changeInVotingDelay = await calculateDifferenceOfDecimals(newVotingDelay, prevVotingDelay)
 
-    return `\n\nNumber of Ethereum blocks to wait before voting on a proposal may begin (Voting Delay) for [${name}](https://${platform}/address/${governanceAddress}) is changed from **${prevVotingDelay}** blocks to **${newVotingDelay}** blocks ${getChangeText(
+    return `Number of Ethereum blocks to wait before voting on a proposal may begin (Voting Delay) for [${name}](https://${platform}/address/${governanceAddress}) is changed from **${prevVotingDelay}** blocks to **${newVotingDelay}** blocks ${getChangeText(
       changeInVotingDelay
     )}`
   },
@@ -88,7 +88,7 @@ export const governorBravoFormatters: { [functionName: string]: TransactionForma
 
     const changeInVotingPeriod = await calculateDifferenceOfDecimals(newVotingPeriod, prevVotingPeriod)
 
-    return `\n\nThe duration of voting on a proposal in terms of Ethereum blocks (Voting Period) of [${name}](https://${platform}/address/${governanceAddress}) is changed from **${prevVotingPeriod}** blocks to **${newVotingPeriod}** blocks ${getChangeText(
+    return `The duration of voting on a proposal in terms of Ethereum blocks (Voting Period) of [${name}](https://${platform}/address/${governanceAddress}) is changed from **${prevVotingPeriod}** blocks to **${newVotingPeriod}** blocks ${getChangeText(
       changeInVotingPeriod
     )}`
   },
