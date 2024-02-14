@@ -99,7 +99,7 @@ function nestCheckResultsForChain(chain: CometChains, checkResult: CheckResult):
   return `
 **Bridge wrapped actions to ${capitalizedChain}**\n\n
   
-${alphabetPrefixedL2Messages.join('\n\n&nbsp;&nbsp;&nbsp;&nbsp;')}
+&nbsp;&nbsp;&nbsp;&nbsp;${alphabetPrefixedL2Messages.join('\n\n&nbsp;&nbsp;&nbsp;&nbsp;')}
 `
 }
 
