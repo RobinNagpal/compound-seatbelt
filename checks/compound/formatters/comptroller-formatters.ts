@@ -5,16 +5,15 @@ import { getContractNameAndAbiFromFile } from './../abi-utils'
 import { CometChains, ExecuteTransactionInfo, TransactionFormatter } from './../compound-types'
 import {
   calculateDifferenceOfDecimals,
-  getCriticalitySignForPercentages,
   defactor,
   getChangeText,
   getContractSymbolAndDecimalsFromFile,
+  getCriticalitySign,
   getFormatCompTokens,
   getFormattedTokenNameWithLink,
   getPercentageForTokenFactor,
   getPlatform,
   getRecipientNameWithLink,
-  getCriticalitySignForValues,
 } from './helper'
 
 export const comptrollerFormatters: { [functionName: string]: TransactionFormatter } = {
@@ -145,8 +144,9 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
         defactor(BigInt(currentValue))
       )
 
-      return `${getCriticalitySignForPercentages(
-        changeInFactor * 100
+      return `${getCriticalitySign(
+        changeInFactor * 100,
+        15
       )} Set [${symbol}](https://${platform}/address/${targetToken}) collateral factor from ${prevValue}% to ${newValue}% ${getChangeText(
         changeInFactor * 100,
         true
@@ -196,7 +196,7 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
 
       const changeInCaps = calculateDifferenceOfDecimals(newValue, prevValue)
 
-      finalText += `${getCriticalitySignForValues(
+      finalText += `${getCriticalitySign(
         changeInCaps,
         100
       )} Set MarketBorrowCaps of [${symbol}](https://${platform}/address/${currentAddress}) from ${prevValue} to ${newValue} ${getChangeText(
@@ -303,7 +303,7 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     const { contractName: targetContractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
     const { contractName: guardianContractName } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
 
-    return `Set the Pause Guardian to [${guardianContractName}](https://${platform}/address/${decodedParams[0]}) via [${targetContractName}](https://${platform}/address/${transaction.target}).`
+    return `🛑 Set the Pause Guardian to [${guardianContractName}](https://${platform}/address/${decodedParams[0]}) via [${targetContractName}](https://${platform}/address/${transaction.target}).`
   },
 }
 

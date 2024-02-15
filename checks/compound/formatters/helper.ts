@@ -48,8 +48,8 @@ export function toYears(seconds: number, secondsPerYear = 31536000): number {
   return seconds / secondsPerYear
 }
 
-export function calculateDifferenceOfDecimals(num1: number, num2: number): number {
-  return defactor(factor(num1) - factor(num2))
+export function calculateDifferenceOfDecimals(newValue: number, oldValue: number): number {
+  return defactor(factor(newValue) - factor(oldValue))
 }
 
 export function getPlatform(chain: CometChains) {
@@ -135,7 +135,7 @@ export function getChangeText(change: number, isPercentage: boolean = false): st
   return `${
     change == 0
       ? `(It remains the same)`
-      : `(It's is getting ${change > 0 ? 'increased' : 'decreased'} by **${change}${percentageSign}**)`
+      : `(It's getting ${change > 0 ? 'increased' : 'decreased'} by **${change}${percentageSign}**)`
   } `
 }
 
@@ -145,17 +145,7 @@ export function formatTimestamp(timestampString: string) {
   return date.toLocaleString()
 }
 
-export function getCriticalitySignForPercentages(change: number) {
-  if (change <= -30 || change >= 30) {
-    return '🛑'
-  } else if (change <= -15 || change >= 15) {
-    return '⚠️'
-  } else {
-    return ''
-  }
-}
-
-export function getCriticalitySignForValues(change: number, optimumChange: number) {
+export function getCriticalitySign(change: number, optimumChange: number) {
   if (change <= -2 * optimumChange || change >= 2 * optimumChange) {
     return '🛑'
   } else if (change <= -optimumChange || change >= optimumChange) {

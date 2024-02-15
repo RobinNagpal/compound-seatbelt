@@ -11,8 +11,7 @@ import {
   getPercentageForTokenFactor,
   getFormattedTokenNameWithLink,
   getChangeText,
-  getCriticalitySignForPercentages,
-  getCriticalitySignForValues,
+  getCriticalitySign,
 } from './helper'
 
 interface AssetConfig {
@@ -246,8 +245,9 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       parseFloat(prevLiquidationFactor)
     )
 
-    return `${getCriticalitySignForPercentages(
-      changeInLiquidationFactor
+    return `${getCriticalitySign(
+      changeInLiquidationFactor,
+      5
     )} Set liquidation factor for [${tokenSymbol}](https://${platform}/address/${
       decodedParams[1]
     }) on [${baseTokenSymbol}](https://${platform}/address/${baseToken}) via [${contractName}](https://${platform}/address/${
@@ -288,7 +288,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
 
     const changeInSupplyCap = calculateDifferenceOfDecimals(newSupplyCap, prevSupplyCap)
 
-    return `${getCriticalitySignForValues(
+    return `${getCriticalitySign(
       changeInSupplyCap,
       10000
     )} Set supply cap for [${tokenSymbol}](https://${platform}/address/${
@@ -400,7 +400,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
 
     const { contractName } = await getContractNameAndAbiFromFile(chain, decodedParams[1])
 
-    return `⚠️ Set factory of [${tokenSymbol}](https://${platform}/address/${baseToken}) to [${contractName}](https://${platform}/address/${decodedParams[1]})`
+    return `🛑 Set factory of [${tokenSymbol}](https://${platform}/address/${baseToken}) to [${contractName}](https://${platform}/address/${decodedParams[1]})`
   },
   'setConfiguration(address,tuple)': async (
     chain: CometChains,
@@ -477,11 +477,11 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       baseToken: [${baseSymbol}](https://${platform}/address/${tupleList[2]}),
       baseTokenPriceFeed: [PriceFeed](https://${platform}/address/${tupleList[3]}),
       extensionDelegate: [${extensionDelegateSymbol}](https://${platform}/address/${tupleList[4]}),
-      supplyKink: ${supplyKink.toFixed(2)},
+      supplyKink: ${(supplyKink * 100).toFixed(2)},
       supplyPerYearInterestRateSlopeLow: ${supplyPerYearInterestRateSlopeLow.toFixed(4)},
       supplyPerYearInterestRateSlopeHigh: ${supplyPerYearInterestRateSlopeHigh.toFixed(4)},
       supplyPerYearInterestRateBase: ${supplyPerYearInterestRateBase.toFixed(4)},
-      borrowKink: ${borrowKink.toFixed(2)},
+      borrowKink: ${(borrowKink * 100).toFixed(2)},
       borrowPerYearInterestRateSlopeLow: ${borrowPerYearInterestRateSlopeLow.toFixed(4)},
       borrowPerYearInterestRateSlopeHigh: ${borrowPerYearInterestRateSlopeHigh.toFixed(4)},
       borrowPerYearInterestRateBase: ${borrowPerYearInterestRateBase.toFixed(4)},
@@ -512,8 +512,9 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
 
     const changeInFactor = calculateDifferenceOfDecimals(parseFloat(priceFactorNew), parseFloat(priceFactorOld))
 
-    return `${getCriticalitySignForPercentages(
-      changeInFactor
+    return `${getCriticalitySign(
+      changeInFactor,
+      15
     )}Set StoreFrontPriceFactor for ${tokenNameWithLink} from **${priceFactorOld}%** to **${priceFactorNew}%** ${getChangeText(
       changeInFactor,
       true
