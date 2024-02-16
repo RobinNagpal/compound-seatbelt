@@ -2,13 +2,7 @@ import fs from 'fs'
 import mftch from 'micro-ftch'
 import { CheckResult, ProposalCheck, ProposalData } from './../../types'
 import { getContractNameAndAbiFromFile, getFunctionFragmentAndDecodedCalldata, getFunctionSignature } from './abi-utils'
-import {
-  CometChains,
-  ExecuteTransactionInfo,
-  ExecuteTransactionsInfo,
-  TargetLookupData,
-  TransactionMessage,
-} from './compound-types'
+import { CometChains, ExecuteTransactionInfo, ExecuteTransactionsInfo, TargetLookupData, TransactionMessage } from './compound-types'
 import { getDecodedBytesForChain, l2Bridges } from './l2-utils'
 import { formattersLookup } from './transaction-formatter'
 import { defactor } from './formatters/helper'
@@ -32,12 +26,7 @@ export const checkCompoundProposalDetails: ProposalCheck = {
   },
 }
 
-async function updateLookupFile(
-  chain: CometChains,
-  proposalId: number,
-  transactions: ExecuteTransactionsInfo,
-  isL2 = false
-): Promise<CheckResult> {
+async function updateLookupFile(chain: CometChains, proposalId: number, transactions: ExecuteTransactionsInfo, isL2 = false): Promise<CheckResult> {
   const { targets, signatures, calldatas, values } = transactions
   let messageCount = 0
   const targetLookupFilePath = `./checks/compound/lookup/target/${chain}TargetLookup.json`
@@ -103,12 +92,7 @@ function nestCheckResultsForChain(chain: CometChains, checkResult: CheckResult):
 `
 }
 
-async function storeTargetInfo(
-  chain: CometChains,
-  proposalId: number,
-  targetLookupData: TargetLookupData,
-  transactionInfo: ExecuteTransactionInfo
-) {
+async function storeTargetInfo(chain: CometChains, proposalId: number, targetLookupData: TargetLookupData, transactionInfo: ExecuteTransactionInfo) {
   const { target, value, signature, calldata } = transactionInfo
   if (value?.toString() && value?.toString() !== '0') {
     return
@@ -143,9 +127,7 @@ async function storeTargetInfo(
     if (!targetLookupData[target].proposals.includes(proposalId)) {
       targetLookupData[target].proposals.push(proposalId)
     }
-    targetLookupData[target].functions[functionSignature].proposals[proposalId.toString()] = decodedCalldata.map(
-      (data) => data.toString()
-    )
+    targetLookupData[target].functions[functionSignature].proposals[proposalId.toString()] = decodedCalldata.map((data) => data.toString())
   } catch (e) {
     console.error(e)
     console.log(`Error decoding proposal: ${proposalId} target: ${target} signature: ${signature} calldata:${calldata}`)
@@ -165,9 +147,7 @@ async function getTransactionMessages(
     } else {
       const { decodedCalldata } = await getFunctionFragmentAndDecodedCalldata(proposalId, chain, transactionInfo)
       return {
-        info: `\n\n${target}.${signature.split('(')[0]}(${decodedCalldata.join(',')}) and Transfer ${defactor(
-          value
-        )} ETH to ${target}`,
+        info: `\n\n${target}.${signature.split('(')[0]}(${decodedCalldata.join(',')}) and Transfer ${defactor(value)} ETH to ${target}`,
       }
     }
   }
@@ -203,11 +183,7 @@ function isRemovedFunction(target: string, signature: string) {
     '0x35a18000230da775cac24873d00ff85bccded550': ['_setImplementation(address,bool,bytes)'],
     '0xf650c3d88d12db855b8bf7d11be6c55a4e07dcc9': ['_setImplementation(address,bool,bytes)'],
     '0xccf4429db6322d5c611ee964527d42e5d685dd6a': ['_setImplementation(address,bool,bytes)'],
-    '0x3d9819210a31b4961b30ef54be2aed79b9c9cd3b': [
-      '_setPendingImplementation(address)',
-      '_setCompSpeed(address,uint256)',
-      '_sweep(address)',
-    ],
+    '0x3d9819210a31b4961b30ef54be2aed79b9c9cd3b': ['_setPendingImplementation(address)', '_setCompSpeed(address,uint256)', '_sweep(address)'],
     '0xc0da02939e1441f497fd74f78ce7decb17b66529': ['_setImplementation(address)'],
     '0x95b4ef2869ebd94beb4eee400a99824bf5dc325b': ['_setImplementation(address,bool,bytes)'],
     '0x7713dd9ca933848f6819f38b8352d9a15ea73f67': ['_setImplementation(address,bool,bytes)'],

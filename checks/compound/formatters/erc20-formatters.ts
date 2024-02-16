@@ -19,11 +19,7 @@ import {
 import namehash from '@ensdomains/eth-ens-namehash'
 
 export const ERC20Formatters: { [functionName: string]: TransactionFormatter } = {
-  'transfer(address,uint256)': async (
-    chain: CometChains,
-    transaction: ExecuteTransactionInfo,
-    decodedParams: string[]
-  ) => {
+  'transfer(address,uint256)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = await getPlatform(chain)
 
     const coinAddress = transaction.target
@@ -33,18 +29,12 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
 
     const amount = defactor(BigInt(decodedParams[1]), parseFloat(`1e${decimals}`))
 
-    return `🛑 Transfer **${amount.toFixed(
-      2
-    )}** [${symbol}](https://${platform}/address/${coinAddress}) to ${getRecipientNameWithLink(
+    return `🛑 Transfer **${amount.toFixed(2)}** [${symbol}](https://${platform}/address/${coinAddress}) to ${getRecipientNameWithLink(
       chain,
       decodedParams[0]
     )}.`
   },
-  'approve(address,uint256)': async (
-    chain: CometChains,
-    transaction: ExecuteTransactionInfo,
-    decodedParams: string[]
-  ) => {
+  'approve(address,uint256)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = await getPlatform(chain)
 
     const tokenAddress = transaction.target
@@ -54,18 +44,12 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
 
     const amount = defactor(BigInt(decodedParams[1]), parseFloat(`1e${decimals}`))
 
-    return `🛑 Approve **${amount.toFixed(
-      2
-    )}** [${symbol}](https://${platform}/address/${tokenAddress}) tokens to ${getRecipientNameWithLink(
+    return `🛑 Approve **${amount.toFixed(2)}** [${symbol}](https://${platform}/address/${tokenAddress}) tokens to ${getRecipientNameWithLink(
       chain,
       decodedParams[0]
     )}`
   },
-  '_setReserveFactor(uint256)': async (
-    chain: CometChains,
-    transaction: ExecuteTransactionInfo,
-    decodedParams: string[]
-  ) => {
+  '_setReserveFactor(uint256)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const tokenAddress = transaction.target
     const { abi } = await getContractNameAndAbiFromFile(chain, tokenAddress)
     const coinInstance = new Contract(tokenAddress, abi, customProvider(chain))
@@ -81,11 +65,7 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
 
     return `Set reserve factor for ${tokenNameWithLink} to ${newReserveFactor}%`
   },
-  'depositForBurn(uint256,uint32,bytes32,address)': async (
-    chain: CometChains,
-    transaction: ExecuteTransactionInfo,
-    decodedParams: string[]
-  ) => {
+  'depositForBurn(uint256,uint32,bytes32,address)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = await getPlatform(chain)
 
     const { contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
@@ -93,11 +73,7 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
     const burnContractAddress = decodedParams[3]
     const { abi } = await getContractNameAndAbiFromFile(chain, burnContractAddress)
     const tokenInstance = new Contract(burnContractAddress, abi, customProvider(chain))
-    const { symbol: tokenSymbol, decimals } = await getContractSymbolAndDecimalsFromFile(
-      burnContractAddress,
-      tokenInstance,
-      chain
-    )
+    const { symbol: tokenSymbol, decimals } = await getContractSymbolAndDecimalsFromFile(burnContractAddress, tokenInstance, chain)
 
     const normalized = hexStripZeros(decodedParams[2])
 
@@ -107,22 +83,14 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
       2
     )}, destination domain ${decodedParams[1]} and the Mint recipient ${normalized}`
   },
-  'setText(bytes32,string,string)': async (
-    chain: CometChains,
-    transaction: ExecuteTransactionInfo,
-    decodedParams: string[]
-  ) => {
+  'setText(bytes32,string,string)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const ENSSubdomain =
       decodedParams[0] === '0x7dcf87198fd673716e5a32b206d9379c4fcbad8875073f52bfd0656759bf89ed'
         ? 'v3-additional-grants.compound-community-licenses.eth'
         : 'Unknown ENS Name'
     return `Set ENS text for ${ENSSubdomain} with key: ${decodedParams[1]} and value:\n\n ${decodedParams[2]}`
   },
-  'setSubnodeRecord(bytes32,bytes32,address,address,uint64)': async (
-    chain: CometChains,
-    transaction: ExecuteTransactionInfo,
-    decodedParams: string[]
-  ) => {
+  'setSubnodeRecord(bytes32,bytes32,address,address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = await getPlatform(chain)
 
     const { contractName: ownerName } = await getContractNameAndAbiFromFile(chain, decodedParams[2])
@@ -132,43 +100,27 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
     const ENSSubdomainLabel = 'v3-additional-grants'
     return `Create new ${ENSSubdomainLabel} ENS subdomain for ${ENSName} with [${ownerName}](https://${platform}/address/${decodedParams[2]}) as owner and [${resolverName}](https://${platform}/address/${decodedParams[3]}) as resolver and ttl = ${decodedParams[4]}`
   },
-  '_setInterestRateModel(address)': async (
-    chain: CometChains,
-    transaction: ExecuteTransactionInfo,
-    decodedParams: string[]
-  ) => {
+  '_setInterestRateModel(address)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = await getPlatform(chain)
 
     const coinLink = await getFormattedTokenNameWithLink(chain, transaction.target)
 
     return `Set [interest rate model](https://${platform}/address/${decodedParams[0]}) for ${coinLink}.`
   },
-  '_reduceReserves(uint256)': async (
-    chain: CometChains,
-    transaction: ExecuteTransactionInfo,
-    decodedParams: string[]
-  ) => {
+  '_reduceReserves(uint256)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = await getPlatform(chain)
 
     const cTokenAddress = transaction.target
     const { abi: cTokenAbi } = await getContractNameAndAbiFromFile(chain, cTokenAddress)
     const cTokenInstance = new Contract(cTokenAddress, cTokenAbi, customProvider(chain))
-    const { symbol: cTokenSymbol, decimals: cTokenDecimals } = await getContractSymbolAndDecimalsFromFile(
-      cTokenAddress,
-      cTokenInstance,
-      chain
-    )
+    const { symbol: cTokenSymbol, decimals: cTokenDecimals } = await getContractSymbolAndDecimalsFromFile(cTokenAddress, cTokenInstance, chain)
 
     const underlyingAssetAddress = await cTokenInstance.callStatic.underlying()
     const totalReserves = await cTokenInstance.callStatic.totalReserves()
 
     const { abi: assetAbi } = await getContractNameAndAbiFromFile(chain, underlyingAssetAddress)
     const assetInstance = new Contract(underlyingAssetAddress, assetAbi, customProvider(chain))
-    const { symbol: assetSymbol, decimals: assetDecimals } = await getContractSymbolAndDecimalsFromFile(
-      underlyingAssetAddress,
-      assetInstance,
-      chain
-    )
+    const { symbol: assetSymbol, decimals: assetDecimals } = await getContractSymbolAndDecimalsFromFile(underlyingAssetAddress, assetInstance, chain)
 
     const totalReservesFormatted = defactor(totalReserves, parseFloat(`1e${cTokenDecimals}`))
     const reduceValue = defactor(BigInt(decodedParams[0]), parseFloat(`1e${assetDecimals}`))
@@ -177,9 +129,7 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
 
     return `Reduce reserves of [${cTokenSymbol}](https://${platform}/address/${cTokenAddress}) by ${reduceValue.toFixed(
       2
-    )} [${assetSymbol}](https://${platform}/address/${underlyingAssetAddress}). Remaining total reserves would be ${totalReservesNew.toFixed(
-      2
-    )}`
+    )} [${assetSymbol}](https://${platform}/address/${underlyingAssetAddress}). Remaining total reserves would be ${totalReservesNew.toFixed(2)}`
   },
   'redeem(uint256)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = await getPlatform(chain)
@@ -187,41 +137,25 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
     const cTokenAddress = transaction.target
     const { abi: cTokenAbi } = await getContractNameAndAbiFromFile(chain, cTokenAddress)
     const cTokenInstance = new Contract(cTokenAddress, cTokenAbi, customProvider(chain))
-    const { symbol: cTokenSymbol, decimals: cTokenDecimals } = await getContractSymbolAndDecimalsFromFile(
-      cTokenAddress,
-      cTokenInstance,
-      chain
-    )
+    const { symbol: cTokenSymbol, decimals: cTokenDecimals } = await getContractSymbolAndDecimalsFromFile(cTokenAddress, cTokenInstance, chain)
 
     const underlyingAssetAddress = await cTokenInstance.callStatic.underlying()
 
     const { abi: assetAbi } = await getContractNameAndAbiFromFile(chain, underlyingAssetAddress)
     const assetInstance = new Contract(underlyingAssetAddress, assetAbi, customProvider(chain))
-    const { symbol: assetSymbol, decimals: assetDecimals } = await getContractSymbolAndDecimalsFromFile(
-      underlyingAssetAddress,
-      assetInstance,
-      chain
-    )
+    const { symbol: assetSymbol, decimals: assetDecimals } = await getContractSymbolAndDecimalsFromFile(underlyingAssetAddress, assetInstance, chain)
 
     const cTokens = defactor(BigInt(decodedParams[0]), parseFloat(`1e${cTokenDecimals}`))
     const underlyingAssetTokens = defactor(BigInt(decodedParams[0]), parseFloat(`1e${assetDecimals}`))
 
     return `Redeem ${cTokens} [${cTokenSymbol}](https://${platform}/address/${transaction.target}) cTokens in exchange for ${underlyingAssetTokens} [${assetSymbol}](https://${platform}/address/${underlyingAssetAddress})`
   },
-  'migrateFromLegacyReputationToken()': async (
-    chain: CometChains,
-    transaction: ExecuteTransactionInfo,
-    decodedParams: string[]
-  ) => {
+  'migrateFromLegacyReputationToken()': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = await getPlatform(chain)
     const newTokenAddress = transaction.target
     const { abi: newTokenAbi } = await getContractNameAndAbiFromFile(chain, newTokenAddress)
     const newTokenInstance = new Contract(newTokenAddress, newTokenAbi, customProvider(chain))
-    const { symbol: newTokenSymbol } = await getContractSymbolAndDecimalsFromFile(
-      newTokenAddress,
-      newTokenInstance,
-      chain
-    )
+    const { symbol: newTokenSymbol } = await getContractSymbolAndDecimalsFromFile(newTokenAddress, newTokenInstance, chain)
     const legacyTokenAddress = await newTokenInstance.callStatic.legacyRepToken()
     const legacyTokenLink = await getFormattedTokenNameWithLink(chain, legacyTokenAddress)
     return `Migrate the balance of legacy reputation token ${legacyTokenLink} to new reputation token [${newTokenSymbol}](https://${platform}/address/${transaction.target}).`

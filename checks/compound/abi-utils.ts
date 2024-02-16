@@ -87,11 +87,7 @@ function getExplorerApiUrl(chain: CometChains, address: string) {
   }
 }
 
-export async function getFunctionFragmentAndDecodedCalldata(
-  proposalId: number,
-  chain: CometChains,
-  transactionInfo: ExecuteTransactionInfo
-) {
+export async function getFunctionFragmentAndDecodedCalldata(proposalId: number, chain: CometChains, transactionInfo: ExecuteTransactionInfo) {
   const { target, signature, calldata } = transactionInfo
   const contractNameAndAbi = await getContractNameAndAbiFromFile(chain, target)
 

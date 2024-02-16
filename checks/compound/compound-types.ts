@@ -43,11 +43,7 @@ export enum CometChains {
   base = 'base',
 }
 
-export type TransactionFormatter = (
-  chain: CometChains,
-  transaction: ExecuteTransactionInfo,
-  decodedParams: string[]
-) => Promise<string>
+export type TransactionFormatter = (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => Promise<string>
 
 export interface ContractNameAndAbi {
   contractName: string

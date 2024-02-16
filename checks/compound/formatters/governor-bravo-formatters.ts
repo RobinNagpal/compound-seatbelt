@@ -1,20 +1,11 @@
 import { Contract } from 'ethers'
 import { getContractNameAndAbiFromFile } from '../abi-utils'
 import { CometChains, ExecuteTransactionInfo, TransactionFormatter } from './../compound-types'
-import {
-  calculateDifferenceOfDecimals,
-  getChangeText,
-  getContractSymbolAndDecimalsFromFile,
-  getPlatform,
-} from './helper'
+import { calculateDifferenceOfDecimals, getChangeText, getContractSymbolAndDecimalsFromFile, getPlatform } from './helper'
 import { customProvider } from '../../../utils/clients/ethers'
 
 export const governorBravoFormatters: { [functionName: string]: TransactionFormatter } = {
-  '_setProposalThreshold(uint256)': async (
-    chain: CometChains,
-    transaction: ExecuteTransactionInfo,
-    decodedParams: string[]
-  ) => {
+  '_setProposalThreshold(uint256)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = await getPlatform(chain)
 
     const governanceAddress = transaction.target
@@ -30,15 +21,9 @@ export const governorBravoFormatters: { [functionName: string]: TransactionForma
 
     return `Set proposal threshold of [${name}](https://${platform}/address/${
       transaction.target
-    }) from **${prevThreshold.toLocaleString()}** to **${newThreshold.toLocaleString()}** ${getChangeText(
-      changeInThreshold
-    )}`
+    }) from **${prevThreshold.toLocaleString()}** to **${newThreshold.toLocaleString()}** ${getChangeText(changeInThreshold)}`
   },
-  '_setWhitelistGuardian(address)': async (
-    chain: CometChains,
-    transaction: ExecuteTransactionInfo,
-    decodedParams: string[]
-  ) => {
+  '_setWhitelistGuardian(address)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = await getPlatform(chain)
 
     const governanceAddress = transaction.target
@@ -50,11 +35,7 @@ export const governorBravoFormatters: { [functionName: string]: TransactionForma
 
     return `Set the Whitelist Guardian of [${name}](https://${platform}/address/${governanceAddress}) to [${guardianContractName}](https://${platform}/address/${decodedParams[0]}).`
   },
-  '_setVotingDelay(uint256)': async (
-    chain: CometChains,
-    transaction: ExecuteTransactionInfo,
-    decodedParams: string[]
-  ) => {
+  '_setVotingDelay(uint256)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = await getPlatform(chain)
 
     const governanceAddress = transaction.target
@@ -71,11 +52,7 @@ export const governorBravoFormatters: { [functionName: string]: TransactionForma
       changeInVotingDelay
     )}`
   },
-  '_setVotingPeriod(uint256)': async (
-    chain: CometChains,
-    transaction: ExecuteTransactionInfo,
-    decodedParams: string[]
-  ) => {
+  '_setVotingPeriod(uint256)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = await getPlatform(chain)
 
     const governanceAddress = transaction.target

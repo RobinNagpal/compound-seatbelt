@@ -148,11 +148,7 @@ export function getRecipientNameWithLink(chain: CometChains, recipient: string) 
 
 export function getChangeText(change: number, isPercentage: boolean = false): string {
   const percentageSign = isPercentage ? '%' : ''
-  return `${
-    change == 0
-      ? `(It remains the same)`
-      : `(It's getting ${change > 0 ? 'increased' : 'decreased'} by **${change}${percentageSign}**)`
-  } `
+  return `${change == 0 ? `(It remains the same)` : `(It's getting ${change > 0 ? 'increased' : 'decreased'} by **${change}${percentageSign}**)`} `
 }
 
 export function formatTimestamp(timestampString: string) {
