@@ -12,6 +12,9 @@ import {
   getFormattedTokenNameWithLink,
   getChangeText,
   getCriticalitySign,
+  fetchIdFromGecko,
+  fetchDataForAsset,
+  getPlatformFromGecko,
 } from './helper'
 
 interface AssetConfig {
@@ -330,7 +333,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
 
     const [address, tuple] = decodedParams
     const tupleList = tuple.split(',')
-
+    const assetAddress = tupleList[0]
     const { abi: contractAbi } = await getContractNameAndAbiFromFile(chain, address)
     const contractInstance = new Contract(address, contractAbi, customProvider(chain))
 
@@ -351,16 +354,38 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     const liquidateCollateralFactor = defactor(BigInt(tupleList[4]), parseFloat(`1e${assetDecimals}`))
     const liquidationFactor = defactor(BigInt(tupleList[5]), parseFloat(`1e${assetDecimals}`))
     const supplyCap = defactor(BigInt(tupleList[6]), parseFloat(`1e${assetDecimals}`))
+    const assetID = await fetchIdFromGecko(assetSymbol)
+    console.log('assetID', assetID)
+    let geckoResponse = ''
+    if (assetID) {
+      const assetData = await fetchDataForAsset(assetID)
+      console.log('assetData', assetData)
+      if (assetData) {
+        const platform = getPlatformFromGecko(chain)
+        console.log('platform', platform)
+        const assetAddressOnGecko = assetData.platforms[`${platform}`]
+        console.log('assetAddressOnGecko', assetAddressOnGecko)
+        if (assetAddressOnGecko == assetAddress) {
+          geckoResponse = `🟢 Asset address is verified on CoinGecko. `
+        }
+        geckoResponse += `Asset has Market cap rank of ${assetData.market_cap_rank}, current price of ${
+          assetData.market_data.current_price.usd
+        } USD, price change in 24hrs is ${assetData.market_data.price_change_percentage_24h}%, market cap is ${
+          assetData.market_data.market_cap_change_24h_in_currency.usd
+        } USD, total volume is ${
+          assetData.market_data.total_volume.usd
+        } USD and total supply is ${assetData.market_data.total_supply.toFixed(2)}.`
+      }
+    }
 
-    return `🛑 Add new asset to market [${symbol}](https://${platform}/address/${baseToken}) with following asset configuration: \n\n{\n\n**asset:** [${assetSymbol}](https://${platform}/address/${
-      tupleList[0]
-    }),\n\n**priceFeed:** ${
+    return `🛑 Add new asset to market [${symbol}](https://${platform}/address/${baseToken}) with following asset configuration: \n\n{\n\n**asset:** [${assetSymbol}](https://${platform}/address/${assetAddress}),\n\n**priceFeed:** ${
       tupleList[1]
     },\n\n**decimals:** ${assetDecimals},\n\n**borrowCollateralFactor:** ${borrowCollateralFactor.toFixed(
       2
     )},\n\n**liquidateCollateralFactor:** ${liquidateCollateralFactor.toFixed(
       2
-    )},\n\n**liquidationFactor:** ${liquidationFactor.toFixed(2)},\n\n**supplyCap:** ${supplyCap.toFixed(2)}\n\n}`
+    )},\n\n**liquidationFactor:** ${liquidationFactor.toFixed(2)},\n\n**supplyCap:** ${supplyCap.toFixed(2)}\n\n}
+    \n\nAsset Information From CoinGecko:\n\n${geckoResponse}`
   },
   'setRewardConfig(address,address)': async (
     chain: CometChains,
