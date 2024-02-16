@@ -22,7 +22,7 @@ export const bridgeFormatters: { [functionName: string]: TransactionFormatter } 
 
       const formattedTokenWithLink = await getFormattedTokenWithLink(CometChains.mainnet, token, amount)
       const recipientWithLink = getRecipientNameWithLink(CometChains.polygon, recipient)
-      return `\n\n Deposit ${formattedTokenWithLink} to ${recipientWithLink} on Polygon.`
+      return `Deposit ${formattedTokenWithLink} to ${recipientWithLink} on Polygon.`
     }
 
     throw new Error('Unknown bridge contract')
@@ -45,7 +45,7 @@ export const bridgeFormatters: { [functionName: string]: TransactionFormatter } 
     const amount = defactor(BigInt(decodedParams[3]), parseFloat(`1e${tokenDecimals}`))
     const recipientWithLink = getRecipientNameWithLink(CometChains.arbitrum, decodedParams[2])
 
-    return `\n\nBridge ${amount.toFixed(
+    return `Bridge ${amount.toFixed(
       2
     )} [${tokenSymbol}](https://${platform}/address/${tokenAddress}) tokens over Arbitrum to ${recipientWithLink}.`
   },
@@ -72,7 +72,7 @@ export const bridgeFormatters: { [functionName: string]: TransactionFormatter } 
 
     const recipientWithLink = getRecipientNameWithLink(chain, recipientAddress)
 
-    return `\n\nCreate a stream on [${senderName}](https://${platform}/address/${senderAddress}) to transfer **${amount.toFixed(
+    return `Create a stream on [${senderName}](https://${platform}/address/${senderAddress}) to transfer **${amount.toFixed(
       2
     )}** [${tokenSymbol}](https://${platform}/address/${tokenAddress}) to ${recipientWithLink}. The stream will start at ${formatTimestamp(
       decodedParams[3]

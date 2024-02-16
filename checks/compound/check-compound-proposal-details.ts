@@ -35,10 +35,11 @@ export const checkCompoundProposalDetails: ProposalCheck = {
 async function updateLookupFile(
   chain: CometChains,
   proposalId: number,
-  transactions: ExecuteTransactionsInfo
+  transactions: ExecuteTransactionsInfo,
+  isL2 = false
 ): Promise<CheckResult> {
   const { targets, signatures, calldatas, values } = transactions
-
+  let messageCount = 0
   const targetLookupFilePath = `./checks/compound/lookup/target/${chain}TargetLookup.json`
   let lookupData: TargetLookupData = {}
 
@@ -60,15 +61,18 @@ async function updateLookupFile(
     if (Object.keys(l2Bridges).includes(target)) {
       const cometChain = l2Bridges[target]
       const l2TransactionsInfo = await getDecodedBytesForChain(cometChain, proposalId, transactionInfo)
-      const l2CheckResults = await updateLookupFile(cometChain, proposalId, l2TransactionsInfo)
+      const l2CheckResults = await updateLookupFile(cometChain, proposalId, l2TransactionsInfo, true)
       const l2Messages = nestCheckResultsForChain(cometChain, l2CheckResults)
-      pushMessageToCheckResults(checkResults, { info: l2Messages })
+      const countPrefixedL2Messages = `\n\n**${++messageCount}-** ${l2Messages}`
+      pushMessageToCheckResults(checkResults, { info: countPrefixedL2Messages })
       continue
     }
 
     await storeTargetInfo(chain, proposalId, lookupData, transactionInfo)
     const message = await getTransactionMessages(chain, proposalId, lookupData, transactionInfo)
-    pushMessageToCheckResults(checkResults, message)
+    const messagePrefix = isL2 ? '' : `\n\n**${++messageCount}-** `
+    const messageInfo = `${messagePrefix}${message.info}`
+    pushMessageToCheckResults(checkResults, { info: messageInfo })
   }
 
   fs.writeFileSync(targetLookupFilePath, JSON.stringify(lookupData, null, 2), 'utf-8')
@@ -88,10 +92,14 @@ function pushMessageToCheckResults(checkResults: CheckResult, message: Transacti
 
 function nestCheckResultsForChain(chain: CometChains, checkResult: CheckResult): string {
   const capitalizedChain = `${chain.charAt(0).toUpperCase()}${chain.slice(1)}`
+  const alphabetPrefixedL2Messages = checkResult.info.map((message, index) => {
+    const letter = String.fromCharCode(97 + index)
+    return `${letter}- ${message}`
+  })
   return `
-### ${capitalizedChain} Updates
+**Bridge wrapped actions to ${capitalizedChain}**\n\n
   
-${checkResult.info.join('\n')}
+&nbsp;&nbsp;&nbsp;&nbsp;${alphabetPrefixedL2Messages.join('\n\n&nbsp;&nbsp;&nbsp;&nbsp;')}
 `
 }
 
@@ -164,7 +172,7 @@ async function getTransactionMessages(
     }
   }
   if (isRemovedFunction(target, signature)) {
-    return { info: `⚠️ Function ${signature} is removed from ${target} contract` }
+    return { info: `🛑 Function ${signature} is removed from ${target} contract` }
   }
 
   const { fun, decodedCalldata } = await getFunctionFragmentAndDecodedCalldata(proposalId, chain, transactionInfo)
