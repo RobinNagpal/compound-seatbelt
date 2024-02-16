@@ -69,4 +69,28 @@ export const governorBravoFormatters: { [functionName: string]: TransactionForma
       changeInVotingPeriod
     )}`
   },
+  'acceptOwnership()': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
+    const platform = getPlatform(chain)
+    const contractAddress = transaction.target
+
+    const { contractName } = await getContractNameAndAbiFromFile(chain, contractAddress)
+
+    return `Accept ownership of [${contractName}](https://${platform}/address/${contractAddress}).`
+  },
+  'resume()': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
+    const platform = getPlatform(chain)
+    const contractAddress = transaction.target
+
+    const { contractName } = await getContractNameAndAbiFromFile(chain, contractAddress)
+
+    return `Resume the [${contractName}](https://${platform}/address/${contractAddress}), allowing the guardian to start rebalancing.`
+  },
+  'deposit(tuple[])': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
+    const platform = getPlatform(chain)
+    const contractAddress = transaction.target
+
+    const { contractName } = await getContractNameAndAbiFromFile(chain, contractAddress)
+
+    return `🛑 Deposit into [${contractName}](https://${platform}/address/${contractAddress}).`
+  },
 }
