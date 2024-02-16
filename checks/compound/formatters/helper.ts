@@ -4,6 +4,9 @@ import fs from 'fs'
 import { CometChains, SymbolAndDecimalsLookupData } from '../compound-types'
 import { customProvider } from './../../../utils/clients/ethers'
 import { getContractNameAndAbiFromFile } from './../abi-utils'
+import mftch from 'micro-ftch'
+// @ts-ignore
+const fetchUrl = mftch.default
 
 export type Numeric = number | bigint
 export const factorDecimals = 18
@@ -62,6 +65,19 @@ export function getPlatform(chain: CometChains) {
       return 'arbiscan.io'
     case CometChains.base:
       return 'basescan.org'
+  }
+}
+
+export function getPlatformFromGecko(chain: CometChains) {
+  switch (chain) {
+    case CometChains.mainnet:
+      return 'ethereum'
+    case CometChains.polygon:
+      return 'polygon-pos'
+    case CometChains.arbitrum:
+      return 'arbitrum-one'
+    case CometChains.base:
+      return 'base'
   }
 }
 
@@ -152,5 +168,41 @@ export function getCriticalitySign(change: number, optimumChange: number) {
     return '⚠️'
   } else {
     return ''
+  }
+}
+
+export async function fetchIdFromGecko(query: string) {
+  const baseUrl = 'https://api.coingecko.com/api/v3/search?query='
+
+  try {
+    const response = await fetchUrl(`${baseUrl}${encodeURIComponent(query)}`)
+    console.log('response', response)
+    if (!response) {
+      return null
+    }
+
+    if (response.coins && response.coins.length > 0) {
+      return response.coins[0].id
+    } else {
+      return null
+    }
+  } catch (error) {
+    console.error('Error fetching ID from Gecko API:', error)
+    return null
+  }
+}
+
+export async function fetchDataForAsset(query: string) {
+  const baseUrl = 'https://api.coingecko.com/api/v3/coins/'
+
+  try {
+    const response = await fetchUrl(`${baseUrl}${encodeURIComponent(query)}`)
+    if (!response) {
+      return null
+    }
+    return response
+  } catch (error) {
+    console.error('Error fetching data for Coin from Gecko API:', error)
+    return null
   }
 }
