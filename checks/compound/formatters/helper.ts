@@ -125,7 +125,7 @@ export async function getFormattedTokenWithLink(chain: CometChains, tokenAddress
   return `**${token.toFixed(2)} ${await getFormattedTokenNameWithLink(chain, tokenAddress)}**`
 }
 export async function getFormattedTokenNameWithLink(chain: CometChains, tokenAddress: string) {
-  const platform = await getPlatform(chain)
+  const platform = getPlatform(chain)
   const { abi: compAddressAbi } = await getContractNameAndAbiFromFile(chain, tokenAddress)
   const compInstance = new Contract(tokenAddress, compAddressAbi, customProvider(chain))
   const { symbol } = await getContractSymbolAndDecimalsFromFile(tokenAddress, compInstance, chain)
@@ -153,8 +153,9 @@ export function getChangeText(change: number, isPercentage: boolean = false): st
 
 export function formatTimestamp(timestampString: string) {
   const timestamp = parseInt(timestampString)
-  const date = new Date(timestamp * 1000)
-  return date.toLocaleString()
+  return `${new Date(timestamp * 1000).toLocaleString('en-US', {
+    timeZone: 'America/New_York',
+  })} ET`
 }
 
 export function getCriticalitySign(change: number, optimumChange: number) {
@@ -172,7 +173,6 @@ export async function fetchIdFromGecko(query: string) {
 
   try {
     const response = await fetchUrl(`${baseUrl}${encodeURIComponent(query)}`)
-    console.log('response', response)
     if (!response) {
       return null
     }
@@ -201,4 +201,11 @@ export async function fetchDataForAsset(query: string) {
     console.error('Error fetching data for Coin from Gecko API:', error)
     return null
   }
+}
+
+export function addCommas(number: number | string) {
+  if (typeof number === 'string') {
+    return parseFloat(number).toLocaleString('en-US')
+  }
+  return number.toLocaleString('en-US')
 }

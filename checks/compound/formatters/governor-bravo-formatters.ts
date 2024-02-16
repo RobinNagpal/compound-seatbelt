@@ -6,7 +6,7 @@ import { customProvider } from '../../../utils/clients/ethers'
 
 export const governorBravoFormatters: { [functionName: string]: TransactionFormatter } = {
   '_setProposalThreshold(uint256)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    const platform = await getPlatform(chain)
+    const platform = getPlatform(chain)
 
     const governanceAddress = transaction.target
     const { abi } = await getContractNameAndAbiFromFile(chain, governanceAddress)
@@ -24,7 +24,7 @@ export const governorBravoFormatters: { [functionName: string]: TransactionForma
     }) from **${prevThreshold.toLocaleString()}** to **${newThreshold.toLocaleString()}** ${getChangeText(changeInThreshold)}`
   },
   '_setWhitelistGuardian(address)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    const platform = await getPlatform(chain)
+    const platform = getPlatform(chain)
 
     const governanceAddress = transaction.target
     const { abi } = await getContractNameAndAbiFromFile(chain, governanceAddress)
@@ -36,7 +36,7 @@ export const governorBravoFormatters: { [functionName: string]: TransactionForma
     return `Set the Whitelist Guardian of [${name}](https://${platform}/address/${governanceAddress}) to [${guardianContractName}](https://${platform}/address/${decodedParams[0]}).`
   },
   '_setVotingDelay(uint256)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    const platform = await getPlatform(chain)
+    const platform = getPlatform(chain)
 
     const governanceAddress = transaction.target
     const { abi } = await getContractNameAndAbiFromFile(chain, governanceAddress)
@@ -53,7 +53,7 @@ export const governorBravoFormatters: { [functionName: string]: TransactionForma
     )}`
   },
   '_setVotingPeriod(uint256)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    const platform = await getPlatform(chain)
+    const platform = getPlatform(chain)
 
     const governanceAddress = transaction.target
     const { abi } = await getContractNameAndAbiFromFile(chain, governanceAddress)
