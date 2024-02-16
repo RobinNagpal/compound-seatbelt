@@ -125,7 +125,7 @@ export async function getFormattedTokenWithLink(chain: CometChains, tokenAddress
   return `**${token.toFixed(2)} ${await getFormattedTokenNameWithLink(chain, tokenAddress)}**`
 }
 export async function getFormattedTokenNameWithLink(chain: CometChains, tokenAddress: string) {
-  const platform = await getPlatform(chain)
+  const platform = getPlatform(chain)
   const { abi: compAddressAbi } = await getContractNameAndAbiFromFile(chain, tokenAddress)
   const compInstance = new Contract(tokenAddress, compAddressAbi, customProvider(chain))
   const { symbol } = await getContractSymbolAndDecimalsFromFile(tokenAddress, compInstance, chain)

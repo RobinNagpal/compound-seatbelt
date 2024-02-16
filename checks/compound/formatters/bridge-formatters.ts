@@ -21,7 +21,7 @@ export const bridgeFormatters: { [functionName: string]: TransactionFormatter } 
     transaction: ExecuteTransactionInfo,
     decodedParams: string[]
   ) => {
-    const platform = await getPlatform(chain)
+    const platform = getPlatform(chain)
 
     const tokenAddress = decodedParams[0]
     const { abi: tokenAbi } = await getContractNameAndAbiFromFile(chain, tokenAddress)
@@ -33,7 +33,7 @@ export const bridgeFormatters: { [functionName: string]: TransactionFormatter } 
     return `Bridge ${amount.toFixed(2)} [${tokenSymbol}](https://${platform}/address/${tokenAddress}) tokens over Arbitrum to ${recipientWithLink}.`
   },
   'createStream(address,uint256,address,uint256,uint256)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    const platform = await getPlatform(chain)
+    const platform = getPlatform(chain)
     const senderAddress = transaction.target
     const recipientAddress = decodedParams[0]
     const { contractName: senderName } = await getContractNameAndAbiFromFile(chain, transaction.target)

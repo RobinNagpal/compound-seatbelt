@@ -87,7 +87,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       decodedParams,
       async (contract) => await contract.callStatic.borrowPerSecondInterestRateBase(),
       'BorrowPerYearInterestRateBase',
-      await getPlatform(chain)
+      getPlatform(chain)
     )
   },
   'setBorrowPerYearInterestRateSlopeLow(address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
@@ -96,7 +96,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       decodedParams,
       async (contract) => await contract.callStatic.borrowPerSecondInterestRateSlopeLow(),
       'BorrowPerYearInterestRateSlopeLow',
-      await getPlatform(chain)
+      getPlatform(chain)
     )
   },
   'setBorrowPerYearInterestRateSlopeHigh(address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
@@ -105,7 +105,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       decodedParams,
       async (contract) => await contract.callStatic.borrowPerSecondInterestRateSlopeHigh(),
       'BorrowPerYearInterestRateSlopeHigh',
-      await getPlatform(chain)
+      getPlatform(chain)
     )
   },
   'setSupplyPerYearInterestRateSlopeLow(address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
@@ -114,7 +114,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       decodedParams,
       async (contract) => await contract.callStatic.supplyPerSecondInterestRateSlopeLow(),
       'SupplyPerYearInterestRateSlopeLow',
-      await getPlatform(chain)
+      getPlatform(chain)
     )
   },
   'setSupplyPerYearInterestRateSlopeHigh(address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
@@ -123,11 +123,11 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       decodedParams,
       async (contract) => await contract.callStatic.supplyPerSecondInterestRateSlopeHigh(),
       'SupplyPerYearInterestRateSlopeHigh',
-      await getPlatform(chain)
+      getPlatform(chain)
     )
   },
   'deployAndUpgradeTo(address,address)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    const platform = await getPlatform(chain)
+    const platform = getPlatform(chain)
 
     const { contractName } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
 
@@ -147,7 +147,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       decodedParams,
       async (contract) => await contract.callStatic.baseTrackingBorrowSpeed(),
       'BaseTrackingBorrowSpeed',
-      await getPlatform(chain)
+      getPlatform(chain)
     )
   },
   'setBaseTrackingSupplySpeed(address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
@@ -156,17 +156,17 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       decodedParams,
       async (contract) => await contract.callStatic.baseTrackingSupplySpeed(),
       'BaseTrackingSupplySpeed',
-      await getPlatform(chain)
+      getPlatform(chain)
     )
   },
   'setBorrowKink(address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    return getTextForChange(chain, decodedParams, async (contract) => await contract.callStatic.borrowKink(), 'BorrowKink', await getPlatform(chain))
+    return getTextForChange(chain, decodedParams, async (contract) => await contract.callStatic.borrowKink(), 'BorrowKink', getPlatform(chain))
   },
   'setSupplyKink(address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    return getTextForChange(chain, decodedParams, async (contract) => await contract.callStatic.supplyKink(), 'SupplyKink', await getPlatform(chain))
+    return getTextForChange(chain, decodedParams, async (contract) => await contract.callStatic.supplyKink(), 'SupplyKink', getPlatform(chain))
   },
   'updateAssetLiquidationFactor(address,address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    const platform = await getPlatform(chain)
+    const platform = getPlatform(chain)
     const { contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
 
     const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[1])
@@ -195,7 +195,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     }) from **${prevLiquidationFactor}%** to **${newLiquidationFactor}%** ${getChangeText(changeInLiquidationFactor, true)}`
   },
   'updateAssetSupplyCap(address,address,uint128)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    const platform = await getPlatform(chain)
+    const platform = getPlatform(chain)
     const { contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
 
     const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[1])
@@ -224,7 +224,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     }) from **${prevSupplyCap.toFixed(2)}** to **${newSupplyCap.toFixed(2)}** ${getChangeText(changeInSupplyCap)}`
   },
   'setBaseBorrowMin(address,uint104)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    const platform = await getPlatform(chain)
+    const platform = getPlatform(chain)
 
     const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
     const currentInstance = new Contract(decodedParams[0], abi, customProvider(chain))
@@ -244,7 +244,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     }) from **${prevBaseBorrowMin}** to **${newBaseBorrowMin}** ${getChangeText(changeInBaseBorrowMin)}`
   },
   'addAsset(address,tuple)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    const platform = await getPlatform(chain)
+    const platform = getPlatform(chain)
 
     const [address, tuple] = decodedParams
     const tupleList = tuple.split(',')
@@ -297,7 +297,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     \n\n${geckoResponse}`
   },
   'setRewardConfig(address,address)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    const platform = await getPlatform(chain)
+    const platform = getPlatform(chain)
 
     const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
     const currentInstance = new Contract(decodedParams[0], abi, customProvider(chain))
@@ -314,7 +314,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     return `⚠️ Set reward token for market [${tokenSymbol}](https://${platform}/address/${baseToken}) as [${symbol}](https://${platform}/address/${decodedParams[1]}).`
   },
   'setFactory(address,address)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    const platform = await getPlatform(chain)
+    const platform = getPlatform(chain)
 
     const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
     const currentInstance = new Contract(decodedParams[0], abi, customProvider(chain))
@@ -329,7 +329,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     return `🛑 Set factory of [${tokenSymbol}](https://${platform}/address/${baseToken}) to [${contractName}](https://${platform}/address/${decodedParams[1]})`
   },
   'setConfiguration(address,tuple)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    const platform = await getPlatform(chain)
+    const platform = getPlatform(chain)
 
     const [address, tuple] = decodedParams
     const tupleList = tuple.split(',')

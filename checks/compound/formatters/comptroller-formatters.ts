@@ -18,7 +18,7 @@ import {
 
 export const comptrollerFormatters: { [functionName: string]: TransactionFormatter } = {
   '_grantComp(address,uint256)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    const platform = await getPlatform(chain)
+    const platform = getPlatform(chain)
 
     const { abi } = await getContractNameAndAbiFromFile(chain, transaction.target)
     const currentInstance = new Contract(transaction.target, abi, customProvider(chain))
@@ -91,7 +91,7 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     return finalText
   },
   '_setCollateralFactor(address,uint256)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    const platform = await getPlatform(chain)
+    const platform = getPlatform(chain)
     const { abi: comptrollerAbi } = await getContractNameAndAbiFromFile(chain, transaction.target)
     const comptrollerInstance = new Contract(transaction.target, comptrollerAbi, customProvider(chain))
     const targetToken = decodedParams[0]
@@ -123,7 +123,7 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     if (decodedParams.length === 0 || decodedParams.some((param) => param === '')) {
       return 'No data provided for Borrow Caps.'
     }
-    const platform = await getPlatform(chain)
+    const platform = getPlatform(chain)
 
     const addresses = decodedParams[0].split(',')
     const values = decodedParams[1].split(',')
@@ -164,7 +164,7 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     return finalText
   },
   '_setPriceOracle(address)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    const platform = await getPlatform(chain)
+    const platform = getPlatform(chain)
     const targetAddress = transaction.target
     const { abi } = await getContractNameAndAbiFromFile(chain, targetAddress)
     const targetInstance = new Contract(targetAddress, abi, customProvider(chain))
@@ -175,7 +175,7 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     return `⚠️ Set new price oracle to [${newValue}](https://${platform}/address/${newValue}). Previous oracle was [${prevValue}](https://${platform}/address/${prevValue}).`
   },
   '_setMintPaused(address,bool)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    const platform = await getPlatform(chain)
+    const platform = getPlatform(chain)
 
     const coinLink = await getFormattedTokenNameWithLink(chain, decodedParams[0])
     const { contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
@@ -185,7 +185,7 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     }).`
   },
   '_setBorrowPaused(address,bool)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    const platform = await getPlatform(chain)
+    const platform = getPlatform(chain)
 
     const coinLink = await getFormattedTokenNameWithLink(chain, decodedParams[0])
     const { contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
@@ -195,7 +195,7 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     }).`
   },
   '_setSeizePaused(bool)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    const platform = await getPlatform(chain)
+    const platform = getPlatform(chain)
 
     const { contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
 
@@ -204,7 +204,7 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     }).`
   },
   '_setContributorCompSpeed(address,uint256)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    const platform = await getPlatform(chain)
+    const platform = getPlatform(chain)
 
     const { abi, contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
 
@@ -225,7 +225,7 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     return `Support ${marketLink} on Compound.`
   },
   '_setPauseGuardian(address)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    const platform = await getPlatform(chain)
+    const platform = getPlatform(chain)
 
     const { contractName: targetContractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
     const { contractName: guardianContractName } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
