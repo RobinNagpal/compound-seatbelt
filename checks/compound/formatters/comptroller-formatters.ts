@@ -138,6 +138,15 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
       const { abi } = await getContractNameAndAbiFromFile(chain, currentAddress)
       const cTokenInstance = new Contract(currentAddress, abi, customProvider(chain))
       const { symbol } = await getContractSymbolAndDecimalsFromFile(currentAddress, cTokenInstance, chain)
+
+      // There is no underlying asset for the address
+      if (currentAddress === '0x4Ddc2D193948926D02f9B1fE9e1daa0718270ED5') {
+        finalText += `Set MarketBorrowCaps of [${symbol}](https://${platform}/address/${currentAddress}) to ${currentValue}`
+        if (i < addresses.length - 1) {
+          finalText += '\n\n'
+        }
+        continue
+      }
       const underlyingAssetAddress = await cTokenInstance.callStatic.underlying()
       const { abi: assetAbi } = await getContractNameAndAbiFromFile(chain, underlyingAssetAddress)
       const assetInstance = new Contract(underlyingAssetAddress, assetAbi, customProvider(chain))
