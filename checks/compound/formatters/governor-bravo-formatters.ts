@@ -1,7 +1,7 @@
 import { Contract } from 'ethers'
 import { getContractNameAndAbiFromFile } from '../abi-utils'
 import { CometChains, ExecuteTransactionInfo, TransactionFormatter } from './../compound-types'
-import { calculateDifferenceOfDecimals, getChangeText, getContractSymbolAndDecimalsFromFile, getPlatform } from './helper'
+import { calculateDifferenceOfDecimals, formatAddressesAndAmounts, getChangeText, getContractSymbolAndDecimalsFromFile, getPlatform } from './helper'
 import { customProvider } from '../../../utils/clients/ethers'
 
 export const governorBravoFormatters: { [functionName: string]: TransactionFormatter } = {
@@ -68,5 +68,30 @@ export const governorBravoFormatters: { [functionName: string]: TransactionForma
     return `The duration of voting on a proposal in terms of Ethereum blocks (Voting Period) of [${name}](https://${platform}/address/${governanceAddress}) is changed from **${prevVotingPeriod}** blocks to **${newVotingPeriod}** blocks ${getChangeText(
       changeInVotingPeriod
     )}`
+  },
+  'acceptOwnership()': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
+    const platform = getPlatform(chain)
+    const contractAddress = transaction.target
+
+    const { contractName } = await getContractNameAndAbiFromFile(chain, contractAddress)
+
+    return `Accept ownership of [${contractName}](https://${platform}/address/${contractAddress}).`
+  },
+  'resume()': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
+    const platform = getPlatform(chain)
+    const contractAddress = transaction.target
+
+    const { contractName } = await getContractNameAndAbiFromFile(chain, contractAddress)
+
+    return `Resume the [${contractName}](https://${platform}/address/${contractAddress}), allowing the guardian to start rebalancing.`
+  },
+  'deposit(tuple[])': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
+    const platform = getPlatform(chain)
+    const contractAddress = transaction.target
+    const tuple = decodedParams[0].split(',')
+    const depositedAssets = await formatAddressesAndAmounts(tuple, chain, platform)
+    const { contractName } = await getContractNameAndAbiFromFile(chain, contractAddress)
+
+    return `🛑 Deposit ${depositedAssets} into [${contractName}](https://${platform}/address/${contractAddress}).`
   },
 }

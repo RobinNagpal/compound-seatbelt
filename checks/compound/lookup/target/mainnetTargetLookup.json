@@ -2537,14 +2537,14 @@
     "functions": {
       "acceptOwnership()": {
         "description": "acceptOwnership()",
-        "transactionFormatter": "",
+        "transactionFormatter": "GovernorBravo.acceptOwnership()",
         "proposals": {
           "187": []
         }
       },
       "deposit(tuple[])": {
         "description": "deposit(tuple[])",
-        "transactionFormatter": "",
+        "transactionFormatter": "GovernorBravo.deposit(tuple[])",
         "proposals": {
           "187": [
             "0x0D8775F648430679A709E98d2b0Cb6250d2887EF,555555000000000000000000,0xE41d2489571d322189246DaFA5ebDe1F4699F498,1694915000000000000000000"
@@ -2553,7 +2553,7 @@
       },
       "resume()": {
         "description": "resume()",
-        "transactionFormatter": "",
+        "transactionFormatter": "GovernorBravo.resume()",
         "proposals": {
           "187": []
         }
@@ -2568,7 +2568,7 @@
     "functions": {
       "acceptOwnership()": {
         "description": "acceptOwnership()",
-        "transactionFormatter": "",
+        "transactionFormatter": "GovernorBravo.acceptOwnership()",
         "proposals": {
           "187": []
         }
@@ -2583,7 +2583,7 @@
     "functions": {
       "acceptOwnership()": {
         "description": "acceptOwnership()",
-        "transactionFormatter": "",
+        "transactionFormatter": "GovernorBravo.acceptOwnership()",
         "proposals": {
           "187": []
         }

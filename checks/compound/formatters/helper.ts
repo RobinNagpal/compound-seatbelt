@@ -209,3 +209,21 @@ export function addCommas(number: number | string) {
   }
   return number.toLocaleString('en-US')
 }
+
+export async function formatAddressesAndAmounts(list: string[], chain: CometChains, platform: string) {
+  async function processPair(address: string, amount: string) {
+    const { abi } = await getContractNameAndAbiFromFile(chain, address)
+    const tokenInstance = new Contract(address, abi, customProvider(chain))
+    const { symbol, decimals } = await getContractSymbolAndDecimalsFromFile(address, tokenInstance, chain)
+    const defactoredAmount = defactor(BigInt(amount), parseFloat(`1e${decimals}`))
+    return `${addCommas(defactoredAmount.toFixed(2))} [${symbol}](https://${platform}/address/${address})`
+  }
+  const promises = []
+  for (let i = 0; i < list.length; i += 2) {
+    const address = list[i]
+    const amount = list[i + 1]
+    promises.push(processPair(address, amount))
+  }
+  const results = await Promise.all(promises)
+  return results.join(', ')
+}

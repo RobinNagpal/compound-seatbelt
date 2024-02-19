@@ -5,6 +5,7 @@ import { customProvider } from '../../../utils/clients/ethers'
 import { getContractNameAndAbiFromFile } from '../abi-utils'
 import { CometChains, ExecuteTransactionInfo, TransactionFormatter } from '../compound-types'
 import {
+  addCommas,
   calculateDifferenceOfDecimals,
   defactor,
   getContractSymbolAndDecimalsFromFile,
@@ -29,7 +30,7 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
 
     const amount = defactor(BigInt(decodedParams[1]), parseFloat(`1e${decimals}`))
 
-    return `🛑 Transfer **${amount.toFixed(2)}** [${symbol}](https://${platform}/address/${coinAddress}) to ${getRecipientNameWithLink(
+    return `🛑 Transfer **${addCommas(amount.toFixed(2))}** [${symbol}](https://${platform}/address/${coinAddress}) to ${getRecipientNameWithLink(
       chain,
       decodedParams[0]
     )}.`
@@ -44,7 +45,7 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
 
     const amount = defactor(BigInt(decodedParams[1]), parseFloat(`1e${decimals}`))
 
-    return `🛑 Approve **${amount.toFixed(2)}** [${symbol}](https://${platform}/address/${tokenAddress}) tokens to ${getRecipientNameWithLink(
+    return `🛑 Approve **${addCommas(amount.toFixed(2))}** [${symbol}](https://${platform}/address/${tokenAddress}) tokens to ${getRecipientNameWithLink(
       chain,
       decodedParams[0]
     )}`
@@ -127,9 +128,9 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
 
     const totalReservesNew = calculateDifferenceOfDecimals(totalReservesFormatted, reduceValue)
 
-    return `Reduce reserves of [${cTokenSymbol}](https://${platform}/address/${cTokenAddress}) by ${reduceValue.toFixed(
-      2
-    )} [${assetSymbol}](https://${platform}/address/${underlyingAssetAddress}). Remaining total reserves would be ${totalReservesNew.toFixed(2)}`
+    return `Reduce reserves of [${cTokenSymbol}](https://${platform}/address/${cTokenAddress}) by ${addCommas(
+      reduceValue.toFixed(2)
+    )} [${assetSymbol}](https://${platform}/address/${underlyingAssetAddress}). Remaining total reserves would be ${addCommas(totalReservesNew.toFixed(2))}`
   },
   'redeem(uint256)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = getPlatform(chain)
@@ -148,7 +149,9 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
     const cTokens = defactor(BigInt(decodedParams[0]), parseFloat(`1e${cTokenDecimals}`))
     const underlyingAssetTokens = defactor(BigInt(decodedParams[0]), parseFloat(`1e${assetDecimals}`))
 
-    return `Redeem ${cTokens} [${cTokenSymbol}](https://${platform}/address/${transaction.target}) cTokens in exchange for ${underlyingAssetTokens} [${assetSymbol}](https://${platform}/address/${underlyingAssetAddress})`
+    return `Redeem ${addCommas(cTokens)} [${cTokenSymbol}](https://${platform}/address/${transaction.target}) cTokens in exchange for ${addCommas(
+      underlyingAssetTokens
+    )} [${assetSymbol}](https://${platform}/address/${underlyingAssetAddress})`
   },
   'migrateFromLegacyReputationToken()': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = getPlatform(chain)
