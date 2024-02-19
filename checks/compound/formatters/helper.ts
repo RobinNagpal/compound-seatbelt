@@ -210,7 +210,7 @@ export function addCommas(number: number | string) {
   return number.toLocaleString('en-US')
 }
 
-export async function formatAddressesAndAmounts(list: string[], chain: CometChains, platform: string) {
+export async function formatCoinsAndAmounts(list: string[], chain: CometChains, platform: string) {
   async function processPair(address: string, amount: string) {
     const { abi } = await getContractNameAndAbiFromFile(chain, address)
     const tokenInstance = new Contract(address, abi, customProvider(chain))
@@ -226,4 +226,17 @@ export async function formatAddressesAndAmounts(list: string[], chain: CometChai
   }
   const results = await Promise.all(promises)
   return results.join(', ')
+}
+
+export function formatAddressesAndAmounts(addressesList: string[], amountsList: string[], platform: string) {
+  const results = []
+  for (let i = 0; i < addressesList.length; i += 1) {
+    let amount = defactor(BigInt(amountsList[i]))
+    if (amount.toFixed(1).split('.')[0] === '0') {
+      amount = parseFloat(amount.toPrecision(5))
+    }
+    console.log(addressesList[i], amountsList[i])
+    results.push(`* [${addressesList[i]}](https://${platform}/address/${addressesList[i]}) by ${addCommas(amount)} COMP`)
+  }
+  return results.join('\n\n')
 }
