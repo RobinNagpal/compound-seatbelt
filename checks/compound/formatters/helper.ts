@@ -232,11 +232,7 @@ export function formatAddressesAndAmounts(addressesList: string[], amountsList: 
   const results = []
   for (let i = 0; i < addressesList.length; i += 1) {
     let amount = defactor(BigInt(amountsList[i]))
-    if (amount.toFixed(1).split('.')[0] === '0') {
-      amount = parseFloat(amount.toPrecision(5))
-    }
-    console.log(addressesList[i], amountsList[i])
-    results.push(`* [${addressesList[i]}](https://${platform}/address/${addressesList[i]}) by ${addCommas(amount)} COMP`)
+    results.push(`* [${addressesList[i]}](https://${platform}/address/${addressesList[i]}) by ${amount.toFixed(20).replace(/0+$/, '')} COMP`)
   }
   return results.join('\n\n')
 }
