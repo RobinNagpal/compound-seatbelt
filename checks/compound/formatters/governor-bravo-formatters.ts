@@ -1,7 +1,7 @@
 import { Contract } from 'ethers'
 import { getContractNameAndAbiFromFile } from '../abi-utils'
 import { CometChains, ExecuteTransactionInfo, TransactionFormatter } from './../compound-types'
-import { calculateDifferenceOfDecimals, formatAddressesAndAmounts, getChangeText, getContractSymbolAndDecimalsFromFile, getPlatform } from './helper'
+import { calculateDifferenceOfDecimals, formatCoinsAndAmounts, getChangeText, getContractSymbolAndDecimalsFromFile, getPlatform } from './helper'
 import { customProvider } from '../../../utils/clients/ethers'
 
 export const governorBravoFormatters: { [functionName: string]: TransactionFormatter } = {
@@ -89,7 +89,7 @@ export const governorBravoFormatters: { [functionName: string]: TransactionForma
     const platform = getPlatform(chain)
     const contractAddress = transaction.target
     const tuple = decodedParams[0].split(',')
-    const depositedAssets = await formatAddressesAndAmounts(tuple, chain, platform)
+    const depositedAssets = await formatCoinsAndAmounts(tuple, chain, platform)
     const { contractName } = await getContractNameAndAbiFromFile(chain, contractAddress)
 
     return `🛑 Deposit ${depositedAssets} into [${contractName}](https://${platform}/address/${contractAddress}).`
