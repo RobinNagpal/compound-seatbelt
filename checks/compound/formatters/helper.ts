@@ -227,3 +227,15 @@ export async function formatAddressesAndAmounts(list: string[], chain: CometChai
   const results = await Promise.all(promises)
   return results.join(', ')
 }
+
+export function checkforumPost(text: string) {
+  const urlRegex = /https:\/\/www\.comp\.xyz\/t\/[^\s\)]+/g
+
+  const matches = text.match(urlRegex)
+
+  if (matches && matches.length > 0) {
+    return `Forum post is present here: [Forum Post](${matches[0]})`
+  } else {
+    return 'No forum post is present.'
+  }
+}
