@@ -7,6 +7,7 @@ import {
   addCommas,
   calculateDifferenceOfDecimals,
   defactor,
+  formatAddressesAndAmounts,
   getChangeText,
   getContractSymbolAndDecimalsFromFile,
   getCriticalitySign,
@@ -232,6 +233,21 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     const { contractName: guardianContractName } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
 
     return `🛑 Set the Pause Guardian to [${guardianContractName}](https://${platform}/address/${decodedParams[0]}) via [${targetContractName}](https://${platform}/address/${transaction.target}).`
+  },
+  '_become(address)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
+    const platform = getPlatform(chain)
+
+    const targetAddress = transaction.target
+    const newImplmentationAddress = decodedParams[0]
+
+    return `🛑 Upgrade of the Compound Comptroller contract to a new implementation [${newImplmentationAddress}](https://${platform}/address/${newImplmentationAddress}) from [${targetAddress}](https://${platform}/address/${targetAddress}).`
+  },
+  'fixBadAccruals(address[],uint256[])': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
+    const platform = getPlatform(chain)
+    const addressesList = decodedParams[0].split(',')
+    const amountsList = decodedParams[1].split(',')
+
+    return `🛑 Fix over-accrued COMP tokens of the addresses by their respective amounts:\n\n${formatAddressesAndAmounts(addressesList, amountsList, platform)}`
   },
 }
 
