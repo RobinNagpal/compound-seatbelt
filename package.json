@@ -10,7 +10,8 @@
     "compile": "hardhat compile",
     "start": "ts-node --experimental-specifier-resolution node index.ts",
     "lint:fix": "prettier --write .",
-    "test": "ts-node --experimental-specifier-resolution node targetLookup.ts"
+    "test": "ts-node --experimental-specifier-resolution node targetLookup.ts",
+    "tst": "ts-node --experimental-specifier-resolution node formatting.ts"
   },
   "repository": {
     "type": "git",
