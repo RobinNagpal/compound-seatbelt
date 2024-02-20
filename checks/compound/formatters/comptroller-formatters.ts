@@ -9,6 +9,7 @@ import {
   defactor,
   formatAddressesAndAmounts,
   getChangeText,
+  getChangeTextFn,
   getContractSymbolAndDecimalsFromFile,
   getCriticalitySign,
   getFormatCompTokens,
@@ -17,6 +18,7 @@ import {
   getPlatform,
   getRecipientNameWithLink,
 } from './helper'
+import { defactorFn, percentageInNumberFn, subtractFn } from './../../../utils/roundingUtils'
 
 export const comptrollerFormatters: { [functionName: string]: TransactionFormatter } = {
   '_grantComp(address,uint256)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
@@ -62,20 +64,20 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
 
       const baseText = `Set CompSpeeds for ${symbol}`
 
-      const previousBorrowSpeed = await currentTargetInstance.callStatic.compBorrowSpeeds(currentAddress)
-      const previousSupplySpeed = await currentTargetInstance.callStatic.compSupplySpeeds(currentAddress)
+      const previousBorrowSpeed = (await currentTargetInstance.callStatic.compBorrowSpeeds(currentAddress)).toString()
+      const previousSupplySpeed = (await currentTargetInstance.callStatic.compSupplySpeeds(currentAddress)).toString()
 
-      const changeInSupply = calculateDifferenceOfDecimals(getDefactoredCompSpeeds(currentSupplySpeed), getDefactoredCompSpeeds(previousSupplySpeed))
+      const changeInSupply = subtractFn(defactorFn(currentSupplySpeed), defactorFn(previousSupplySpeed))
 
-      const changeInBorrow = calculateDifferenceOfDecimals(getDefactoredCompSpeeds(currentBorrowSpeed), getDefactoredCompSpeeds(previousBorrowSpeed))
+      const changeInBorrow = subtractFn(defactorFn(currentBorrowSpeed), defactorFn(previousBorrowSpeed))
 
-      const prevFormattedBorrowSpeed = getFormattedCompSpeeds(previousBorrowSpeed)
-      const prevFormattedSupplySpeed = getFormattedCompSpeeds(previousSupplySpeed)
-      const newFormattedBorrowSpeed = getFormattedCompSpeeds(currentBorrowSpeed)
-      const newFormattedSupplySpeed = getFormattedCompSpeeds(currentSupplySpeed)
+      const prevFormattedBorrowSpeed = defactorFn(previousBorrowSpeed)
+      const prevFormattedSupplySpeed = defactorFn(previousSupplySpeed)
+      const newFormattedBorrowSpeed = defactorFn(currentBorrowSpeed)
+      const newFormattedSupplySpeed = defactorFn(currentSupplySpeed)
 
-      const changeInSpeedsText = (type: string, changeInSpeed: number, prevFormattedValue: string, newFormattedValue: string) => {
-        return `${type} speed of ${symbol} to ${newFormattedValue} ${compSymbol}/block which was previously ${prevFormattedValue} ${compSymbol}/block ${getChangeText(
+      const changeInSpeedsText = (type: string, changeInSpeed: string, prevFormattedValue: string, newFormattedValue: string) => {
+        return `${type} speed of ${symbol} to ${newFormattedValue} ${compSymbol}/block which was previously ${prevFormattedValue} ${compSymbol}/block ${getChangeTextFn(
           changeInSpeed,
           true
         )}`
@@ -108,13 +110,13 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
 
     if (currentValue) {
       const prevValue = getPercentageForTokenFactor(currentValue)
-      const changeInFactor = calculateDifferenceOfDecimals(defactor(BigInt(decodedParams[1])), defactor(BigInt(currentValue)))
+      const changeInFactor = subtractFn(decodedParams[1], currentValue.toString())
 
       return `${getCriticalitySign(
-        changeInFactor * 100,
+        percentageInNumberFn(changeInFactor),
         15
       )} Set [${symbol}](https://${platform}/address/${targetToken}) collateral factor from ${prevValue}% to ${newValue}% ${getChangeText(
-        changeInFactor * 100,
+        percentageInNumberFn(changeInFactor),
         true
       )}`
     }
