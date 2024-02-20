@@ -43,4 +43,5 @@ async function main() {
   console.log('difference 3', bigNumber3.sub(bigNumberDiff3).toString())
 }
 
-main()
+function roundingScenariosByD() {}
+roundingScenariosByD()
