@@ -1,5 +1,23 @@
 import { BigNumber } from '@ethersproject/bignumber'
 import { defactor, factor, factorDecimals } from './checks/compound/formatters/helper'
+import { Decimal } from 'decimal.js'
+Decimal.set({ precision: 100 })
+
+function defactorFnD(number: string, decimals = '18') {
+  return Decimal.div(new Decimal(number), new Decimal(`1e${decimals}`)).toFixed()
+}
+
+function factorFnD(base: string, exponent = 18) {
+  return Decimal.pow(new Decimal(base), exponent).toFixed()
+}
+
+function subtractFnD(number1: string, number2: string) {
+  return Decimal.sub(new Decimal(number1), new Decimal(number2)).toFixed()
+}
+
+function addFnD(number1: string, number2: string) {
+  return Decimal.add(new Decimal(number1), new Decimal(number2)).toFixed()
+}
 
 function defactorFn(f: bigint | BigNumber, decimals: number = 1e18): number {
   return defactor(f, decimals)
@@ -43,5 +61,19 @@ async function main() {
   console.log('difference 3', bigNumber3.sub(bigNumberDiff3).toString())
 }
 
-function roundingScenariosByD() {}
+function roundingScenariosByD() {
+  const number1 = '2210000000000000000000000000'
+  const number2 = '2210000000000000000000000000.00000000000000000022'
+  const number3 = '0.00000000000000000022'
+
+  console.log('defactor by 18', defactorFnD(number1))
+  console.log('defactor by 12', defactorFnD(number1, '12'))
+  console.log('defactor by 6', defactorFnD(number1, '6'))
+
+  console.log('subtract num1 & num2', subtractFnD(number1, number2))
+  console.log('subtract num1 & num3', subtractFnD(number1, number3))
+
+  console.log('add num1 & num2', addFnD(number1, number2))
+  console.log('add num1 & num3', addFnD(number1, number3))
+}
 roundingScenariosByD()
