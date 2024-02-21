@@ -66,7 +66,7 @@ export async function getContractSymbolAndDecimalsFromFile(address: string, inst
 
 export async function getFormattedTokenWithLink(chain: CometChains, tokenAddress: string, value: string) {
   const token = defactorFn(value)
-  return `**${token} ${await getFormattedTokenNameWithLink(chain, tokenAddress)}**`
+  return `**${addCommas(token)} ${await getFormattedTokenNameWithLink(chain, tokenAddress)}**`
 }
 export async function getFormattedTokenNameWithLink(chain: CometChains, tokenAddress: string) {
   const platform = getPlatform(chain)
@@ -93,7 +93,9 @@ export function getRecipientNameWithLink(chain: CometChains, recipient: string) 
 export function getChangeTextFn(change: string, isPercentage: boolean = false): string {
   const percentageSign = isPercentage ? '%' : ''
   return `${
-    change === '0' ? `(It remains the same)` : `(It's getting ${change.startsWith('-') ? 'decreased' : 'increased'} by **${change}${percentageSign}**)`
+    change === '0'
+      ? `(It remains the same)`
+      : `(It's getting ${change.startsWith('-') ? 'decreased' : 'increased'} by **${addCommas(change)}${percentageSign}**)`
   } `
 }
 
@@ -150,11 +152,22 @@ export async function fetchDataForAsset(query: string) {
   }
 }
 
-export function addCommas(number: number | string) {
-  if (typeof number === 'string') {
-    return parseFloat(number).toLocaleString('en-US')
-  }
-  return number.toLocaleString('en-US')
+export function addCommas(numberAsString: string): string {
+  const isNegative = numberAsString.startsWith('-')
+
+  let absNumberAsString = isNegative ? numberAsString.substring(1) : numberAsString
+
+  let parts = absNumberAsString.split('.')
+  let integerPart = parts[0]
+  let decimalPart = parts.length > 1 ? '.' + parts[1] : ''
+
+  let reversedIntegerPart = integerPart.split('').reverse().join('')
+  let withCommasArray = reversedIntegerPart.match(/.{1,3}/g)
+  let withCommas = withCommasArray ? withCommasArray.join(',') : ''
+
+  let formattedNumber = withCommas.split('').reverse().join('') + decimalPart
+
+  return isNegative ? '-' + formattedNumber : formattedNumber
 }
 
 export async function formatCoinsAndAmounts(list: string[], chain: CometChains, platform: string) {
@@ -163,7 +176,7 @@ export async function formatCoinsAndAmounts(list: string[], chain: CometChains, 
     const tokenInstance = new Contract(address, abi, customProvider(chain))
     const { symbol, decimals } = await getContractSymbolAndDecimalsFromFile(address, tokenInstance, chain)
     const defactoredAmount = defactorFn(amount, `${decimals}`)
-    return `${defactoredAmount} [${symbol}](https://${platform}/address/${address})`
+    return `${addCommas(defactoredAmount)} [${symbol}](https://${platform}/address/${address})`
   }
   const promises = []
   for (let i = 0; i < list.length; i += 2) {
@@ -178,7 +191,7 @@ export async function formatCoinsAndAmounts(list: string[], chain: CometChains, 
 export function formatAddressesAndAmounts(addressesList: string[], amountsList: string[], platform: string) {
   const results = []
   for (let i = 0; i < addressesList.length; i += 1) {
-    results.push(`* [${addressesList[i]}](https://${platform}/address/${addressesList[i]}) by ${defactorFn(amountsList[i])} COMP`)
+    results.push(`* [${addressesList[i]}](https://${platform}/address/${addressesList[i]}) by ${addCommas(defactorFn(amountsList[i]))} COMP`)
   }
   return results.join('\n\n')
 }
