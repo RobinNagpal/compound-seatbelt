@@ -5,6 +5,7 @@ import { CometChains, SymbolAndDecimalsLookupData } from '../compound-types'
 import { customProvider } from './../../../utils/clients/ethers'
 import { getContractNameAndAbiFromFile } from './../abi-utils'
 import mftch from 'micro-ftch'
+import { defactorFn } from './../../../utils/roundingUtils'
 // @ts-ignore
 const fetchUrl = mftch.default
 
@@ -151,6 +152,13 @@ export function getChangeText(change: number, isPercentage: boolean = false): st
   return `${change == 0 ? `(It remains the same)` : `(It's getting ${change > 0 ? 'increased' : 'decreased'} by **${change}${percentageSign}**)`} `
 }
 
+export function getChangeTextFn(change: string, isPercentage: boolean = false): string {
+  const percentageSign = isPercentage ? '%' : ''
+  return `${
+    change.match('0') ? `(It remains the same)` : `(It's getting ${change.startsWith('-') ? 'decreased' : 'increased'} by **${change}${percentageSign}**)`
+  } `
+}
+
 export function formatTimestamp(timestampString: string) {
   const timestamp = parseInt(timestampString)
   return `${new Date(timestamp * 1000).toLocaleString('en-US', {
@@ -231,8 +239,7 @@ export async function formatCoinsAndAmounts(list: string[], chain: CometChains, 
 export function formatAddressesAndAmounts(addressesList: string[], amountsList: string[], platform: string) {
   const results = []
   for (let i = 0; i < addressesList.length; i += 1) {
-    let amount = defactor(BigInt(amountsList[i]))
-    results.push(`* [${addressesList[i]}](https://${platform}/address/${addressesList[i]}) by ${amount.toFixed(20).replace(/0+$/, '')} COMP`)
+    results.push(`* [${addressesList[i]}](https://${platform}/address/${addressesList[i]}) by ${defactorFn(amountsList[i])} COMP`)
   }
   return results.join('\n\n')
 }
