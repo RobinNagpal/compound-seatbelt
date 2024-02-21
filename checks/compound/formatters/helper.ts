@@ -236,10 +236,22 @@ export async function formatCoinsAndAmounts(list: string[], chain: CometChains, 
   return results.join(', ')
 }
 
+export function checkforumPost(text: string) {
+  const urlRegex = /https:\/\/www\.comp\.xyz\/t\/[^\s\)]+/g
+
+  const matches = text.match(urlRegex)
+
+  if (matches && matches.length > 0) {
+    return `Forum post is present here: [Forum Post](${matches[0]})`
+  } else {
+    return 'No forum post is present.'
+  }
+
 export function formatAddressesAndAmounts(addressesList: string[], amountsList: string[], platform: string) {
   const results = []
   for (let i = 0; i < addressesList.length; i += 1) {
     results.push(`* [${addressesList[i]}](https://${platform}/address/${addressesList[i]}) by ${defactorFn(amountsList[i])} COMP`)
   }
   return results.join('\n\n')
+
 }

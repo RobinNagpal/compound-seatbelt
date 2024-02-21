@@ -13,6 +13,7 @@ import { unified } from 'unified'
 import { mdToPdf } from 'md-to-pdf'
 import { formatProposalId } from '../utils/contracts/governor'
 import { AllCheckResults, GovernorType, ProposalEvent } from '../types'
+import { checkforumPost } from '../checks/compound/formatters/helper'
 
 // --- Markdown helpers ---
 
@@ -183,6 +184,10 @@ _Updated as of block [${blocks.current.number}](https://etherscan.io/block/${blo
     blocks.end ? formatTime(blocks.end.timestamp) : formatTime(estimateTime(blocks.current, endBlock))
   })
 - Targets: ${targets.map((target) => toAddressLink(target, true)).join('; ')}
+
+## Forum Post
+
+${checkforumPost(description.trim())} 
 
 ## Table of contents
 
