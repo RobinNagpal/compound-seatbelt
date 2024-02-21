@@ -3,6 +3,7 @@ import { customProvider } from '../../../utils/clients/ethers'
 import { getContractNameAndAbiFromFile } from './../abi-utils'
 import { CometChains, ExecuteTransactionInfo, TransactionFormatter } from './../compound-types'
 import {
+  addCommas,
   formatAddressesAndAmounts,
   getChangeTextFn,
   getContractSymbolAndDecimalsFromFile,
@@ -25,9 +26,9 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     const compInstance = new Contract(compAddress, compAddressAbi, customProvider(chain))
     const { symbol } = await getContractSymbolAndDecimalsFromFile(compAddress, compInstance, chain)
 
-    const numberOfCompTokens = decodedParams[1]
-    const formattedCompTokens = defactorFn(numberOfCompTokens)
-    return `🛑 Grant **${formattedCompTokens}** [${symbol}](https://${platform}/address/${compAddress}) tokens to ${getRecipientNameWithLink(
+    const numberOfCompTokens = defactorFn(decodedParams[1])
+
+    return `🛑 Grant **${addCommas(numberOfCompTokens)}** [${symbol}](https://${platform}/address/${compAddress}) tokens to ${getRecipientNameWithLink(
       chain,
       decodedParams[0]
     )}.`
@@ -137,7 +138,7 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
 
       // There is no underlying asset for the address
       if (currentAddress === '0x4Ddc2D193948926D02f9B1fE9e1daa0718270ED5') {
-        finalText += `Set MarketBorrowCaps of [${symbol}](https://${platform}/address/${currentAddress}) to ${currentValue}`
+        finalText += `Set MarketBorrowCaps of [${symbol}](https://${platform}/address/${currentAddress}) to ${addCommas(currentValue)}`
         if (i < addresses.length - 1) {
           finalText += '\n\n'
         }
@@ -158,9 +159,9 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
       finalText += `${getCriticalitySign(
         changeInCaps,
         100
-      )} Set MarketBorrowCaps of [${symbol}](https://${platform}/address/${currentAddress}) from ${prevValue} to ${newValue} ${getChangeTextFn(
-        changeInCaps
-      )} via [${contractName}](https://${platform}/address/${transaction.target}).`
+      )} Set MarketBorrowCaps of [${symbol}](https://${platform}/address/${currentAddress}) from ${addCommas(prevValue)} to ${addCommas(
+        newValue
+      )} ${getChangeTextFn(changeInCaps)} via [${contractName}](https://${platform}/address/${transaction.target}).`
 
       if (i < addresses.length - 1) {
         finalText += '\n\n'

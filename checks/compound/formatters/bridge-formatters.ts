@@ -1,7 +1,7 @@
 import { customProvider } from '../../../utils/clients/ethers'
 import { getContractNameAndAbiFromFile } from '../abi-utils'
 import { CometChains, ExecuteTransactionInfo, TransactionFormatter } from './../compound-types'
-import { formatTimestamp, getContractSymbolAndDecimalsFromFile, getFormattedTokenWithLink, getPlatform, getRecipientNameWithLink } from './helper'
+import { addCommas, formatTimestamp, getContractSymbolAndDecimalsFromFile, getFormattedTokenWithLink, getPlatform, getRecipientNameWithLink } from './helper'
 import { Contract } from 'ethers'
 import { defactorFn } from './../../../utils/roundingUtils'
 
@@ -31,7 +31,7 @@ export const bridgeFormatters: { [functionName: string]: TransactionFormatter } 
     const amount = defactorFn(decodedParams[3], `${tokenDecimals}`)
     const recipientWithLink = getRecipientNameWithLink(CometChains.arbitrum, decodedParams[2])
 
-    return `Bridge ${amount} [${tokenSymbol}](https://${platform}/address/${tokenAddress}) tokens over Arbitrum to ${recipientWithLink}.`
+    return `Bridge ${addCommas(amount)} [${tokenSymbol}](https://${platform}/address/${tokenAddress}) tokens over Arbitrum to ${recipientWithLink}.`
   },
   'createStream(address,uint256,address,uint256,uint256)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = getPlatform(chain)
@@ -48,7 +48,9 @@ export const bridgeFormatters: { [functionName: string]: TransactionFormatter } 
 
     const recipientWithLink = getRecipientNameWithLink(chain, recipientAddress)
 
-    return `Create a stream on [${senderName}](https://${platform}/address/${senderAddress}) to transfer **${amount}** [${tokenSymbol}](https://${platform}/address/${tokenAddress}) to ${recipientWithLink}. The stream will start at ${formatTimestamp(
+    return `Create a stream on [${senderName}](https://${platform}/address/${senderAddress}) to transfer **${addCommas(
+      amount
+    )}** [${tokenSymbol}](https://${platform}/address/${tokenAddress}) to ${recipientWithLink}. The stream will start at ${formatTimestamp(
       decodedParams[3]
     )} and end at ${formatTimestamp(decodedParams[4])}.`
   },

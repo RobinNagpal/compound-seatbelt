@@ -13,7 +13,7 @@ import {
   addCommas,
   getChangeTextFn,
 } from './helper'
-import { annualizeFn, defactorFn, multiplyFn, percentageFn, subtractFn } from './../../../utils/roundingUtils'
+import { annualizeFn, defactorFn, percentageFn, subtractFn } from './../../../utils/roundingUtils'
 
 interface AssetConfig {
   asset: string
@@ -41,14 +41,14 @@ async function getTextForChangeInInterestRate(
   const { symbol } = await getContractSymbolAndDecimalsFromFile(baseToken, baseTokenInstance, chain)
 
   const prevInterestRate = annualizeFn((await getInterestRateFunction(currentCometInstance)).toString())
-  const previousRateInPercent = multiplyFn(prevInterestRate, '100')
-  const currentRateInPercent = multiplyFn(defactorFn(decodedParams[1]), '100')
+  const previousRateInPercent = percentageFn(prevInterestRate)
+  const currentRateInPercent = percentageFn(defactorFn(decodedParams[1]))
 
   const changeInRate = subtractFn(currentRateInPercent, previousRateInPercent)
 
-  return `Set ${interestRateName} of [${symbol}](https://${platform}/address/${baseToken}) from ${previousRateInPercent} to ${currentRateInPercent} ${getChangeTextFn(
-    changeInRate
-  )}`
+  return `Set ${interestRateName} of [${symbol}](https://${platform}/address/${baseToken}) from ${addCommas(previousRateInPercent)} to ${addCommas(
+    currentRateInPercent
+  )} ${getChangeTextFn(changeInRate)}`
 }
 
 async function getTextForChange(
@@ -71,7 +71,9 @@ async function getTextForChange(
 
   const changeInValues = subtractFn(newValue, prevValue)
 
-  return `Set ${functionName} of [${symbol}](https://${platform}/address/${baseToken}) from ${prevValue} to ${newValue} ${getChangeTextFn(changeInValues)}`
+  return `Set ${functionName} of [${symbol}](https://${platform}/address/${baseToken}) from ${addCommas(prevValue)} to ${addCommas(newValue)} ${getChangeTextFn(
+    changeInValues
+  )}`
 }
 
 export const configuratorFormatters: { [functionName: string]: TransactionFormatter } = {
@@ -215,7 +217,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       decodedParams[1]
     }) on [${baseTokenSymbol}](https://${platform}/address/${baseToken}) via [${contractName}](https://${platform}/address/${
       transaction.target
-    }) from **${prevSupplyCap}** to **${newSupplyCap}** ${getChangeTextFn(changeInSupplyCap)}`
+    }) from **${addCommas(prevSupplyCap)}** to **${addCommas(newSupplyCap)}** ${getChangeTextFn(changeInSupplyCap)}`
   },
   'setBaseBorrowMin(address,uint104)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = getPlatform(chain)
@@ -234,9 +236,9 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
 
     const changeInBaseBorrowMin = subtractFn(newBaseBorrowMin, prevBaseBorrowMin)
 
-    return `Set BaseBorrowMin of [${symbol}](https://${platform}/address/${
-      decodedParams[0]
-    }) from **${prevBaseBorrowMin}** to **${newBaseBorrowMin}** ${getChangeTextFn(changeInBaseBorrowMin)}`
+    return `Set BaseBorrowMin of [${symbol}](https://${platform}/address/${decodedParams[0]}) from **${addCommas(prevBaseBorrowMin)}** to **${addCommas(
+      newBaseBorrowMin
+    )}** ${getChangeTextFn(changeInBaseBorrowMin)}`
   },
   'addAsset(address,tuple)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = getPlatform(chain)
@@ -384,20 +386,20 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       baseTokenPriceFeed: [PriceFeed](https://${platform}/address/${tupleList[3]}),
       extensionDelegate: [${extensionDelegateSymbol}](https://${platform}/address/${tupleList[4]}),
       supplyKink: ${percentageFn(supplyKink)},
-      supplyPerYearInterestRateSlopeLow: ${supplyPerYearInterestRateSlopeLow},
-      supplyPerYearInterestRateSlopeHigh: ${supplyPerYearInterestRateSlopeHigh},
-      supplyPerYearInterestRateBase: ${supplyPerYearInterestRateBase},
+      supplyPerYearInterestRateSlopeLow: ${addCommas(supplyPerYearInterestRateSlopeLow)},
+      supplyPerYearInterestRateSlopeHigh: ${addCommas(supplyPerYearInterestRateSlopeHigh)},
+      supplyPerYearInterestRateBase: ${addCommas(supplyPerYearInterestRateBase)},
       borrowKink: ${percentageFn(borrowKink)},
-      borrowPerYearInterestRateSlopeLow: ${borrowPerYearInterestRateSlopeLow},
-      borrowPerYearInterestRateSlopeHigh: ${borrowPerYearInterestRateSlopeHigh},
-      borrowPerYearInterestRateBase: ${borrowPerYearInterestRateBase},
-      storeFrontPriceFactor: ${storeFrontPriceFactor},
-      trackingIndexScale: ${trackingIndexScale},
-      baseTrackingSupplySpeed: ${baseTrackingSupplySpeed},
-      baseTrackingBorrowSpeed: ${baseTrackingBorrowSpeed},
-      baseMinForRewards: ${baseMinForRewards},
-      baseBorrowMin: ${baseBorrowMin},
-      targetReserves: ${targetReserves},
+      borrowPerYearInterestRateSlopeLow: ${addCommas(borrowPerYearInterestRateSlopeLow)},
+      borrowPerYearInterestRateSlopeHigh: ${addCommas(borrowPerYearInterestRateSlopeHigh)},
+      borrowPerYearInterestRateBase: ${addCommas(borrowPerYearInterestRateBase)},
+      storeFrontPriceFactor: ${addCommas(storeFrontPriceFactor)},
+      trackingIndexScale: ${addCommas(trackingIndexScale)},
+      baseTrackingSupplySpeed: ${addCommas(baseTrackingSupplySpeed)},
+      baseTrackingBorrowSpeed: ${addCommas(baseTrackingBorrowSpeed)},
+      baseMinForRewards: ${addCommas(baseMinForRewards)},
+      baseBorrowMin: ${addCommas(baseBorrowMin)},
+      targetReserves: ${addCommas(targetReserves)},
       assetConfigs: ${JSON.stringify(assetConfigs, null, 2)}
     }`
   },

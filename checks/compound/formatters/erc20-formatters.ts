@@ -1,10 +1,10 @@
-import { hexZeroPad, hexStripZeros } from '@ethersproject/bytes'
+import { hexStripZeros } from '@ethersproject/bytes'
 import { Contract } from 'ethers'
 
 import { customProvider } from '../../../utils/clients/ethers'
 import { getContractNameAndAbiFromFile } from '../abi-utils'
 import { CometChains, ExecuteTransactionInfo, TransactionFormatter } from '../compound-types'
-import { getContractSymbolAndDecimalsFromFile, getFormattedTokenNameWithLink, getPlatform, getRecipientNameWithLink } from './helper'
+import { addCommas, getContractSymbolAndDecimalsFromFile, getFormattedTokenNameWithLink, getPlatform, getRecipientNameWithLink } from './helper'
 import { defactorFn, percentageFn, subtractFn } from './../../../utils/roundingUtils'
 
 // @ts-ignore
@@ -21,7 +21,10 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
 
     const amount = defactorFn(decodedParams[1], `${decimals}`)
 
-    return `🛑 Transfer **${amount}** [${symbol}](https://${platform}/address/${coinAddress}) to ${getRecipientNameWithLink(chain, decodedParams[0])}.`
+    return `🛑 Transfer **${addCommas(amount)}** [${symbol}](https://${platform}/address/${coinAddress}) to ${getRecipientNameWithLink(
+      chain,
+      decodedParams[0]
+    )}.`
   },
   'approve(address,uint256)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = getPlatform(chain)
@@ -33,7 +36,10 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
 
     const amount = defactorFn(decodedParams[1], `${decimals}`)
 
-    return `🛑 Approve **${amount}** [${symbol}](https://${platform}/address/${tokenAddress}) tokens to ${getRecipientNameWithLink(chain, decodedParams[0])}`
+    return `🛑 Approve **${addCommas(amount)}** [${symbol}](https://${platform}/address/${tokenAddress}) tokens to ${getRecipientNameWithLink(
+      chain,
+      decodedParams[0]
+    )}`
   },
   '_setReserveFactor(uint256)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const tokenAddress = transaction.target
@@ -65,7 +71,9 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
 
     const amount = defactorFn(decodedParams[0], `${decimals}`)
 
-    return `Set DepositforBurn of ${contractName} for the Burn contract [${tokenSymbol}](https://${platform}/address/${burnContractAddress}) with amount ${amount}, destination domain ${decodedParams[1]} and the Mint recipient ${normalized}`
+    return `Set DepositforBurn of ${contractName} for the Burn contract [${tokenSymbol}](https://${platform}/address/${burnContractAddress}) with amount ${addCommas(
+      amount
+    )}, destination domain ${decodedParams[1]} and the Mint recipient ${normalized}`
   },
   'setText(bytes32,string,string)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const ENSSubdomain =
@@ -111,7 +119,9 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
 
     const totalReservesNew = subtractFn(totalReservesFormatted, reduceValue)
 
-    return `Reduce reserves of [${cTokenSymbol}](https://${platform}/address/${cTokenAddress}) by ${reduceValue} [${assetSymbol}](https://${platform}/address/${underlyingAssetAddress}). Remaining total reserves would be ${totalReservesNew}`
+    return `Reduce reserves of [${cTokenSymbol}](https://${platform}/address/${cTokenAddress}) by ${addCommas(
+      reduceValue
+    )} [${assetSymbol}](https://${platform}/address/${underlyingAssetAddress}). Remaining total reserves would be ${addCommas(totalReservesNew)}`
   },
   'redeem(uint256)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = getPlatform(chain)
@@ -130,7 +140,9 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
     const cTokens = defactorFn(decodedParams[0], `${cTokenDecimals}`)
     const underlyingAssetTokens = defactorFn(decodedParams[0], `${assetDecimals}`)
 
-    return `Redeem ${cTokens} [${cTokenSymbol}](https://${platform}/address/${transaction.target}) cTokens in exchange for ${underlyingAssetTokens} [${assetSymbol}](https://${platform}/address/${underlyingAssetAddress})`
+    return `Redeem ${addCommas(cTokens)} [${cTokenSymbol}](https://${platform}/address/${transaction.target}) cTokens in exchange for ${addCommas(
+      underlyingAssetTokens
+    )} [${assetSymbol}](https://${platform}/address/${underlyingAssetAddress})`
   },
   'migrateFromLegacyReputationToken()': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = getPlatform(chain)

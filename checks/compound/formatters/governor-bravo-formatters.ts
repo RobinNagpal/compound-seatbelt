@@ -1,7 +1,7 @@
 import { Contract } from 'ethers'
 import { getContractNameAndAbiFromFile } from '../abi-utils'
 import { CometChains, ExecuteTransactionInfo, TransactionFormatter } from './../compound-types'
-import { formatCoinsAndAmounts, getChangeTextFn, getPlatform } from './helper'
+import { addCommas, formatCoinsAndAmounts, getChangeTextFn, getPlatform } from './helper'
 import { customProvider } from '../../../utils/clients/ethers'
 import { subtractFn } from './../../../utils/roundingUtils'
 
@@ -20,9 +20,9 @@ export const governorBravoFormatters: { [functionName: string]: TransactionForma
 
     const changeInThreshold = subtractFn(newThreshold, prevThreshold)
 
-    return `Set proposal threshold of [${name}](https://${platform}/address/${
-      transaction.target
-    }) from **${prevThreshold}** to **${newThreshold}** ${getChangeTextFn(changeInThreshold)}`
+    return `Set proposal threshold of [${name}](https://${platform}/address/${transaction.target}) from **${addCommas(prevThreshold)}** to **${addCommas(
+      newThreshold
+    )}** ${getChangeTextFn(changeInThreshold)}`
   },
   '_setWhitelistGuardian(address)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = getPlatform(chain)
@@ -49,9 +49,9 @@ export const governorBravoFormatters: { [functionName: string]: TransactionForma
 
     const changeInVotingDelay = subtractFn(newVotingDelay, prevVotingDelay)
 
-    return `Number of Ethereum blocks to wait before voting on a proposal may begin (Voting Delay) for [${name}](https://${platform}/address/${governanceAddress}) is changed from **${prevVotingDelay}** blocks to **${newVotingDelay}** blocks ${getChangeTextFn(
-      changeInVotingDelay
-    )}`
+    return `Number of Ethereum blocks to wait before voting on a proposal may begin (Voting Delay) for [${name}](https://${platform}/address/${governanceAddress}) is changed from **${addCommas(
+      prevVotingDelay
+    )}** blocks to **${addCommas(newVotingDelay)}** blocks ${getChangeTextFn(changeInVotingDelay)}`
   },
   '_setVotingPeriod(uint256)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = getPlatform(chain)
@@ -66,9 +66,9 @@ export const governorBravoFormatters: { [functionName: string]: TransactionForma
 
     const changeInVotingPeriod = subtractFn(newVotingPeriod, prevVotingPeriod)
 
-    return `The duration of voting on a proposal in terms of Ethereum blocks (Voting Period) of [${name}](https://${platform}/address/${governanceAddress}) is changed from **${prevVotingPeriod}** blocks to **${newVotingPeriod}** blocks ${getChangeTextFn(
-      changeInVotingPeriod
-    )}`
+    return `The duration of voting on a proposal in terms of Ethereum blocks (Voting Period) of [${name}](https://${platform}/address/${governanceAddress}) is changed from **${addCommas(
+      prevVotingPeriod
+    )}** blocks to **${addCommas(newVotingPeriod)}** blocks ${getChangeTextFn(changeInVotingPeriod)}`
   },
   'acceptOwnership()': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = getPlatform(chain)
