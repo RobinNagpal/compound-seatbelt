@@ -1,15 +1,7 @@
 import { customProvider } from '../../../utils/clients/ethers'
 import { getContractNameAndAbiFromFile } from '../abi-utils'
 import { CometChains, ExecuteTransactionInfo, TransactionFormatter } from './../compound-types'
-import {
-  addCommas,
-  defactor,
-  formatTimestamp,
-  getContractSymbolAndDecimalsFromFile,
-  getFormattedTokenWithLink,
-  getPlatform,
-  getRecipientNameWithLink,
-} from './helper'
+import { formatTimestamp, getContractSymbolAndDecimalsFromFile, getFormattedTokenWithLink, getPlatform, getRecipientNameWithLink } from './helper'
 import { Contract } from 'ethers'
 import { defactorFn } from './../../../utils/roundingUtils'
 
