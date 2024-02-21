@@ -16,7 +16,9 @@ import {
   fetchDataForAsset,
   getPlatformFromGecko,
   addCommas,
+  getChangeTextFn,
 } from './helper'
+import { annualizeFn, defactorFn, multiplyFn, percentageFn, percentageInNumberFn, subtractFn } from './../../../utils/roundingUtils'
 
 interface AssetConfig {
   asset: string
@@ -43,15 +45,13 @@ async function getTextForChangeInInterestRate(
   const baseTokenInstance = new Contract(baseToken, baseTokenAbi, customProvider(chain))
   const { symbol } = await getContractSymbolAndDecimalsFromFile(baseToken, baseTokenInstance, chain)
 
-  const prevInterestRate = annualize(await getInterestRateFunction(currentCometInstance))
-  const previousRateInPercent = parseFloat((prevInterestRate * 100).toPrecision(3))
+  const prevInterestRate = annualizeFn((await getInterestRateFunction(currentCometInstance)).toString())
+  const previousRateInPercent = multiplyFn(prevInterestRate, '100')
+  const currentRateInPercent = multiplyFn(defactorFn(decodedParams[1]), '100')
 
-  const newInterestRate = BigInt(decodedParams[1])
-  const currentRateInPercent = defactor(newInterestRate) * 100
+  const changeInRate = subtractFn(currentRateInPercent, previousRateInPercent)
 
-  const changeInRate = calculateDifferenceOfDecimals(currentRateInPercent, previousRateInPercent)
-
-  return `Set ${interestRateName} of [${symbol}](https://${platform}/address/${baseToken}) from ${previousRateInPercent} to ${currentRateInPercent} ${getChangeText(
+  return `Set ${interestRateName} of [${symbol}](https://${platform}/address/${baseToken}) from ${previousRateInPercent} to ${currentRateInPercent} ${getChangeTextFn(
     changeInRate
   )}`
 }
@@ -178,21 +178,21 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
 
     const assetInfo = await currentBaseTokenInstance.callStatic.getAssetInfoByAddress(decodedParams[1])
 
-    const prevLiquidationFactor = getPercentageForTokenFactor(assetInfo.liquidationFactor)
-    const newLiquidationFactor = getPercentageForTokenFactor(decodedParams[2])
+    const prevLiquidationFactor = percentageFn(assetInfo.liquidationFactor.toString())
+    const newLiquidationFactor = percentageFn(decodedParams[2])
     const baseToken = await currentBaseTokenInstance.callStatic.baseToken()
 
     const { abi: baseTokenAbi } = await getContractNameAndAbiFromFile(chain, baseToken)
     const baseTokenInstance = new Contract(baseToken, baseTokenAbi, customProvider(chain))
     const { symbol: baseTokenSymbol } = await getContractSymbolAndDecimalsFromFile(baseToken, baseTokenInstance, chain)
 
-    const changeInLiquidationFactor = calculateDifferenceOfDecimals(parseFloat(newLiquidationFactor), parseFloat(prevLiquidationFactor))
+    const changeInLiquidationFactor = subtractFn(newLiquidationFactor, prevLiquidationFactor)
 
-    return `${getCriticalitySign(changeInLiquidationFactor, 5)} Set liquidation factor for [${tokenSymbol}](https://${platform}/address/${
+    return `${getCriticalitySign(parseFloat(changeInLiquidationFactor), 5)} Set liquidation factor for [${tokenSymbol}](https://${platform}/address/${
       decodedParams[1]
     }) on [${baseTokenSymbol}](https://${platform}/address/${baseToken}) via [${contractName}](https://${platform}/address/${
       transaction.target
-    }) from **${prevLiquidationFactor}%** to **${newLiquidationFactor}%** ${getChangeText(changeInLiquidationFactor, true)}`
+    }) from **${prevLiquidationFactor}%** to **${newLiquidationFactor}%** ${getChangeTextFn(changeInLiquidationFactor, true)}`
   },
   'updateAssetSupplyCap(address,address,uint128)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = getPlatform(chain)

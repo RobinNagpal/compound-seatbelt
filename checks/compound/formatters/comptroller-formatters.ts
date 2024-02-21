@@ -7,7 +7,9 @@ import {
   addCommas,
   calculateDifferenceOfDecimals,
   defactor,
+  formatAddressesAndAmounts,
   getChangeText,
+  getChangeTextFn,
   getContractSymbolAndDecimalsFromFile,
   getCriticalitySign,
   getFormatCompTokens,
@@ -16,6 +18,7 @@ import {
   getPlatform,
   getRecipientNameWithLink,
 } from './helper'
+import { defactorFn, percentageInNumberFn, subtractFn } from './../../../utils/roundingUtils'
 
 export const comptrollerFormatters: { [functionName: string]: TransactionFormatter } = {
   '_grantComp(address,uint256)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
@@ -61,20 +64,20 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
 
       const baseText = `Set CompSpeeds for ${symbol}`
 
-      const previousBorrowSpeed = await currentTargetInstance.callStatic.compBorrowSpeeds(currentAddress)
-      const previousSupplySpeed = await currentTargetInstance.callStatic.compSupplySpeeds(currentAddress)
+      const previousBorrowSpeed = (await currentTargetInstance.callStatic.compBorrowSpeeds(currentAddress)).toString()
+      const previousSupplySpeed = (await currentTargetInstance.callStatic.compSupplySpeeds(currentAddress)).toString()
 
-      const changeInSupply = calculateDifferenceOfDecimals(getDefactoredCompSpeeds(currentSupplySpeed), getDefactoredCompSpeeds(previousSupplySpeed))
+      const changeInSupply = subtractFn(defactorFn(currentSupplySpeed), defactorFn(previousSupplySpeed))
 
-      const changeInBorrow = calculateDifferenceOfDecimals(getDefactoredCompSpeeds(currentBorrowSpeed), getDefactoredCompSpeeds(previousBorrowSpeed))
+      const changeInBorrow = subtractFn(defactorFn(currentBorrowSpeed), defactorFn(previousBorrowSpeed))
 
-      const prevFormattedBorrowSpeed = getFormattedCompSpeeds(previousBorrowSpeed)
-      const prevFormattedSupplySpeed = getFormattedCompSpeeds(previousSupplySpeed)
-      const newFormattedBorrowSpeed = getFormattedCompSpeeds(currentBorrowSpeed)
-      const newFormattedSupplySpeed = getFormattedCompSpeeds(currentSupplySpeed)
+      const prevFormattedBorrowSpeed = defactorFn(previousBorrowSpeed)
+      const prevFormattedSupplySpeed = defactorFn(previousSupplySpeed)
+      const newFormattedBorrowSpeed = defactorFn(currentBorrowSpeed)
+      const newFormattedSupplySpeed = defactorFn(currentSupplySpeed)
 
-      const changeInSpeedsText = (type: string, changeInSpeed: number, prevFormattedValue: string, newFormattedValue: string) => {
-        return `${type} speed of ${symbol} to ${newFormattedValue} ${compSymbol}/block which was previously ${prevFormattedValue} ${compSymbol}/block ${getChangeText(
+      const changeInSpeedsText = (type: string, changeInSpeed: string, prevFormattedValue: string, newFormattedValue: string) => {
+        return `${type} speed of ${symbol} to ${newFormattedValue} ${compSymbol}/block which was previously ${prevFormattedValue} ${compSymbol}/block ${getChangeTextFn(
           changeInSpeed,
           true
         )}`
@@ -107,13 +110,13 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
 
     if (currentValue) {
       const prevValue = getPercentageForTokenFactor(currentValue)
-      const changeInFactor = calculateDifferenceOfDecimals(defactor(BigInt(decodedParams[1])), defactor(BigInt(currentValue)))
+      const changeInFactor = subtractFn(decodedParams[1], currentValue.toString())
 
       return `${getCriticalitySign(
-        changeInFactor * 100,
+        percentageInNumberFn(changeInFactor),
         15
       )} Set [${symbol}](https://${platform}/address/${targetToken}) collateral factor from ${prevValue}% to ${newValue}% ${getChangeText(
-        changeInFactor * 100,
+        percentageInNumberFn(changeInFactor),
         true
       )}`
     }
@@ -138,6 +141,15 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
       const { abi } = await getContractNameAndAbiFromFile(chain, currentAddress)
       const cTokenInstance = new Contract(currentAddress, abi, customProvider(chain))
       const { symbol } = await getContractSymbolAndDecimalsFromFile(currentAddress, cTokenInstance, chain)
+
+      // There is no underlying asset for the address
+      if (currentAddress === '0x4Ddc2D193948926D02f9B1fE9e1daa0718270ED5') {
+        finalText += `Set MarketBorrowCaps of [${symbol}](https://${platform}/address/${currentAddress}) to ${currentValue}`
+        if (i < addresses.length - 1) {
+          finalText += '\n\n'
+        }
+        continue
+      }
       const underlyingAssetAddress = await cTokenInstance.callStatic.underlying()
       const { abi: assetAbi } = await getContractNameAndAbiFromFile(chain, underlyingAssetAddress)
       const assetInstance = new Contract(underlyingAssetAddress, assetAbi, customProvider(chain))
@@ -232,6 +244,21 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     const { contractName: guardianContractName } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
 
     return `🛑 Set the Pause Guardian to [${guardianContractName}](https://${platform}/address/${decodedParams[0]}) via [${targetContractName}](https://${platform}/address/${transaction.target}).`
+  },
+  '_become(address)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
+    const platform = getPlatform(chain)
+
+    const targetAddress = transaction.target
+    const newImplmentationAddress = decodedParams[0]
+
+    return `🛑 Upgrade of the Compound Comptroller contract to a new implementation [${newImplmentationAddress}](https://${platform}/address/${newImplmentationAddress}) from [${targetAddress}](https://${platform}/address/${targetAddress}).`
+  },
+  'fixBadAccruals(address[],uint256[])': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
+    const platform = getPlatform(chain)
+    const addressesList = decodedParams[0].split(',')
+    const amountsList = decodedParams[1].split(',')
+
+    return `🛑 Fix over-accrued COMP tokens of the addresses by their respective amounts:\n\n${formatAddressesAndAmounts(addressesList, amountsList, platform)}`
   },
 }
 

@@ -15,6 +15,7 @@ import {
   getPlatform,
   getRecipientNameWithLink,
 } from './helper'
+import { percentageFn } from './../../../utils/roundingUtils'
 
 // @ts-ignore
 import namehash from '@ensdomains/eth-ens-namehash'
@@ -56,10 +57,10 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
     const coinInstance = new Contract(tokenAddress, abi, customProvider(chain))
     const prevReserveFactor = await coinInstance.callStatic.reserveFactorMantissa()
 
-    const newReserveFactor = getPercentageForTokenFactor(decodedParams[0])
+    const newReserveFactor = percentageFn(decodedParams[0])
 
     const tokenNameWithLink = await getFormattedTokenNameWithLink(chain, tokenAddress)
-    const prevReserve = getPercentageForTokenFactor(prevReserveFactor)
+    const prevReserve = percentageFn(prevReserveFactor.toString())
     if (prevReserveFactor && prevReserve !== newReserveFactor) {
       return `Set reserve factor for ${tokenNameWithLink} from ${prevReserve}% to ${newReserveFactor}%`
     }
