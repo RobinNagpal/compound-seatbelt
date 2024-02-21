@@ -1,8 +1,9 @@
 import { Contract } from 'ethers'
 import { getContractNameAndAbiFromFile } from '../abi-utils'
 import { CometChains, ExecuteTransactionInfo, TransactionFormatter } from './../compound-types'
-import { calculateDifferenceOfDecimals, formatCoinsAndAmounts, getChangeText, getContractSymbolAndDecimalsFromFile, getPlatform } from './helper'
+import { formatCoinsAndAmounts, getChangeTextFn, getPlatform } from './helper'
 import { customProvider } from '../../../utils/clients/ethers'
+import { subtractFn } from './../../../utils/roundingUtils'
 
 export const governorBravoFormatters: { [functionName: string]: TransactionFormatter } = {
   '_setProposalThreshold(uint256)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
@@ -14,14 +15,14 @@ export const governorBravoFormatters: { [functionName: string]: TransactionForma
 
     const name = await governanceInstance.callStatic.name()
 
-    const prevThreshold = parseFloat(await governanceInstance.callStatic.proposalThreshold())
-    const newThreshold = parseFloat(decodedParams[0])
+    const prevThreshold = (await governanceInstance.callStatic.proposalThreshold()).toString()
+    const newThreshold = decodedParams[0]
 
-    const changeInThreshold = calculateDifferenceOfDecimals(newThreshold, prevThreshold)
+    const changeInThreshold = subtractFn(newThreshold, prevThreshold)
 
     return `Set proposal threshold of [${name}](https://${platform}/address/${
       transaction.target
-    }) from **${prevThreshold.toLocaleString()}** to **${newThreshold.toLocaleString()}** ${getChangeText(changeInThreshold)}`
+    }) from **${prevThreshold}** to **${newThreshold}** ${getChangeTextFn(changeInThreshold)}`
   },
   '_setWhitelistGuardian(address)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = getPlatform(chain)
@@ -43,12 +44,12 @@ export const governorBravoFormatters: { [functionName: string]: TransactionForma
     const governanceInstance = new Contract(governanceAddress, abi, customProvider(chain))
 
     const name = await governanceInstance.callStatic.name()
-    const prevVotingDelay = await governanceInstance.callStatic.votingDelay()
-    const newVotingDelay = parseFloat(decodedParams[0])
+    const prevVotingDelay = (await governanceInstance.callStatic.votingDelay()).toString()
+    const newVotingDelay = decodedParams[0]
 
-    const changeInVotingDelay = await calculateDifferenceOfDecimals(newVotingDelay, prevVotingDelay)
+    const changeInVotingDelay = subtractFn(newVotingDelay, prevVotingDelay)
 
-    return `Number of Ethereum blocks to wait before voting on a proposal may begin (Voting Delay) for [${name}](https://${platform}/address/${governanceAddress}) is changed from **${prevVotingDelay}** blocks to **${newVotingDelay}** blocks ${getChangeText(
+    return `Number of Ethereum blocks to wait before voting on a proposal may begin (Voting Delay) for [${name}](https://${platform}/address/${governanceAddress}) is changed from **${prevVotingDelay}** blocks to **${newVotingDelay}** blocks ${getChangeTextFn(
       changeInVotingDelay
     )}`
   },
@@ -60,12 +61,12 @@ export const governorBravoFormatters: { [functionName: string]: TransactionForma
     const governanceInstance = new Contract(governanceAddress, abi, customProvider(chain))
 
     const name = await governanceInstance.callStatic.name()
-    const prevVotingPeriod = await governanceInstance.callStatic.votingPeriod()
-    const newVotingPeriod = parseFloat(decodedParams[0])
+    const prevVotingPeriod = (await governanceInstance.callStatic.votingPeriod()).toString()
+    const newVotingPeriod = decodedParams[0]
 
-    const changeInVotingPeriod = await calculateDifferenceOfDecimals(newVotingPeriod, prevVotingPeriod)
+    const changeInVotingPeriod = subtractFn(newVotingPeriod, prevVotingPeriod)
 
-    return `The duration of voting on a proposal in terms of Ethereum blocks (Voting Period) of [${name}](https://${platform}/address/${governanceAddress}) is changed from **${prevVotingPeriod}** blocks to **${newVotingPeriod}** blocks ${getChangeText(
+    return `The duration of voting on a proposal in terms of Ethereum blocks (Voting Period) of [${name}](https://${platform}/address/${governanceAddress}) is changed from **${prevVotingPeriod}** blocks to **${newVotingPeriod}** blocks ${getChangeTextFn(
       changeInVotingPeriod
     )}`
   },
