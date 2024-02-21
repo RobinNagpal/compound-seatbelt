@@ -5,7 +5,7 @@ import { getContractNameAndAbiFromFile, getFunctionFragmentAndDecodedCalldata, g
 import { CometChains, ExecuteTransactionInfo, ExecuteTransactionsInfo, TargetLookupData, TransactionMessage } from './compound-types'
 import { getDecodedBytesForChain, l2Bridges } from './l2-utils'
 import { formattersLookup } from './transaction-formatter'
-import { defactor } from './formatters/helper'
+import { defactorFn } from './../../utils/roundingUtils'
 // @ts-ignore
 const fetchUrl = mftch.default
 
@@ -143,11 +143,11 @@ async function getTransactionMessages(
   const { target, value, signature, calldata } = transactionInfo
   if (value?.toString() && value?.toString() !== '0') {
     if (!signature) {
-      return { info: `\n\nTransfer ${defactor(value)} ETH to ${target}` }
+      return { info: `\n\nTransfer ${defactorFn(value.toString())} ETH to ${target}` }
     } else {
       const { decodedCalldata } = await getFunctionFragmentAndDecodedCalldata(proposalId, chain, transactionInfo)
       return {
-        info: `\n\n${target}.${signature.split('(')[0]}(${decodedCalldata.join(',')}) and Transfer ${defactor(value)} ETH to ${target}`,
+        info: `\n\n${target}.${signature.split('(')[0]}(${decodedCalldata.join(',')}) and Transfer ${defactorFn(value.toString())} ETH to ${target}`,
       }
     }
   }
