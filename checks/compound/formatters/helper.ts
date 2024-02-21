@@ -1,4 +1,3 @@
-import { BigNumber } from '@ethersproject/bignumber'
 import { Contract, ethers } from 'ethers'
 import fs from 'fs'
 import { CometChains, SymbolAndDecimalsLookupData } from '../compound-types'
@@ -8,53 +7,6 @@ import mftch from 'micro-ftch'
 import { defactorFn } from './../../../utils/roundingUtils'
 // @ts-ignore
 const fetchUrl = mftch.default
-
-export type Numeric = number | bigint
-export const factorDecimals = 18
-export const factorScale = factor(1)
-export const ONE = factorScale
-export const ZERO = factor(0)
-export function exp(i: number, d: Numeric = 0, r: Numeric = 6): bigint {
-  return (BigInt(Math.floor(i * 10 ** Number(r))) * 10n ** BigInt(d)) / 10n ** BigInt(r)
-}
-
-export function factor(f: number, decimals: number = factorDecimals): bigint {
-  return exp(f, decimals)
-}
-
-export function defactor(f: bigint | BigNumber, decimals: number = 1e18): number {
-  return Number(toBigInt(f)) / decimals
-}
-
-// Truncates a factor to a certain number of decimals
-export function truncateDecimals(factor: bigint | BigNumber, decimals = 4) {
-  const descaleFactor = factorScale / exp(1, decimals)
-  return (toBigInt(factor) / descaleFactor) * descaleFactor
-}
-
-export function mulPrice(n: bigint, price: bigint | BigNumber, fromScale: bigint | BigNumber): bigint {
-  return (n * toBigInt(price)) / toBigInt(fromScale)
-}
-
-function toBigInt(f: bigint | BigNumber): bigint {
-  if (typeof f === 'bigint') {
-    return f
-  } else {
-    return f.toBigInt()
-  }
-}
-
-export function annualize(n: bigint | BigNumber, secondsPerYear = 31536000n): number {
-  return defactor(toBigInt(n) * secondsPerYear)
-}
-
-export function toYears(seconds: number, secondsPerYear = 31536000): number {
-  return seconds / secondsPerYear
-}
-
-export function calculateDifferenceOfDecimals(newValue: number, oldValue: number): number {
-  return defactor(factor(newValue) - factor(oldValue))
-}
 
 export function getPlatform(chain: CometChains) {
   switch (chain) {
@@ -112,18 +64,9 @@ export async function getContractSymbolAndDecimalsFromFile(address: string, inst
   return { symbol: lookupData[addr].symbol, decimals: lookupData[addr].decimals }
 }
 
-export function getPercentageForTokenFactor(value: BigNumber | string) {
-  return (defactor(BigInt(value.toString())) * 100).toFixed(1)
-}
-
-export function getFormatCompTokens(numberOfCompTokens: string) {
-  const compToken = defactor(BigInt(numberOfCompTokens))
-  return compToken.toFixed(2)
-}
-
 export async function getFormattedTokenWithLink(chain: CometChains, tokenAddress: string, value: string) {
-  const token = defactor(BigInt(value))
-  return `**${token.toFixed(2)} ${await getFormattedTokenNameWithLink(chain, tokenAddress)}**`
+  const token = defactorFn(value)
+  return `**${addCommas(token)} ${await getFormattedTokenNameWithLink(chain, tokenAddress)}**`
 }
 export async function getFormattedTokenNameWithLink(chain: CometChains, tokenAddress: string) {
   const platform = getPlatform(chain)
@@ -147,15 +90,12 @@ export function getRecipientNameWithLink(chain: CometChains, recipient: string) 
   return `[${recipientName}](https://${platform}/address/${recipient})`
 }
 
-export function getChangeText(change: number, isPercentage: boolean = false): string {
-  const percentageSign = isPercentage ? '%' : ''
-  return `${change == 0 ? `(It remains the same)` : `(It's getting ${change > 0 ? 'increased' : 'decreased'} by **${change}${percentageSign}**)`} `
-}
-
 export function getChangeTextFn(change: string, isPercentage: boolean = false): string {
   const percentageSign = isPercentage ? '%' : ''
   return `${
-    change.match('0') ? `(It remains the same)` : `(It's getting ${change.startsWith('-') ? 'decreased' : 'increased'} by **${change}${percentageSign}**)`
+    change === '0'
+      ? `(It remains the same)`
+      : `(It's getting ${change.startsWith('-') ? 'decreased' : 'increased'} by **${addCommas(change)}${percentageSign}**)`
   } `
 }
 
@@ -166,7 +106,8 @@ export function formatTimestamp(timestampString: string) {
   })} ET`
 }
 
-export function getCriticalitySign(change: number, optimumChange: number) {
+export function getCriticalitySign(changeInString: string, optimumChange: number) {
+  const change = parseFloat(changeInString)
   if (change <= -2 * optimumChange || change >= 2 * optimumChange) {
     return '🛑'
   } else if (change <= -optimumChange || change >= optimumChange) {
@@ -211,11 +152,22 @@ export async function fetchDataForAsset(query: string) {
   }
 }
 
-export function addCommas(number: number | string) {
-  if (typeof number === 'string') {
-    return parseFloat(number).toLocaleString('en-US')
-  }
-  return number.toLocaleString('en-US')
+export function addCommas(numberAsString: string): string {
+  const isNegative = numberAsString.startsWith('-')
+
+  let absNumberAsString = isNegative ? numberAsString.substring(1) : numberAsString
+
+  let parts = absNumberAsString.split('.')
+  let integerPart = parts[0]
+  let decimalPart = parts.length > 1 ? '.' + parts[1] : ''
+
+  let reversedIntegerPart = integerPart.split('').reverse().join('')
+  let withCommasArray = reversedIntegerPart.match(/.{1,3}/g)
+  let withCommas = withCommasArray ? withCommasArray.join(',') : ''
+
+  let formattedNumber = withCommas.split('').reverse().join('') + decimalPart
+
+  return isNegative ? '-' + formattedNumber : formattedNumber
 }
 
 export async function formatCoinsAndAmounts(list: string[], chain: CometChains, platform: string) {
@@ -223,8 +175,8 @@ export async function formatCoinsAndAmounts(list: string[], chain: CometChains, 
     const { abi } = await getContractNameAndAbiFromFile(chain, address)
     const tokenInstance = new Contract(address, abi, customProvider(chain))
     const { symbol, decimals } = await getContractSymbolAndDecimalsFromFile(address, tokenInstance, chain)
-    const defactoredAmount = defactor(BigInt(amount), parseFloat(`1e${decimals}`))
-    return `${addCommas(defactoredAmount.toFixed(2))} [${symbol}](https://${platform}/address/${address})`
+    const defactoredAmount = defactorFn(amount, `${decimals}`)
+    return `${addCommas(defactoredAmount)} [${symbol}](https://${platform}/address/${address})`
   }
   const promises = []
   for (let i = 0; i < list.length; i += 2) {
@@ -250,7 +202,7 @@ export function checkforumPost(text: string) {
 export function formatAddressesAndAmounts(addressesList: string[], amountsList: string[], platform: string) {
   const results = []
   for (let i = 0; i < addressesList.length; i += 1) {
-    results.push(`* [${addressesList[i]}](https://${platform}/address/${addressesList[i]}) by ${defactorFn(amountsList[i])} COMP`)
+    results.push(`* [${addressesList[i]}](https://${platform}/address/${addressesList[i]}) by ${addCommas(defactorFn(amountsList[i]))} COMP`)
   }
   return results.join('\n\n')
 

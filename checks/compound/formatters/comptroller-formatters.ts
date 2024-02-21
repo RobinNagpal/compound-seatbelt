@@ -1,24 +1,18 @@
-import { BigNumber } from '@ethersproject/bignumber'
 import { Contract } from 'ethers'
 import { customProvider } from '../../../utils/clients/ethers'
 import { getContractNameAndAbiFromFile } from './../abi-utils'
 import { CometChains, ExecuteTransactionInfo, TransactionFormatter } from './../compound-types'
 import {
   addCommas,
-  calculateDifferenceOfDecimals,
-  defactor,
   formatAddressesAndAmounts,
-  getChangeText,
   getChangeTextFn,
   getContractSymbolAndDecimalsFromFile,
   getCriticalitySign,
-  getFormatCompTokens,
   getFormattedTokenNameWithLink,
-  getPercentageForTokenFactor,
   getPlatform,
   getRecipientNameWithLink,
 } from './helper'
-import { defactorFn, percentageInNumberFn, subtractFn } from './../../../utils/roundingUtils'
+import { defactorFn, percentageFn, subtractFn } from './../../../utils/roundingUtils'
 
 export const comptrollerFormatters: { [functionName: string]: TransactionFormatter } = {
   '_grantComp(address,uint256)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
@@ -32,9 +26,9 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     const compInstance = new Contract(compAddress, compAddressAbi, customProvider(chain))
     const { symbol } = await getContractSymbolAndDecimalsFromFile(compAddress, compInstance, chain)
 
-    const numberOfCompTokens = decodedParams[1]
-    const formattedCompTokens = getFormatCompTokens(numberOfCompTokens)
-    return `🛑 Grant **${addCommas(formattedCompTokens)}** [${symbol}](https://${platform}/address/${compAddress}) tokens to ${getRecipientNameWithLink(
+    const numberOfCompTokens = defactorFn(decodedParams[1])
+
+    return `🛑 Grant **${addCommas(numberOfCompTokens)}** [${symbol}](https://${platform}/address/${compAddress}) tokens to ${getRecipientNameWithLink(
       chain,
       decodedParams[0]
     )}.`
@@ -106,17 +100,17 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
 
     const { symbol } = await getContractSymbolAndDecimalsFromFile(targetToken, coinInstance, chain)
 
-    const newValue = getPercentageForTokenFactor(decodedParams[1])
+    const newValue = percentageFn(decodedParams[1])
 
     if (currentValue) {
-      const prevValue = getPercentageForTokenFactor(currentValue)
+      const prevValue = percentageFn(currentValue)
       const changeInFactor = subtractFn(decodedParams[1], currentValue.toString())
 
       return `${getCriticalitySign(
-        percentageInNumberFn(changeInFactor),
+        percentageFn(changeInFactor),
         15
-      )} Set [${symbol}](https://${platform}/address/${targetToken}) collateral factor from ${prevValue}% to ${newValue}% ${getChangeText(
-        percentageInNumberFn(changeInFactor),
+      )} Set [${symbol}](https://${platform}/address/${targetToken}) collateral factor from ${prevValue}% to ${newValue}% ${getChangeTextFn(
+        percentageFn(changeInFactor),
         true
       )}`
     }
@@ -144,7 +138,7 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
 
       // There is no underlying asset for the address
       if (currentAddress === '0x4Ddc2D193948926D02f9B1fE9e1daa0718270ED5') {
-        finalText += `Set MarketBorrowCaps of [${symbol}](https://${platform}/address/${currentAddress}) to ${currentValue}`
+        finalText += `Set MarketBorrowCaps of [${symbol}](https://${platform}/address/${currentAddress}) to ${addCommas(currentValue)}`
         if (i < addresses.length - 1) {
           finalText += '\n\n'
         }
@@ -156,18 +150,18 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
       const { decimals: assetDecimals } = await getContractSymbolAndDecimalsFromFile(underlyingAssetAddress, assetInstance, chain)
       const { abi: contractAbi, contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
       const contractInstance = new Contract(transaction.target, contractAbi, customProvider(chain))
+      const borrowCaps = (await contractInstance.callStatic.borrowCaps(currentAddress)).toString()
+      const prevValue = defactorFn(borrowCaps, `${assetDecimals}`)
+      const newValue = defactorFn(currentValue, `${assetDecimals}`)
 
-      const prevValue = defactor(await contractInstance.callStatic.borrowCaps(currentAddress), parseFloat(`1e${assetDecimals}`))
-      const newValue = defactor(BigInt(currentValue), parseFloat(`1e${assetDecimals}`))
-
-      const changeInCaps = calculateDifferenceOfDecimals(newValue, prevValue)
+      const changeInCaps = subtractFn(newValue, prevValue)
 
       finalText += `${getCriticalitySign(
         changeInCaps,
         100
-      )} Set MarketBorrowCaps of [${symbol}](https://${platform}/address/${currentAddress}) from ${prevValue} to ${newValue} ${getChangeText(
-        changeInCaps
-      )} via [${contractName}](https://${platform}/address/${transaction.target}).`
+      )} Set MarketBorrowCaps of [${symbol}](https://${platform}/address/${currentAddress}) from ${addCommas(prevValue)} to ${addCommas(
+        newValue
+      )} ${getChangeTextFn(changeInCaps)} via [${contractName}](https://${platform}/address/${transaction.target}).`
 
       if (i < addresses.length - 1) {
         finalText += '\n\n'
@@ -223,14 +217,14 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
 
     const targetInstance = new Contract(transaction.target, abi, customProvider(chain))
 
-    const prevValue = await targetInstance.callStatic.compContributorSpeeds(decodedParams[0])
-    const newValue = parseFloat(decodedParams[1])
+    const prevValue = (await targetInstance.callStatic.compContributorSpeeds(decodedParams[0])).toString()
+    const newValue = decodedParams[1]
 
-    const changeInSpeed = calculateDifferenceOfDecimals(newValue, prevValue)
+    const changeInSpeed = subtractFn(newValue, prevValue)
 
     return `Set ContributorCompSpeed for [${decodedParams[0]}](https://${platform}/address/${
       decodedParams[0]
-    }) from **${prevValue}** to **${newValue}** ${getChangeText(changeInSpeed)} via [${contractName}](https://${platform}/address/${transaction.target}).`
+    }) from **${prevValue}** to **${newValue}** ${getChangeTextFn(changeInSpeed)} via [${contractName}](https://${platform}/address/${transaction.target}).`
   },
   '_supportMarket(address)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const marketLink = await getFormattedTokenNameWithLink(chain, decodedParams[0])
@@ -260,13 +254,4 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
 
     return `🛑 Fix over-accrued COMP tokens of the addresses by their respective amounts:\n\n${formatAddressesAndAmounts(addressesList, amountsList, platform)}`
   },
-}
-
-function getFormattedCompSpeeds(speedValue: BigNumber | string) {
-  const newCompSpeed = defactor(BigInt(speedValue.toString()))
-  return newCompSpeed.toFixed(3)
-}
-
-function getDefactoredCompSpeeds(speedValue: BigNumber | string) {
-  return defactor(BigInt(speedValue.toString()))
 }

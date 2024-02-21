@@ -32,7 +32,3 @@ export function toYearsFn(seconds: string, secondsPerYear = '31536000') {
 export function percentageFn(value: string) {
   return defactorFn(Decimal.mul(new Decimal(value), new Decimal(100)).toFixed())
 }
-
-export function percentageInNumberFn(value: string) {
-  return parseFloat(percentageFn(value))
-}

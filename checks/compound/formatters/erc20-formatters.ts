@@ -1,21 +1,11 @@
-import { hexZeroPad, hexStripZeros } from '@ethersproject/bytes'
+import { hexStripZeros } from '@ethersproject/bytes'
 import { Contract } from 'ethers'
 
 import { customProvider } from '../../../utils/clients/ethers'
 import { getContractNameAndAbiFromFile } from '../abi-utils'
 import { CometChains, ExecuteTransactionInfo, TransactionFormatter } from '../compound-types'
-import {
-  addCommas,
-  calculateDifferenceOfDecimals,
-  defactor,
-  getContractSymbolAndDecimalsFromFile,
-  getFormattedTokenNameWithLink,
-  getFormattedTokenWithLink,
-  getPercentageForTokenFactor,
-  getPlatform,
-  getRecipientNameWithLink,
-} from './helper'
-import { percentageFn } from './../../../utils/roundingUtils'
+import { addCommas, getContractSymbolAndDecimalsFromFile, getFormattedTokenNameWithLink, getPlatform, getRecipientNameWithLink } from './helper'
+import { defactorFn, percentageFn, subtractFn } from './../../../utils/roundingUtils'
 
 // @ts-ignore
 import namehash from '@ensdomains/eth-ens-namehash'
@@ -29,9 +19,9 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
     const tokenInstance = new Contract(coinAddress, abi, customProvider(chain))
     const { symbol, decimals } = await getContractSymbolAndDecimalsFromFile(coinAddress, tokenInstance, chain)
 
-    const amount = defactor(BigInt(decodedParams[1]), parseFloat(`1e${decimals}`))
+    const amount = defactorFn(decodedParams[1], `${decimals}`)
 
-    return `🛑 Transfer **${addCommas(amount.toFixed(2))}** [${symbol}](https://${platform}/address/${coinAddress}) to ${getRecipientNameWithLink(
+    return `🛑 Transfer **${addCommas(amount)}** [${symbol}](https://${platform}/address/${coinAddress}) to ${getRecipientNameWithLink(
       chain,
       decodedParams[0]
     )}.`
@@ -44,9 +34,9 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
     const tokenInstance = new Contract(tokenAddress, abi, customProvider(chain))
     const { symbol, decimals } = await getContractSymbolAndDecimalsFromFile(tokenAddress, tokenInstance, chain)
 
-    const amount = defactor(BigInt(decodedParams[1]), parseFloat(`1e${decimals}`))
+    const amount = defactorFn(decodedParams[1], `${decimals}`)
 
-    return `🛑 Approve **${addCommas(amount.toFixed(2))}** [${symbol}](https://${platform}/address/${tokenAddress}) tokens to ${getRecipientNameWithLink(
+    return `🛑 Approve **${addCommas(amount)}** [${symbol}](https://${platform}/address/${tokenAddress}) tokens to ${getRecipientNameWithLink(
       chain,
       decodedParams[0]
     )}`
@@ -79,10 +69,10 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
 
     const normalized = hexStripZeros(decodedParams[2])
 
-    const amount = defactor(BigInt(decodedParams[0]), parseFloat(`1e${decimals}`))
+    const amount = defactorFn(decodedParams[0], `${decimals}`)
 
-    return `Set DepositforBurn of ${contractName} for the Burn contract [${tokenSymbol}](https://${platform}/address/${burnContractAddress}) with amount ${amount.toFixed(
-      2
+    return `Set DepositforBurn of ${contractName} for the Burn contract [${tokenSymbol}](https://${platform}/address/${burnContractAddress}) with amount ${addCommas(
+      amount
     )}, destination domain ${decodedParams[1]} and the Mint recipient ${normalized}`
   },
   'setText(bytes32,string,string)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
@@ -118,20 +108,20 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
     const { symbol: cTokenSymbol, decimals: cTokenDecimals } = await getContractSymbolAndDecimalsFromFile(cTokenAddress, cTokenInstance, chain)
 
     const underlyingAssetAddress = await cTokenInstance.callStatic.underlying()
-    const totalReserves = await cTokenInstance.callStatic.totalReserves()
+    const totalReserves = (await cTokenInstance.callStatic.totalReserves()).toString()
 
     const { abi: assetAbi } = await getContractNameAndAbiFromFile(chain, underlyingAssetAddress)
     const assetInstance = new Contract(underlyingAssetAddress, assetAbi, customProvider(chain))
     const { symbol: assetSymbol, decimals: assetDecimals } = await getContractSymbolAndDecimalsFromFile(underlyingAssetAddress, assetInstance, chain)
 
-    const totalReservesFormatted = defactor(totalReserves, parseFloat(`1e${cTokenDecimals}`))
-    const reduceValue = defactor(BigInt(decodedParams[0]), parseFloat(`1e${assetDecimals}`))
+    const totalReservesFormatted = defactorFn(totalReserves, `${cTokenDecimals}`)
+    const reduceValue = defactorFn(decodedParams[0], `${assetDecimals}`)
 
-    const totalReservesNew = calculateDifferenceOfDecimals(totalReservesFormatted, reduceValue)
+    const totalReservesNew = subtractFn(totalReservesFormatted, reduceValue)
 
     return `Reduce reserves of [${cTokenSymbol}](https://${platform}/address/${cTokenAddress}) by ${addCommas(
-      reduceValue.toFixed(2)
-    )} [${assetSymbol}](https://${platform}/address/${underlyingAssetAddress}). Remaining total reserves would be ${addCommas(totalReservesNew.toFixed(2))}`
+      reduceValue
+    )} [${assetSymbol}](https://${platform}/address/${underlyingAssetAddress}). Remaining total reserves would be ${addCommas(totalReservesNew)}`
   },
   'redeem(uint256)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = getPlatform(chain)
@@ -147,8 +137,8 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
     const assetInstance = new Contract(underlyingAssetAddress, assetAbi, customProvider(chain))
     const { symbol: assetSymbol, decimals: assetDecimals } = await getContractSymbolAndDecimalsFromFile(underlyingAssetAddress, assetInstance, chain)
 
-    const cTokens = defactor(BigInt(decodedParams[0]), parseFloat(`1e${cTokenDecimals}`))
-    const underlyingAssetTokens = defactor(BigInt(decodedParams[0]), parseFloat(`1e${assetDecimals}`))
+    const cTokens = defactorFn(decodedParams[0], `${cTokenDecimals}`)
+    const underlyingAssetTokens = defactorFn(decodedParams[0], `${assetDecimals}`)
 
     return `Redeem ${addCommas(cTokens)} [${cTokenSymbol}](https://${platform}/address/${transaction.target}) cTokens in exchange for ${addCommas(
       underlyingAssetTokens
