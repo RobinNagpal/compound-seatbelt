@@ -155,7 +155,7 @@ export function getChangeText(change: number, isPercentage: boolean = false): st
 export function getChangeTextFn(change: string, isPercentage: boolean = false): string {
   const percentageSign = isPercentage ? '%' : ''
   return `${
-    change.match('0') ? `(It remains the same)` : `(It's getting ${change.startsWith('-') ? 'decreased' : 'increased'} by **${change}${percentageSign}**)`
+    change === '0' ? `(It remains the same)` : `(It's getting ${change.startsWith('-') ? 'decreased' : 'increased'} by **${change}${percentageSign}**)`
   } `
 }
 
