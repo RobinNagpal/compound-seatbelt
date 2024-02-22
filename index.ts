@@ -20,6 +20,8 @@ import {
   inferGovernorType,
 } from './utils/contracts/governor'
 import { getAddress } from '@ethersproject/address'
+import fs from 'fs'
+import path from 'path'
 
 /**
  * @notice Simulate governance proposals and run proposal checks against them
@@ -51,7 +53,7 @@ async function main() {
 
     // Fetch all proposal IDs
     governorType = await inferGovernorType(GOVERNOR_ADDRESS)
-    // const proposalIds = await getProposalIds(governorType, GOVERNOR_ADDRESS, latestBlock.number)
+    const proposalIds = await getProposalIds(governorType, GOVERNOR_ADDRESS, latestBlock.number)
     // const proposalIds: BigNumber[] = [BigNumber.from('213')]
     // const proposalIdsArr = [
     //   214, 213, 212, 211, 210, 209, 208, 207, 206, 205, 204, 203, 202, 201, 200, 199, 198, 197, 196, 195, 194, 193, 192,
@@ -63,8 +65,8 @@ async function main() {
     //
     //   151, 150, 149, 148, 147, 146, 145, 144, 143,
     // ]
-    const proposalIdsArr = [122]
-    const proposalIds = proposalIdsArr.map((id) => BigNumber.from(id))
+    // const proposalIdsArr = [65]
+    // const proposalIds = proposalIdsArr.map((id) => BigNumber.from(id))
 
     governor = getGovernor(governorType, GOVERNOR_ADDRESS)
 
@@ -94,7 +96,6 @@ async function main() {
     for (const simProposal of simProposals) {
       if (simProposal.simType === 'new') throw new Error('Simulation type "new" is not supported in this branch')
       // Determine if this proposal is already `executed` or currently in-progress (`proposed`)
-      console.log(`  Simulating ${DAO_NAME} proposal ${simProposal.id}...`)
       const config: SimulationConfig = {
         type: simProposal.simType,
         daoName: DAO_NAME,
@@ -103,6 +104,15 @@ async function main() {
         proposalId: simProposal.id,
       }
 
+      const pdfDirectory = `./reports/${DAO_NAME}/${config.governorAddress}`
+      const pdfExists = fs.existsSync(path.join(pdfDirectory, `${simProposal.id.toString()}.pdf`))
+
+      if (simProposal.simType !== 'executed' || pdfExists) {
+        console.log(`  Skipping simulation for proposal ${simProposal.id} (either not executed or PDF already exists)`)
+        continue
+      }
+
+      console.log(`  Simulating ${DAO_NAME} proposal ${simProposal.id}...`)
       const { sim, proposal, latestBlock } = await simulate(config)
       simOutputs.push({ sim, proposal, latestBlock, config })
       console.log(`    done`)
@@ -113,8 +123,8 @@ async function main() {
   // Generate the proposal data and dependencies needed by checks
   const proposalData = { governor, provider, timelock: await getTimelock(governorType, governor.address) }
 
-  console.log('Starting proposal checks and report generation...')
   for (const simOutput of simOutputs) {
+    console.log('Starting proposal checks and report generation...')
     // Run checks
     const { sim, proposal, latestBlock, config } = simOutput
     console.log(`  Running for proposal ID ${formatProposalId(governorType, proposal.id!)}...`)

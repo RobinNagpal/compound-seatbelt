@@ -198,6 +198,7 @@ export function checkforumPost(text: string) {
   } else {
     return 'No forum post is present.'
   }
+}
 
 export function formatAddressesAndAmounts(addressesList: string[], amountsList: string[], platform: string) {
   const results = []
@@ -205,5 +206,4 @@ export function formatAddressesAndAmounts(addressesList: string[], amountsList: 
     results.push(`* [${addressesList[i]}](https://${platform}/address/${addressesList[i]}) by ${addCommas(defactorFn(amountsList[i]))} COMP`)
   }
   return results.join('\n\n')
-
 }
