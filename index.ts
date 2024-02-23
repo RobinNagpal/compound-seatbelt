@@ -163,7 +163,9 @@ async function main() {
       dir
     )
   }
-  await commitAndPushToGit(`/reports/`)
+  if (simOutputs.length > 0) {
+    await commitAndPushToGit(`/reports/`)
+  }
   console.log('Done!')
 }
 

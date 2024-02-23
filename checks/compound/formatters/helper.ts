@@ -241,7 +241,7 @@ export async function commitAndPushToGit(repositoryPath: string) {
   const author = { name: process.env.GITHUB_USERNAME, email: process.env.GITHUB_EMAIL }
   await add({ fs, dir: `${process.env.GIT_REPO_PATH}`, filepath: '.' })
   await commit({ fs, dir: `${process.env.GIT_REPO_PATH}`, message, author })
-  await push({
+  const pushResult = await push({
     fs,
     http,
     dir: `${process.env.GIT_REPO_PATH}`,
@@ -249,4 +249,5 @@ export async function commitAndPushToGit(repositoryPath: string) {
     ref: 'main',
     onAuth: () => ({ username: process.env.GITHUB_TOKEN }),
   })
+  console.log('pushResult', pushResult)
 }
