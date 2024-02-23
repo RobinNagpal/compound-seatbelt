@@ -1,0 +1,37 @@
+<h1 id="legacy-market-maintenance-wbtc-and-rep">Legacy market maintenance: WBTC and REP</h1>
+<p><em>Updated as of block <a href="https://etherscan.io/block/19292382">19292382</a> at 2/23/2024, 2:29:35 PM ET</em></p>
+<ul>
+<li>ID: 44</li>
+<li>Proposer: <a href="https://etherscan.io/address/0x54A37d93E57c5DA659F508069Cf65A381b61E189"><code>0x54A37d93E57c5DA659F508069Cf65A381b61E189</code></a></li>
+<li>Start Block: 12331844 (4/28/2021, 7:19:57 PM ET)</li>
+<li>End Block: 12351554 (5/1/2021, 8:27:07 PM ET)</li>
+<li>Targets: <a href="https://etherscan.io/address/0xC11b1268C1A384e55C48c2391d8d480264A3A7F4#code"><code>0xC11b1268C1A384e55C48c2391d8d480264A3A7F4</code></a>; <a href="https://etherscan.io/address/0x3d9819210A31b4961b30EF54bE2aeD79B9c9Cd3B#code"><code>0x3d9819210A31b4961b30EF54bE2aeD79B9c9Cd3B</code></a>; <a href="https://etherscan.io/address/0x3d9819210A31b4961b30EF54bE2aeD79B9c9Cd3B#code"><code>0x3d9819210A31b4961b30EF54bE2aeD79B9c9Cd3B</code></a>; <a href="https://etherscan.io/address/0x3d9819210A31b4961b30EF54bE2aeD79B9c9Cd3B#code"><code>0x3d9819210A31b4961b30EF54bE2aeD79B9c9Cd3B</code></a></li>
+</ul>
+<h2 id="forum-post">Forum Post</h2>
+<p>Forum post is present here: <a href="https://www.comp.xyz/t/legacy-market-migration-wbtc/1333">Forum Post</a></p>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#proposal-text">Proposal Text</a></li>
+<li><a href="#checks">Checks</a>
+<ul>
+<li><a href="#checks-compound-proposal-details--passed">Checks Compound Proposal Details ✅ Passed</a></li>
+</ul>
+</li>
+</ul>
+<h2 id="proposal-text">Proposal Text</h2>
+<blockquote>
+<h1 id="legacy-market-maintenance-wbtc-and-rep-1">Legacy market maintenance: WBTC and REP</h1>
+<p>In <a href="https://compound.finance/governance/proposals/41">Proposal 41</a>, we began the process to migrate WBTC to a modern upgradable cToken contract.</p>
+<p>The new WBTC cToken has become widely adopted, with $2.2B supplied.</p>
+<p>This proposal continues the deprecation process for the legacy WBTC market, following the process established for SAI and REP.</p>
+<p>The Reserve Factor for the legacy asset will be raised to 100%, which removes the supply interest rate, and supplying and borrowing (new usage) will be disabled. The legacy WBTC cToken will still be effective collateral, and existing users will not be liquidated or materially impacted.</p>
+<p>Finally, the proposal completes the deprecation of REP, by lowering its collateral factor to 0%, nine months after <a href="https://compound.finance/governance/proposals/17">Proposal 17</a> disabled new usage of the asset.</p>
+<p><a href="https://www.comp.xyz/t/legacy-market-migration-wbtc/1333">Discussion</a></p>
+</blockquote>
+<h2 id="checks">Checks</h2>
+<h3 id="checks-compound-proposal-details--passed">Checks Compound Proposal Details ✅ Passed</h3>
+<p><strong>Info</strong>:</p>
+<p><strong>1-</strong> Set reserve factor for <a href="https://etherscan.io/address/0xc11b1268c1a384e55c48c2391d8d480264a3a7f4">cWBTC</a> to 100%</p>
+<p><strong>2-</strong> ⚠️ Pause <a href="https://etherscan.io/address/0xC11b1268C1A384e55C48c2391d8d480264A3A7F4">cWBTC</a> borrowing via <a href="https://etherscan.io/address/0x3d9819210a31b4961b30ef54be2aed79b9c9cd3b">Comptroller</a>.</p>
+<p><strong>3-</strong> ⚠️ Pause minting for <a href="https://etherscan.io/address/0xC11b1268C1A384e55C48c2391d8d480264A3A7F4">cWBTC</a> via <a href="https://etherscan.io/address/0x3d9819210a31b4961b30ef54be2aed79b9c9cd3b">Comptroller</a>.</p>
+<p><strong>4-</strong>  Set <a href="https://etherscan.io/address/0x158079Ee67Fce2f58472A96584A73C7Ab9AC95c1">cREP</a> collateral factor from 0% to 0% (It remains the same)</p>
