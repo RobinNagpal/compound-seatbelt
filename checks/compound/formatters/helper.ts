@@ -1,10 +1,16 @@
+import dotenv from 'dotenv'
+dotenv.config()
 import { Contract, ethers } from 'ethers'
 import fs from 'fs'
 import { CometChains, SymbolAndDecimalsLookupData } from '../compound-types'
 import { customProvider } from './../../../utils/clients/ethers'
 import { getContractNameAndAbiFromFile } from './../abi-utils'
-import mftch from 'micro-ftch'
 import { defactorFn } from './../../../utils/roundingUtils'
+import { DISCORD_WEBHOOK_URL } from './../../../utils/constants'
+import mftch, { FETCH_OPT, InvalidStatusCodeError } from 'micro-ftch'
+import { add, commit, push } from 'isomorphic-git'
+import http from 'isomorphic-git/http/node'
+
 // @ts-ignore
 const fetchUrl = mftch.default
 
@@ -206,4 +212,33 @@ export function formatAddressesAndAmounts(addressesList: string[], amountsList: 
     results.push(`* [${addressesList[i]}](https://${platform}/address/${addressesList[i]}) by ${addCommas(defactorFn(amountsList[i]))} COMP`)
   }
   return results.join('\n\n')
+}
+
+export async function postNotificationToDiscord(text: string) {
+  const message = text.length > 2000 ? 'Text length exceeds 2000 characters' : text
+
+  const fetchOptions = <Partial<FETCH_OPT>>{
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    data: JSON.stringify({ content: message }) as unknown as object,
+  }
+  try {
+    const response = await fetchUrl(DISCORD_WEBHOOK_URL, fetchOptions)
+
+    console.log('Successfully posted summary to Discord.')
+  } catch (error) {
+    if (error instanceof InvalidStatusCodeError && error.statusCode === 204) {
+      console.log('Successfully posted summary to Discord, received 204 No Content.')
+    } else {
+      console.error('Error posting to Discord:', error)
+    }
+  }
+}
+
+export async function commitAndPushToGit(repositoryPath: string) {
+  const message = 'Added new pdf reports of the proposals to the repository'
+  const author = { name: process.env.GITHUB_USERNAME, email: process.env.GITHUB_EMAIL }
+  await add({ fs, dir: repositoryPath, filepath: '.' })
+  await commit({ fs, dir: repositoryPath, message, author })
+  await push({ fs, http, dir: repositoryPath, remote: 'origin', ref: 'main', onAuth: () => ({ username: process.env.GITHUB_TOKEN }) })
 }
