@@ -116,10 +116,7 @@ async function main() {
       console.log(`  Simulating ${DAO_NAME} proposal ${simProposal.id}...`)
       const { sim, proposal, latestBlock } = await simulate(config)
       simOutputs.push({ sim, proposal, latestBlock, config })
-      await commitAndPushToGit(`/reports/${DAO_NAME}/${config.governorAddress}`)
-      await postNotificationToDiscord(
-        `Proposal ${simProposal.id} has been simulated and PDF report has been added to the files.`
-      )
+      await postNotificationToDiscord(`Proposal ${simProposal.id} has been simulated.`)
       console.log(`    done`)
     }
   }
@@ -166,6 +163,7 @@ async function main() {
       dir
     )
   }
+  await commitAndPushToGit(`/reports/`)
   console.log('Done!')
 }
 
