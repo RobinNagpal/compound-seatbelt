@@ -99,11 +99,10 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     const coinInstance = new Contract(targetToken, abi, customProvider(chain))
 
     const { symbol } = await getContractSymbolAndDecimalsFromFile(targetToken, coinInstance, chain)
-
     const newValue = percentageFn(decodedParams[1])
 
     if (currentValue) {
-      const prevValue = percentageFn(currentValue)
+      const prevValue = percentageFn(currentValue.toString())
       const changeInFactor = subtractFn(decodedParams[1], currentValue.toString())
 
       return `${getCriticalitySign(
