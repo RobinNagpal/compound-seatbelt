@@ -162,9 +162,10 @@ async function main() {
       checkResults,
       dir
     )
-  }
-  if (simOutputs.length > 0) {
-    await commitAndPushToGit(`reports/`)
+    await commitAndPushToGit(
+      `reports/${config.daoName}/${config.governorAddress}/${proposal.id?.toString()}.pdf`,
+      proposal.id!.toString()
+    )
   }
   console.log('Done!')
 }

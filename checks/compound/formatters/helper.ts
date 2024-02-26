@@ -235,10 +235,10 @@ export async function postNotificationToDiscord(text: string) {
   }
 }
 
-export async function commitAndPushToGit(repositoryPath: string) {
-  const message = 'Added new pdf reports of the proposals to the repository'
+export async function commitAndPushToGit(filePath: string, proposalNo: string) {
+  const message = `Add pdf report of Proposal#${proposalNo} to the repository`
   const author = { name: process.env.GITHUB_USERNAME, email: process.env.GITHUB_EMAIL }
-  await add({ fs, dir: `${process.env.GIT_REPO_PATH}`, filepath: `${repositoryPath}` })
+  await add({ fs, dir: `${process.env.GIT_REPO_PATH}`, filepath: `${filePath}` })
   await commit({ fs, dir: `${process.env.GIT_REPO_PATH}`, message, author })
   const pushResult = await push({
     fs,
