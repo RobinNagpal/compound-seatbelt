@@ -228,7 +228,7 @@ export async function postNotificationToDiscord(text: string) {
     console.log('Successfully posted summary to Discord.')
   } catch (error) {
     if (error instanceof InvalidStatusCodeError && error.statusCode === 204) {
-      console.log('Successfully posted summary to Discord, received 204 No Content.')
+      console.log('Successfully posted content to Discord, received 204 No Content.')
     } else {
       console.error('Error posting to Discord:', error)
     }
@@ -248,4 +248,10 @@ export async function commitAndPushToGit(filePath: string, proposalNo: string) {
     ref: 'main',
     onAuth: () => ({ username: process.env.GITHUB_TOKEN }),
   })
+  if (pushResult.ok) {
+    console.log(`Successfully pushed pdf report of proposal # ${proposalNo} to the repository.`)
+    await postNotificationToDiscord(
+      `Pdf report of Proposal # ${proposalNo} has been added to the repository which can be accessed at https://github.com/RobinNagpal/compound-seatbelt/blob/main/presentation/report.ts`
+    )
+  }
 }

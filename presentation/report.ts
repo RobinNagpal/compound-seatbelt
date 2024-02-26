@@ -203,7 +203,7 @@ ${Object.keys(checks)
   .map((checkId) => toCheckSummary(checks[checkId]))
   .join('\n')}
 `
-  await postNotificationToDiscord(report)
+
   // Add table of contents and return report.
   return (await remark().use(remarkToc, { tight: true }).process(report)).toString()
 }
