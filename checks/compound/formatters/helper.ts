@@ -236,7 +236,7 @@ export async function postNotificationToDiscord(text: string) {
 }
 
 export async function commitAndPushToGit(filePath: string, proposalNo: string) {
-  const message = `Add pdf report of Proposal#${proposalNo} to the repository`
+  const message = `Add pdf report of Proposal # ${proposalNo} to the repository`
   const author = { name: process.env.GITHUB_USERNAME, email: process.env.GITHUB_EMAIL }
   await add({ fs, dir: `${process.env.GIT_REPO_PATH}`, filepath: `${filePath}` })
   await commit({ fs, dir: `${process.env.GIT_REPO_PATH}`, message, author })
@@ -248,5 +248,4 @@ export async function commitAndPushToGit(filePath: string, proposalNo: string) {
     ref: 'main',
     onAuth: () => ({ username: process.env.GITHUB_TOKEN }),
   })
-  console.log('pushResult', pushResult)
 }
