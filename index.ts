@@ -164,7 +164,7 @@ async function main() {
     )
   }
   if (simOutputs.length > 0) {
-    await commitAndPushToGit(`/reports/`)
+    await commitAndPushToGit(`reports/`)
   }
   console.log('Done!')
 }
