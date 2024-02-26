@@ -54,7 +54,7 @@ async function main() {
 
     // Fetch all proposal IDs
     governorType = await inferGovernorType(GOVERNOR_ADDRESS)
-    // const proposalIds = await getProposalIds(governorType, GOVERNOR_ADDRESS, latestBlock.number)
+    const proposalIds = await getProposalIds(governorType, GOVERNOR_ADDRESS, latestBlock.number)
     // const proposalIds: BigNumber[] = [BigNumber.from('213')]
     // const proposalIdsArr = [
     //   214, 213, 212, 211, 210, 209, 208, 207, 206, 205, 204, 203, 202, 201, 200, 199, 198, 197, 196, 195, 194, 193, 192,
@@ -66,8 +66,8 @@ async function main() {
     //
     //   151, 150, 149, 148, 147, 146, 145, 144, 143,
     // ]
-    const proposalIdsArr = [43, 44]
-    const proposalIds = proposalIdsArr.map((id) => BigNumber.from(id))
+    // const proposalIdsArr = [65]
+    // const proposalIds = proposalIdsArr.map((id) => BigNumber.from(id))
 
     governor = getGovernor(governorType, GOVERNOR_ADDRESS)
 
@@ -116,10 +116,7 @@ async function main() {
       console.log(`  Simulating ${DAO_NAME} proposal ${simProposal.id}...`)
       const { sim, proposal, latestBlock } = await simulate(config)
       simOutputs.push({ sim, proposal, latestBlock, config })
-      await commitAndPushToGit(`/reports/${DAO_NAME}/${config.governorAddress}`)
-      await postNotificationToDiscord(
-        `Proposal ${simProposal.id} has been simulated and PDF report has been added to the files.`
-      )
+      await postNotificationToDiscord(`Proposal ${simProposal.id} has been simulated.`)
       console.log(`    done`)
     }
   }
@@ -165,6 +162,9 @@ async function main() {
       checkResults,
       dir
     )
+  }
+  if (simOutputs.length > 0) {
+    await commitAndPushToGit(`reports/`)
   }
   console.log('Done!')
 }
