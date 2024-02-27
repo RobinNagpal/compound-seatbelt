@@ -116,7 +116,7 @@ async function main() {
       console.log(`  Simulating ${DAO_NAME} proposal ${simProposal.id}...`)
       const { sim, proposal, latestBlock } = await simulate(config)
       simOutputs.push({ sim, proposal, latestBlock, config })
-      await postNotificationToDiscord(`Proposal # ${simProposal.id} has been simulated.`)
+      await postNotificationToDiscord(`**Proposal # ${simProposal.id}** has been simulated.\n\n`)
       console.log(`    done`)
     }
   }
