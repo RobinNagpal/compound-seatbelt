@@ -224,11 +224,10 @@ export async function postNotificationToDiscord(text: string) {
   }
   try {
     const response = await fetchUrl(DISCORD_WEBHOOK_URL, fetchOptions)
-
     console.log('Successfully posted summary to Discord.')
   } catch (error) {
     if (error instanceof InvalidStatusCodeError && error.statusCode === 204) {
-      console.log('Successfully posted content to Discord, received 204 No Content.')
+      console.log('Successfully posted message to Discord.')
     } else {
       console.error('Error posting to Discord:', error)
     }
@@ -245,13 +244,39 @@ export async function commitAndPushToGit(filePath: string, proposalNo: string) {
     http,
     dir: `${process.env.GIT_REPO_PATH}`,
     remote: 'origin',
-    ref: 'main',
+    ref: 'dawood/workflow_changes',
     onAuth: () => ({ username: process.env.GITHUB_TOKEN }),
   })
   if (pushResult.ok) {
     console.log(`Successfully pushed pdf report of proposal # ${proposalNo} to the repository.`)
     await postNotificationToDiscord(
-      `Pdf report of Proposal # ${proposalNo} has been added to the repository which can be accessed at https://github.com/RobinNagpal/compound-seatbelt/blob/main/presentation/report.ts`
+      `Pdf report of **Proposal # ${proposalNo}** has been added to the repository which can be accessed **[here](${process.env.GITHUB_REPO_PATH}/${filePath})**.\n\n`
     )
   }
+}
+
+function extractChecksMarkdown(reportMarkdown: string) {
+  return reportMarkdown.slice(reportMarkdown.indexOf('## Checks'))
+}
+
+function extractTextFromMarkdown(markdownText: string) {
+  return markdownText.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+}
+
+export async function pushChecksSummaryToDiscord(reportMarkdown: string, proposalNo: string) {
+  const header = `# Summary of Compound Checks for proposal # ${proposalNo}\n\n`
+  const appendix = '... \n\n(see report for full text)'
+  const maxLength = 2000 - appendix.length - header.length
+  let discordPayload = extractChecksMarkdown(reportMarkdown)
+
+  if (discordPayload.length >= 2000) {
+    let checksText = extractTextFromMarkdown(discordPayload)
+    discordPayload = header + (checksText.length < maxLength ? checksText : checksText.slice(0, maxLength) + appendix)
+  } else {
+    discordPayload = header + discordPayload
+    if (discordPayload.length > 2000) {
+      discordPayload = header + discordPayload.slice(0, maxLength) + appendix
+    }
+  }
+  await postNotificationToDiscord(discordPayload)
 }
