@@ -85,8 +85,7 @@ function nestCheckResultsForChain(chain: CometChains, checkResult: CheckResult):
     const letter = String.fromCharCode(97 + index)
     return `${letter}- ${message}`
   })
-  return `
-**Bridge wrapped actions to ${capitalizedChain}**\n\n
+  return `**Bridge wrapped actions to ${capitalizedChain}**\n\n
   
 &nbsp;&nbsp;&nbsp;&nbsp;${alphabetPrefixedL2Messages.join('\n\n&nbsp;&nbsp;&nbsp;&nbsp;')}
 `
