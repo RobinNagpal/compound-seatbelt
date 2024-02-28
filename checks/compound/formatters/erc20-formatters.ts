@@ -47,10 +47,10 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
     const coinInstance = new Contract(tokenAddress, abi, customProvider(chain))
     const prevReserveFactor = await coinInstance.callStatic.reserveFactorMantissa()
 
-    const newReserveFactor = percentageFn(decodedParams[0])
+    const newReserveFactor = percentageFn(defactorFn(decodedParams[0]))
 
     const tokenNameWithLink = await getFormattedTokenNameWithLink(chain, tokenAddress)
-    const prevReserve = percentageFn(prevReserveFactor.toString())
+    const prevReserve = percentageFn(defactorFn(prevReserveFactor.toString()))
     if (prevReserveFactor && prevReserve !== newReserveFactor) {
       return `Set reserve factor for ${tokenNameWithLink} from ${prevReserve}% to ${newReserveFactor}%`
     }
@@ -153,5 +153,29 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
     const legacyTokenAddress = await newTokenInstance.callStatic.legacyRepToken()
     const legacyTokenLink = await getFormattedTokenNameWithLink(chain, legacyTokenAddress)
     return `Migrate the balance of legacy reputation token ${legacyTokenLink} to new reputation token [${newTokenSymbol}](https://${platform}/address/${transaction.target}).`
+  },
+  'fund()': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
+    const platform = getPlatform(chain)
+    const distributorAddress = transaction.target
+    const { abi: distributorAbi, contractName: distributorName } = await getContractNameAndAbiFromFile(chain, distributorAddress)
+    const distributorInstance = new Contract(distributorAddress, distributorAbi, customProvider(chain))
+
+    const funderAddress = await distributorInstance.callStatic.funder()
+    const { contractName: funderName } = await getContractNameAndAbiFromFile(chain, funderAddress)
+    const isFunded = await distributorInstance.callStatic.isFunded()
+    if (isFunded) {
+      return `[${distributorName}](https://${platform}/address/${distributorAddress}) has already been funded by [${funderName}](https://${platform}/address/${funderAddress}).`
+    }
+
+    const tokenAddress = await distributorInstance.callStatic.token()
+    const { abi: tokenAbi } = await getContractNameAndAbiFromFile(chain, tokenAddress)
+    const tokenInstance = new Contract(tokenAddress, tokenAbi, customProvider(chain))
+    const { symbol: tokenSymbol, decimals } = await getContractSymbolAndDecimalsFromFile(tokenAddress, tokenInstance, chain)
+
+    const fundingAmount = defactorFn((await distributorInstance.callStatic.fundingAmount()).toString(), `${decimals}`)
+
+    return `🛑 [${distributorName}](https://${platform}/address/${distributorAddress}) is getting funded with ${addCommas(
+      fundingAmount
+    )} [${tokenSymbol}](https://${platform}/address/${tokenAddress}) by [${funderName}](https://${platform}/address/${funderAddress}).`
   },
 }
