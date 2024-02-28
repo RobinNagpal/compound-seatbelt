@@ -98,10 +98,11 @@ export function getRecipientNameWithLink(chain: CometChains, recipient: string) 
 
 export function getChangeTextFn(change: string, isPercentage: boolean = false): string {
   const percentageSign = isPercentage ? '%' : ''
+  const absoluteChange = change.startsWith('-') ? change.substring(1) : change
   return `${
     change === '0'
       ? `(It remains the same)`
-      : `(It's getting ${change.startsWith('-') ? 'decreased' : 'increased'} by **${addCommas(change)}${percentageSign}**)`
+      : `(It's getting ${change.startsWith('-') ? '**decreased**' : '**increased**'} by **${addCommas(absoluteChange)}${percentageSign}**)`
   } `
 }
 

@@ -13,7 +13,7 @@ import {
   addCommas,
   getChangeTextFn,
 } from './helper'
-import { annualizeFn, defactorFn, percentageFn, subtractFn } from './../../../utils/roundingUtils'
+import { annualizeFn, dailyRateFn, defactorFn, percentageFn, subtractFn } from './../../../utils/roundingUtils'
 
 interface AssetConfig {
   asset: string
@@ -51,13 +51,16 @@ async function getTextForChangeInInterestRate(
   )} ${getChangeTextFn(changeInRate)}`
 }
 
-async function getTextForChange(
+async function getTextForKinkChange(
   chain: CometChains,
+  transaction: ExecuteTransactionInfo,
   decodedParams: string[],
   getFunction: (contract: Contract) => Promise<BigNumber>,
   functionName: string,
   platform: string
 ) {
+  const { contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
+
   const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
   const currentCometInstance = new Contract(decodedParams[0], abi, customProvider(chain))
 
@@ -66,14 +69,48 @@ async function getTextForChange(
   const baseTokenInstance = new Contract(baseToken, baseTokenAbi, customProvider(chain))
   const { symbol } = await getContractSymbolAndDecimalsFromFile(baseToken, baseTokenInstance, chain)
 
-  const prevValue = defactorFn((await getFunction(currentCometInstance)).toString())
-  const newValue = defactorFn(decodedParams[1])
+  const prevValue = percentageFn(defactorFn((await getFunction(currentCometInstance)).toString()))
+  const newValue = percentageFn(defactorFn(decodedParams[1]))
 
   const changeInValues = subtractFn(newValue, prevValue)
 
-  return `Set ${functionName} of [${symbol}](https://${platform}/address/${baseToken}) from ${addCommas(prevValue)} to ${addCommas(newValue)} ${getChangeTextFn(
-    changeInValues
-  )}`
+  return `Set ${functionName} of [${symbol}](https://${platform}/address/${baseToken}) via [${contractName}](https://${platform}/address/${
+    transaction.target
+  }}) from ${addCommas(prevValue)}% to ${addCommas(newValue)}% ${getChangeTextFn(changeInValues, true)}`
+}
+
+async function getTextForSpeedChange(
+  chain: CometChains,
+  transaction: ExecuteTransactionInfo,
+  decodedParams: string[],
+  getFunction: (contract: Contract) => Promise<BigNumber>,
+  functionName: string,
+  platform: string,
+  speedName: string
+) {
+  const { contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
+
+  const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
+  const currentCometInstance = new Contract(decodedParams[0], abi, customProvider(chain))
+
+  const baseToken = await currentCometInstance.callStatic.baseToken()
+  const { abi: baseTokenAbi } = await getContractNameAndAbiFromFile(chain, baseToken)
+  const baseTokenInstance = new Contract(baseToken, baseTokenAbi, customProvider(chain))
+  const { symbol } = await getContractSymbolAndDecimalsFromFile(baseToken, baseTokenInstance, chain)
+
+  const prevSpeedValue = (await getFunction(currentCometInstance)).toString()
+  const newSpeedValue = decodedParams[1]
+
+  const prevRewardValue = dailyRateFn(defactorFn(prevSpeedValue, '15'))
+  const newRewardValue = dailyRateFn(defactorFn(newSpeedValue, '15'))
+
+  const changeInValues = subtractFn(newRewardValue, prevRewardValue)
+
+  return `Set ${functionName} of [${symbol}](https://${platform}/address/${baseToken}) [${contractName}](https://${platform}/address/${
+    transaction.target
+  }) from ${addCommas(prevSpeedValue)} to ${addCommas(newSpeedValue)}. Hence changing Daily ${speedName} rewards from ${addCommas(
+    prevRewardValue
+  )} to ${addCommas(newRewardValue)} ${getChangeTextFn(changeInValues)}`
 }
 
 export const configuratorFormatters: { [functionName: string]: TransactionFormatter } = {
@@ -138,28 +175,32 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     return `Deploy and upgrade new implementation for [${symbol}](https://${platform}/address/${baseToken}) via [${contractName}](https://${platform}/address/${decodedParams[0]}).`
   },
   'setBaseTrackingBorrowSpeed(address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    return getTextForChange(
+    return getTextForSpeedChange(
       chain,
+      transaction,
       decodedParams,
       async (contract) => await contract.callStatic.baseTrackingBorrowSpeed(),
       'BaseTrackingBorrowSpeed',
-      getPlatform(chain)
+      getPlatform(chain),
+      'Borrow'
     )
   },
   'setBaseTrackingSupplySpeed(address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    return getTextForChange(
+    return getTextForSpeedChange(
       chain,
+      transaction,
       decodedParams,
       async (contract) => await contract.callStatic.baseTrackingSupplySpeed(),
       'BaseTrackingSupplySpeed',
-      getPlatform(chain)
+      getPlatform(chain),
+      'Supply'
     )
   },
   'setBorrowKink(address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    return getTextForChange(chain, decodedParams, async (contract) => await contract.callStatic.borrowKink(), 'BorrowKink', getPlatform(chain))
+    return getTextForKinkChange(chain, transaction, decodedParams, async (contract) => await contract.callStatic.borrowKink(), 'BorrowKink', getPlatform(chain))
   },
   'setSupplyKink(address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    return getTextForChange(chain, decodedParams, async (contract) => await contract.callStatic.supplyKink(), 'SupplyKink', getPlatform(chain))
+    return getTextForKinkChange(chain, transaction, decodedParams, async (contract) => await contract.callStatic.supplyKink(), 'SupplyKink', getPlatform(chain))
   },
   'updateAssetLiquidationFactor(address,address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = getPlatform(chain)
@@ -174,8 +215,8 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
 
     const assetInfo = await currentBaseTokenInstance.callStatic.getAssetInfoByAddress(decodedParams[1])
 
-    const prevLiquidationFactor = percentageFn(assetInfo.liquidationFactor.toString())
-    const newLiquidationFactor = percentageFn(decodedParams[2])
+    const prevLiquidationFactor = percentageFn(defactorFn(assetInfo.liquidationFactor.toString()))
+    const newLiquidationFactor = percentageFn(defactorFn(decodedParams[2]))
     const baseToken = await currentBaseTokenInstance.callStatic.baseToken()
 
     const { abi: baseTokenAbi } = await getContractNameAndAbiFromFile(chain, baseToken)
@@ -411,8 +452,8 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     const tokenNameWithLink = await getFormattedTokenNameWithLink(chain, baseToken)
 
     const storeFrontPriceFactor = (await currentInstance.callStatic.storeFrontPriceFactor()).toString()
-    const priceFactorOld = percentageFn(storeFrontPriceFactor)
-    const priceFactorNew = percentageFn(decodedParams[1])
+    const priceFactorOld = percentageFn(defactorFn(storeFrontPriceFactor))
+    const priceFactorNew = percentageFn(defactorFn(decodedParams[1]))
 
     const changeInFactor = subtractFn(priceFactorNew, priceFactorOld)
 
