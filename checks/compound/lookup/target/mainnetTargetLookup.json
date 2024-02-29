@@ -934,7 +934,7 @@
     "functions": {
       "fund()": {
         "description": "fund()",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20.fund()",
         "proposals": {
           "59": []
         }

@@ -25,10 +25,14 @@ export function annualizeFn(number: string, secondsPerYear = '31536000') {
   return defactorFn(multiplyFn(number, secondsPerYear))
 }
 
+export function dailyRateFn(number: string, secondsPerDay = '86400') {
+  return multiplyFn(number, secondsPerDay)
+}
+
 export function toYearsFn(seconds: string, secondsPerYear = '31536000') {
   return Decimal.div(new Decimal(seconds), new Decimal(secondsPerYear)).toFixed()
 }
 
 export function percentageFn(value: string) {
-  return defactorFn(Decimal.mul(new Decimal(value), new Decimal(100)).toFixed())
+  return Decimal.mul(new Decimal(value), new Decimal(100)).toFixed()
 }

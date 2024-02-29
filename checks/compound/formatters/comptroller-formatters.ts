@@ -99,18 +99,17 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     const coinInstance = new Contract(targetToken, abi, customProvider(chain))
 
     const { symbol } = await getContractSymbolAndDecimalsFromFile(targetToken, coinInstance, chain)
-
-    const newValue = percentageFn(decodedParams[1])
+    const newValue = percentageFn(defactorFn(decodedParams[1]))
 
     if (currentValue) {
-      const prevValue = percentageFn(currentValue)
-      const changeInFactor = subtractFn(decodedParams[1], currentValue.toString())
+      const prevValue = percentageFn(defactorFn(currentValue.toString()))
+      const changeInFactor = subtractFn(newValue, prevValue)
 
       return `${getCriticalitySign(
-        percentageFn(changeInFactor),
+        changeInFactor,
         15
       )} Set [${symbol}](https://${platform}/address/${targetToken}) collateral factor from ${prevValue}% to ${newValue}% ${getChangeTextFn(
-        percentageFn(changeInFactor),
+        changeInFactor,
         true
       )}`
     }
@@ -217,14 +216,14 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
 
     const targetInstance = new Contract(transaction.target, abi, customProvider(chain))
 
-    const prevValue = (await targetInstance.callStatic.compContributorSpeeds(decodedParams[0])).toString()
-    const newValue = decodedParams[1]
+    const prevValue = defactorFn((await targetInstance.callStatic.compContributorSpeeds(decodedParams[0])).toString())
+    const newValue = defactorFn(decodedParams[1])
 
     const changeInSpeed = subtractFn(newValue, prevValue)
 
-    return `Set ContributorCompSpeed for [${decodedParams[0]}](https://${platform}/address/${
-      decodedParams[0]
-    }) from **${prevValue}** to **${newValue}** ${getChangeTextFn(changeInSpeed)} via [${contractName}](https://${platform}/address/${transaction.target}).`
+    return `Set ContributorCompSpeed for [${decodedParams[0]}](https://${platform}/address/${decodedParams[0]}) from **${addCommas(
+      prevValue
+    )}** to **${addCommas(newValue)}** ${getChangeTextFn(changeInSpeed)} via [${contractName}](https://${platform}/address/${transaction.target}).`
   },
   '_supportMarket(address)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const marketLink = await getFormattedTokenNameWithLink(chain, decodedParams[0])
@@ -237,7 +236,9 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     const { contractName: targetContractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
     const { contractName: guardianContractName } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
 
-    return `🛑 Set the Pause Guardian to [${guardianContractName}](https://${platform}/address/${decodedParams[0]}) via [${targetContractName}](https://${platform}/address/${transaction.target}).`
+    return `🛑 Set the Pause Guardian to ${getRecipientNameWithLink(chain, decodedParams[0])} via [${targetContractName}](https://${platform}/address/${
+      transaction.target
+    }).`
   },
   '_become(address)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = getPlatform(chain)

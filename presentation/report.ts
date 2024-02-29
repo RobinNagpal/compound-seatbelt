@@ -13,7 +13,7 @@ import { unified } from 'unified'
 import { mdToPdf } from 'md-to-pdf'
 import { formatProposalId } from '../utils/contracts/governor'
 import { AllCheckResults, GovernorType, ProposalEvent } from '../types'
-import { checkforumPost } from '../checks/compound/formatters/helper'
+import { checkforumPost, pushChecksSummaryToDiscord } from '../checks/compound/formatters/helper'
 
 // --- Markdown helpers ---
 
@@ -151,6 +151,7 @@ export async function generateAndSaveReports(
     fsp.writeFile(`${path}.md`, markdownReport),
     mdToPdf({ content: markdownReport }, { dest: `${path}.pdf` }),
   ])
+  await pushChecksSummaryToDiscord(markdownReport, proposal.id!.toString())
 }
 
 /**
