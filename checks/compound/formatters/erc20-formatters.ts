@@ -163,9 +163,6 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
     const funderAddress = await distributorInstance.callStatic.funder()
     const { contractName: funderName } = await getContractNameAndAbiFromFile(chain, funderAddress)
     const isFunded = await distributorInstance.callStatic.isFunded()
-    if (isFunded) {
-      return `[${distributorName}](https://${platform}/address/${distributorAddress}) has already been funded by [${funderName}](https://${platform}/address/${funderAddress}).`
-    }
 
     const tokenAddress = await distributorInstance.callStatic.token()
     const { abi: tokenAbi } = await getContractNameAndAbiFromFile(chain, tokenAddress)
@@ -174,8 +171,12 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
 
     const fundingAmount = defactorFn((await distributorInstance.callStatic.fundingAmount()).toString(), `${decimals}`)
 
-    return `🛑 [${distributorName}](https://${platform}/address/${distributorAddress}) is getting funded with ${addCommas(
+    return `🛑 [${distributorName}](https://${platform}/address/${distributorAddress}) is getting funded ${addCommas(
       fundingAmount
-    )} [${tokenSymbol}](https://${platform}/address/${tokenAddress}) by [${funderName}](https://${platform}/address/${funderAddress}).`
+    )} [${tokenSymbol}](https://${platform}/address/${tokenAddress}) by [${funderName}](https://${platform}/address/${funderAddress})${
+      isFunded
+        ? ` but [${distributorName}](https://${platform}/address/${distributorAddress}) has already been funded by [${funderName}](https://${platform}/address/${funderAddress})`
+        : ''
+    }.`
   },
 }
