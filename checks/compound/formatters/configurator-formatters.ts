@@ -100,17 +100,17 @@ async function getTextForSpeedChange(
 
   const prevSpeedValue = (await getFunction(currentCometInstance)).toString()
   const newSpeedValue = decodedParams[1]
+  const changeInSpeedValues = subtractFn(newSpeedValue, prevSpeedValue)
 
   const prevRewardValue = dailyRateFn(defactorFn(prevSpeedValue, '15'))
   const newRewardValue = dailyRateFn(defactorFn(newSpeedValue, '15'))
-
-  const changeInValues = subtractFn(newRewardValue, prevRewardValue)
+  const changeInRewardValues = subtractFn(newRewardValue, prevRewardValue)
 
   return `Set ${functionName} of [${symbol}](https://${platform}/address/${baseToken}) [${contractName}](https://${platform}/address/${
     transaction.target
-  }) from ${addCommas(prevSpeedValue)} to ${addCommas(newSpeedValue)}. Hence changing Daily ${speedName} rewards from ${addCommas(
-    prevRewardValue
-  )} to ${addCommas(newRewardValue)} ${getChangeTextFn(changeInValues)}`
+  }) from ${addCommas(prevSpeedValue)} to ${addCommas(newSpeedValue)} ${getChangeTextFn(
+    changeInSpeedValues
+  )}. Hence changing Daily ${speedName} rewards from ${addCommas(prevRewardValue)} to ${addCommas(newRewardValue)} ${getChangeTextFn(changeInRewardValues)}`
 }
 
 export const configuratorFormatters: { [functionName: string]: TransactionFormatter } = {
