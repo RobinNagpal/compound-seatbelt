@@ -136,7 +136,7 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
 
       // There is no underlying asset for the address
       if (currentAddress === '0x4Ddc2D193948926D02f9B1fE9e1daa0718270ED5') {
-        finalText += `Set MarketBorrowCaps of [${symbol}](https://${platform}/address/${currentAddress}) to ${addCommas(currentValue)}`
+        finalText += `Set MarketBorrowCaps of [${symbol}](https://${platform}/address/${currentAddress}) to ${addCommas(defactorFn(currentValue))}`
         if (i < addresses.length - 1) {
           finalText += '\n\n'
         }
