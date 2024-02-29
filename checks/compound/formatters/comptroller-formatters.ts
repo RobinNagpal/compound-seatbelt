@@ -38,8 +38,8 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
       return 'No data provided for Comp speeds.'
     }
     const addresses = decodedParams[0].split(',')
-    const borrowSpeeds = decodedParams[1].split(',')
-    const supplySpeeds = decodedParams[2].split(',')
+    const supplySpeeds = decodedParams[1].split(',')
+    const borrowSpeeds = decodedParams[2].split(',')
 
     let finalText = ''
 
@@ -72,8 +72,7 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
 
       const changeInSpeedsText = (type: string, changeInSpeed: string, prevFormattedValue: string, newFormattedValue: string) => {
         return `${type} speed of ${symbol} to ${newFormattedValue} ${compSymbol}/block which was previously ${prevFormattedValue} ${compSymbol}/block ${getChangeTextFn(
-          changeInSpeed,
-          true
+          changeInSpeed
         )}`
       }
 
@@ -158,9 +157,9 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
       finalText += `${getCriticalitySign(
         changeInCaps,
         100
-      )} Set MarketBorrowCaps of [${symbol}](https://${platform}/address/${currentAddress}) from ${addCommas(prevValue)} to ${addCommas(
-        newValue
-      )} ${getChangeTextFn(changeInCaps)} via [${contractName}](https://${platform}/address/${transaction.target}).`
+      )} Set MarketBorrowCaps of [${symbol}](https://${platform}/address/${currentAddress}) via [${contractName}](https://${platform}/address/${
+        transaction.target
+      }) from ${addCommas(prevValue)} to ${addCommas(newValue)} ${getChangeTextFn(changeInCaps)}.`
 
       if (i < addresses.length - 1) {
         finalText += '\n\n'
@@ -221,9 +220,11 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
 
     const changeInSpeed = subtractFn(newValue, prevValue)
 
-    return `Set ContributorCompSpeed for [${decodedParams[0]}](https://${platform}/address/${decodedParams[0]}) from **${addCommas(
-      prevValue
-    )}** to **${addCommas(newValue)}** ${getChangeTextFn(changeInSpeed)} via [${contractName}](https://${platform}/address/${transaction.target}).`
+    return `Set ContributorCompSpeed for [${decodedParams[0]}](https://${platform}/address/${
+      decodedParams[0]
+    }) via [${contractName}](https://${platform}/address/${transaction.target}) from **${addCommas(prevValue)}** to **${addCommas(
+      newValue
+    )}** ${getChangeTextFn(changeInSpeed)}.`
   },
   '_supportMarket(address)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const marketLink = await getFormattedTokenNameWithLink(chain, decodedParams[0])
