@@ -28,7 +28,7 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
 
     const numberOfCompTokens = defactorFn(decodedParams[1])
 
-    return `🛑 Grant **${addCommas(numberOfCompTokens)}** [${symbol}](https://${platform}/address/${compAddress}) tokens to ${getRecipientNameWithLink(
+    return `🛑 Grant **${addCommas(numberOfCompTokens)} [${symbol}](https://${platform}/address/${compAddress})** tokens to ${getRecipientNameWithLink(
       chain,
       decodedParams[0]
     )}.`
