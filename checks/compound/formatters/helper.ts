@@ -10,6 +10,7 @@ import { DISCORD_WEBHOOK_URL } from './../../../utils/constants'
 import mftch, { FETCH_OPT, InvalidStatusCodeError } from 'micro-ftch'
 import { add, commit, push } from 'isomorphic-git'
 import http from 'isomorphic-git/http/node'
+import path from 'path'
 
 // @ts-ignore
 const fetchUrl = mftch.default
@@ -235,23 +236,36 @@ export async function postNotificationToDiscord(text: string) {
   }
 }
 
-export async function commitAndPushToGit(filePath: string, proposalNo: string) {
+export async function commitAndPushToGit(directoryPath: string, proposalNo: string) {
   const message = `Add pdf report of Proposal # ${proposalNo} to the repository`
   const author = { name: process.env.GITHUB_USERNAME, email: process.env.GITHUB_EMAIL }
-  await add({ fs, dir: `${process.env.GIT_REPO_PATH}`, filepath: `${filePath}` })
+  const fullDirectoryPath = path.join(process.env.GIT_REPO_PATH!, directoryPath)
+
+  // List all files in the directory
+  const files = fs.readdirSync(fullDirectoryPath)
+
+  for (const file of files) {
+    // Ensure to only add files, not directories
+    const fullPath = path.join(fullDirectoryPath, file)
+    if (fs.statSync(fullPath).isFile()) {
+      // Adjust to use relative path from GIT_REPO_PATH
+      const relativePath = path.relative(process.env.GIT_REPO_PATH!, fullPath)
+      await add({ fs, dir: process.env.GIT_REPO_PATH!, filepath: relativePath })
+    }
+  }
   await commit({ fs, dir: `${process.env.GIT_REPO_PATH}`, message, author })
   const pushResult = await push({
     fs,
     http,
     dir: `${process.env.GIT_REPO_PATH}`,
     remote: 'origin',
-    ref: 'dawood/workflow_changes',
+    ref: 'main',
     onAuth: () => ({ username: process.env.GITHUB_TOKEN }),
   })
   if (pushResult.ok) {
     console.log(`Successfully pushed pdf report of proposal # ${proposalNo} to the repository.`)
     await postNotificationToDiscord(
-      `Pdf report of **Proposal # ${proposalNo}** has been added to the repository which can be accessed **[here](${process.env.GITHUB_REPO_PATH}/${filePath})**.\n\n`
+      `Pdf report of **Proposal # ${proposalNo}** has been added to the repository which can be accessed **[here](${process.env.GITHUB_REPO_PATH})**.\n\n`
     )
   }
 }

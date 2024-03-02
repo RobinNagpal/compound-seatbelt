@@ -151,6 +151,22 @@ export async function generateAndSaveReports(
     fsp.writeFile(`${path}.md`, markdownReport),
     mdToPdf({ content: markdownReport }, { dest: `${path}.pdf` }),
   ])
+}
+
+export async function pushCompoundChecksToDiscord(
+  governorType: GovernorType,
+  blocks: { current: Block; start: Block | null; end: Block | null },
+  proposal: ProposalEvent,
+  checks: AllCheckResults
+) {
+  const compoundChecks = checks['checkCompoundProposalDetails']
+  // Generate the base markdown proposal report. This is the markdown report which is translated into other file types.
+  const baseReport = await toMarkdownProposalReport(governorType, blocks, proposal, {
+    checkCompoundProposalDetails: compoundChecks,
+  })
+
+  const markdownReport = String(await remark().use(remarkFixEmojiLinks).process(baseReport))
+
   await pushChecksSummaryToDiscord(markdownReport, proposal.id!.toString())
 }
 
