@@ -20,19 +20,19 @@
     "contractName": "CErc20Delegate",
     "functions": {
       "_setReserveFactor(uint256)": {
-        "transactionFormatter": "ERC20._setReserveFactor(uint256)"
+        "transactionFormatter": "CErc20Delegate._setReserveFactor(uint256)"
       },
       "_reduceReserves(uint256)": {
-        "transactionFormatter": "ERC20._reduceReserves(uint256)"
+        "transactionFormatter": "CErc20Delegate._reduceReserves(uint256)"
       },
       "redeem(uint256)": {
-        "transactionFormatter": "ERC20.redeem(uint256)"
+        "transactionFormatter": "CErc20Delegate.redeem(uint256)"
       },
       "transfer(address,uint256)": {
         "transactionFormatter": "ERC20.transfer(address,uint256)"
       },
       "_setInterestRateModel(address)": {
-        "transactionFormatter": "ERC20._setInterestRateModel(address)"
+        "transactionFormatter": "CErc20Delegate._setInterestRateModel(address)"
       }
     }
   },
@@ -101,27 +101,8 @@
   },
   "Sablier": {
     "functions": {
-      "createStream(address,uint256,address,uint256)": {
-        "transactionFormatter": "Sablier.createStream(address,uint256,address,uint256)"
-      },
       "createStream(address,uint256,address,uint256,uint256)": {
-        "transactionFormatter": "BridgeFormatters.createStream(address,uint256,address,uint256,uint256)"
-      }
-    }
-  },
-  "CEther": {
-    "_setReserveFactor(uint256)": {
-      "transactionFormatter": "ERC20._setReserveFactor(uint256)"
-    },
-    "_setInterestRateModel(address)": {
-      "transactionFormatter": "ERC20._setInterestRateModel(address)"
-    }
-  },
-  "ComptrollerSweeper": {
-    "contractName": "ComptrollerSweeper",
-    "functions": {
-      "sweepToken(address)": {
-        "transactionFormatter": "ComptrollerSweeper.sweepToken(address)"
+        "transactionFormatter": "Sablier.createStream(address,uint256,address,uint256,uint256)"
       }
     }
   },
@@ -178,7 +159,7 @@
   "CometProxyAdmin": {
     "functions": {
       "deployAndUpgradeTo(address,address)": {
-        "transactionFormatter": "Configurator.deployAndUpgradeTo(address,address)"
+        "transactionFormatter": "CometProxyAdmin.deployAndUpgradeTo(address,address)"
       }
     }
   },
@@ -186,22 +167,21 @@
     "contractName": "SaiTap",
     "functions": {
       "cash(uint256)": {
-        "transactionFormatter": "##############################"
+        "transactionFormatter": "SaiTap.cash(uint256)"
       }
     }
   },
   "CometRewards": {
     "functions": {
       "setRewardConfig(address,address)": {
-        "transactionFormatter": "Configurator.setRewardConfig(address,address)"
+        "transactionFormatter": "CometRewards.setRewardConfig(address,address)"
       }
     }
   },
   "WETH9": {
     "functions": {
       "deposit()": {
-        "description": "deposit()",
-        "transactionFormatter": "##############################"
+        "transactionFormatter": "WETH9.deposit()"
       },
       "transfer(address,uint256)": {
         "transactionFormatter": "ERC20.transfer(address,uint256)"
@@ -244,34 +224,34 @@
   "TokenMessenger": {
     "functions": {
       "depositForBurn(uint256,uint32,bytes32,address)": {
-        "transactionFormatter": "ERC20.depositForBurn(uint256,uint32,bytes32,address)"
+        "transactionFormatter": "TokenMessenger.depositForBurn(uint256,uint32,bytes32,address)"
       }
     }
   },
   "AeraVaultV2": {
     "functions": {
       "acceptOwnership()": {
-        "transactionFormatter": "GovernorBravo.acceptOwnership()"
+        "transactionFormatter": "AeraVault.acceptOwnership()"
       },
       "deposit(tuple[])": {
-        "transactionFormatter": "GovernorBravo.deposit(tuple[])"
+        "transactionFormatter": "AeraVault.deposit(tuple[])"
       },
       "resume()": {
-        "transactionFormatter": "GovernorBravo.resume()"
+        "transactionFormatter": "AeraVault.resume()"
       }
     }
   },
   "AeraVaultAssetRegistry": {
     "functions": {
       "acceptOwnership()": {
-        "transactionFormatter": "GovernorBravo.acceptOwnership()"
+        "transactionFormatter": "AeraVault.acceptOwnership()"
       }
     }
   },
   "AeraVaultHooks": {
     "functions": {
       "acceptOwnership()": {
-        "transactionFormatter": "GovernorBravo.acceptOwnership()"
+        "transactionFormatter": "AeraVault.acceptOwnership()"
       }
     }
   }

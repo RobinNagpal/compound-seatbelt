@@ -160,21 +160,6 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       getPlatform(chain)
     )
   },
-  'deployAndUpgradeTo(address,address)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    const platform = getPlatform(chain)
-
-    const { contractName } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
-
-    const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[1])
-    const currentCometInstance = new Contract(decodedParams[1], abi, customProvider(chain))
-
-    const baseToken = await currentCometInstance.callStatic.baseToken()
-    const { abi: baseTokenAbi } = await getContractNameAndAbiFromFile(chain, baseToken)
-    const baseTokenInstance = new Contract(baseToken, baseTokenAbi, customProvider(chain))
-    const { symbol } = await getContractSymbolAndDecimalsFromFile(baseToken, baseTokenInstance, chain)
-
-    return `Deploy and upgrade new implementation for **[${symbol}](https://${platform}/address/${baseToken})** via **[${contractName}](https://${platform}/address/${decodedParams[0]})**.`
-  },
   'setBaseTrackingBorrowSpeed(address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     return getTextForSpeedChange(
       chain,
@@ -328,23 +313,6 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
 
     return `🛑 Add new asset to market **[${symbol}](https://${platform}/address/${baseToken})** with following asset configuration: \n\n{\n\n**asset:** [${assetSymbol}](https://${platform}/address/${assetAddress}),\n\n**priceFeed:** ${tupleList[1]},\n\n**decimals:** ${assetDecimals},\n\n**borrowCollateralFactor:** ${borrowCollateralFactor},\n\n**liquidateCollateralFactor:** ${liquidateCollateralFactor},\n\n**liquidationFactor:** ${liquidationFactor},\n\n**supplyCap:** ${supplyCap}\n\n}
     \n\n${geckoResponse}`
-  },
-  'setRewardConfig(address,address)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    const platform = getPlatform(chain)
-
-    const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
-    const currentInstance = new Contract(decodedParams[0], abi, customProvider(chain))
-
-    const baseToken = await currentInstance.callStatic.baseToken()
-    const { abi: baseTokenAbi } = await getContractNameAndAbiFromFile(chain, baseToken)
-    const baseTokenInstance = new Contract(baseToken, baseTokenAbi, customProvider(chain))
-    const { symbol: tokenSymbol } = await getContractSymbolAndDecimalsFromFile(baseToken, baseTokenInstance, chain)
-
-    const { abi: compAbi } = await getContractNameAndAbiFromFile(chain, decodedParams[1])
-    const compInstance = new Contract(decodedParams[1], compAbi, customProvider(chain))
-    const { symbol } = await getContractSymbolAndDecimalsFromFile(decodedParams[1], compInstance, chain)
-
-    return `⚠️ Set reward token for market **[${tokenSymbol}](https://${platform}/address/${baseToken})** as **[${symbol}](https://${platform}/address/${decodedParams[1]})**.`
   },
   'setFactory(address,address)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = getPlatform(chain)

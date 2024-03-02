@@ -169,7 +169,7 @@ async function main() {
       checkResults
     )
 
-    await commitAndPushToGit(`reports/${config.daoName}/${config.governorAddress}`, proposal.id!.toString())
+    // await commitAndPushToGit(`reports/${config.daoName}/${config.governorAddress}`, proposal.id!.toString())
   }
   console.log('Done!')
 }

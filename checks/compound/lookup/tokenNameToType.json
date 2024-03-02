@@ -9,6 +9,7 @@
   "ZRXToken": "ERC20",
   "Fei": "ERC20",
   "Uni": "ERC20",
+  "CEther": "CErc20Delegate",
   "CErc20": "CErc20Delegate"
 
 }
