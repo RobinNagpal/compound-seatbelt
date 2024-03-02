@@ -80,7 +80,7 @@ export async function getFormattedTokenNameWithLink(chain: CometChains, tokenAdd
   const compInstance = new Contract(tokenAddress, compAddressAbi, customProvider(chain))
   const { symbol } = await getContractSymbolAndDecimalsFromFile(tokenAddress, compInstance, chain)
 
-  return `[${symbol}](https://${platform}/address/${tokenAddress})`
+  return `**[${symbol}](https://${platform}/address/${tokenAddress})**`
 }
 
 export function getRecipientNameWithLink(chain: CometChains, recipient: string) {
@@ -93,7 +93,7 @@ export function getRecipientNameWithLink(chain: CometChains, recipient: string) 
   }
   const platform = getPlatform(chain)
 
-  return `[${recipientName}](https://${platform}/address/${recipient})`
+  return `**[${recipientName}](https://${platform}/address/${recipient})**`
 }
 
 export function getChangeTextFn(change: string, isPercentage: boolean = false): string {
@@ -183,7 +183,7 @@ export async function formatCoinsAndAmounts(list: string[], chain: CometChains, 
     const tokenInstance = new Contract(address, abi, customProvider(chain))
     const { symbol, decimals } = await getContractSymbolAndDecimalsFromFile(address, tokenInstance, chain)
     const defactoredAmount = defactorFn(amount, `${decimals}`)
-    return `${addCommas(defactoredAmount)} [${symbol}](https://${platform}/address/${address})`
+    return `**${addCommas(defactoredAmount)} [${symbol}](https://${platform}/address/${address})**`
   }
   const promises = []
   for (let i = 0; i < list.length; i += 2) {

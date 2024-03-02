@@ -16,7 +16,7 @@ export const checkCompoundProposalDetails: ProposalCheck = {
   name: 'Checks Compound Proposal Details',
   async checkProposal(proposal, sim, deps: ProposalData) {
     const { targets: targets, signatures: signatures, calldatas: calldatas, values } = proposal
-
+    // console.log(proposal)
     const chain = CometChains.mainnet
     const proposalId = proposal.id?.toNumber() || 0
 
@@ -140,6 +140,7 @@ async function getTransactionMessages(
   transactionInfo: ExecuteTransactionInfo
 ): Promise<TransactionMessage> {
   const { target, value, signature, calldata } = transactionInfo
+  // console.log('transaction info', transactionInfo)
   if (value?.toString() && value?.toString() !== '0') {
     if (!signature) {
       return { info: `\n\nTransfer ${defactorFn(value.toString())} ETH to ${target}` }
