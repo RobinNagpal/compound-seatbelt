@@ -245,7 +245,7 @@ export async function commitAndPushToGit(filePath: string, proposalNo: string) {
     http,
     dir: `${process.env.GIT_REPO_PATH}`,
     remote: 'origin',
-    ref: 'dawood/workflow_changes',
+    ref: 'main',
     onAuth: () => ({ username: process.env.GITHUB_TOKEN }),
   })
   if (pushResult.ok) {

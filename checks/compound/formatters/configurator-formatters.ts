@@ -12,6 +12,7 @@ import {
   getPlatformFromGecko,
   addCommas,
   getChangeTextFn,
+  getRecipientNameWithLink,
 } from './helper'
 import { annualizeFn, dailyRateFn, defactorFn, percentageFn, subtractFn } from './../../../utils/roundingUtils'
 
@@ -100,17 +101,17 @@ async function getTextForSpeedChange(
 
   const prevSpeedValue = (await getFunction(currentCometInstance)).toString()
   const newSpeedValue = decodedParams[1]
+  const changeInSpeedValues = subtractFn(newSpeedValue, prevSpeedValue)
 
   const prevRewardValue = dailyRateFn(defactorFn(prevSpeedValue, '15'))
   const newRewardValue = dailyRateFn(defactorFn(newSpeedValue, '15'))
-
-  const changeInValues = subtractFn(newRewardValue, prevRewardValue)
+  const changeInRewardValues = subtractFn(newRewardValue, prevRewardValue)
 
   return `Set ${functionName} of [${symbol}](https://${platform}/address/${baseToken}) [${contractName}](https://${platform}/address/${
     transaction.target
-  }) from ${addCommas(prevSpeedValue)} to ${addCommas(newSpeedValue)}. Hence changing Daily ${speedName} rewards from ${addCommas(
-    prevRewardValue
-  )} to ${addCommas(newRewardValue)} ${getChangeTextFn(changeInValues)}`
+  }) from ${addCommas(prevSpeedValue)} to ${addCommas(newSpeedValue)} ${getChangeTextFn(
+    changeInSpeedValues
+  )}. Hence changing Daily ${speedName} rewards from ${addCommas(prevRewardValue)} to ${addCommas(newRewardValue)} ${getChangeTextFn(changeInRewardValues)}`
 }
 
 export const configuratorFormatters: { [functionName: string]: TransactionFormatter } = {
@@ -422,15 +423,15 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
 
     return `🛑 Set configuration for [${contractBaseSymbol}](https://${platform}/address/${contractBaseToken}) to: \n\n{
       governor: [${governor}](https://${platform}/address/${tupleList[0]}),
-      pauseGuardian: [${pauseGuardian}](https://${platform}/address/${tupleList[1]}),
+      pauseGuardian: ${getRecipientNameWithLink(chain, tupleList[1])},
       baseToken: [${baseSymbol}](https://${platform}/address/${tupleList[2]}),
       baseTokenPriceFeed: [PriceFeed](https://${platform}/address/${tupleList[3]}),
       extensionDelegate: [${extensionDelegateSymbol}](https://${platform}/address/${tupleList[4]}),
-      supplyKink: ${percentageFn(supplyKink)},
+      supplyKink: ${percentageFn(supplyKink)}%,
       supplyPerYearInterestRateSlopeLow: ${addCommas(supplyPerYearInterestRateSlopeLow)},
       supplyPerYearInterestRateSlopeHigh: ${addCommas(supplyPerYearInterestRateSlopeHigh)},
       supplyPerYearInterestRateBase: ${addCommas(supplyPerYearInterestRateBase)},
-      borrowKink: ${percentageFn(borrowKink)},
+      borrowKink: ${percentageFn(borrowKink)}%,
       borrowPerYearInterestRateSlopeLow: ${addCommas(borrowPerYearInterestRateSlopeLow)},
       borrowPerYearInterestRateSlopeHigh: ${addCommas(borrowPerYearInterestRateSlopeHigh)},
       borrowPerYearInterestRateBase: ${addCommas(borrowPerYearInterestRateBase)},
