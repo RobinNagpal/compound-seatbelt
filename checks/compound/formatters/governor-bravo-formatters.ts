@@ -20,9 +20,9 @@ export const governorBravoFormatters: { [functionName: string]: TransactionForma
 
     const changeInThreshold = subtractFn(newThreshold, prevThreshold)
 
-    return `Set proposal threshold of [${name}](https://${platform}/address/${transaction.target}) from **${addCommas(prevThreshold)}** to **${addCommas(
+    return `Set proposal threshold of **[${name}](https://${platform}/address/${transaction.target})** from ${addCommas(prevThreshold)} to ${addCommas(
       newThreshold
-    )}** ${getChangeTextFn(changeInThreshold)}`
+    )} ${getChangeTextFn(changeInThreshold)}`
   },
   '_setWhitelistGuardian(address)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = getPlatform(chain)
@@ -33,7 +33,10 @@ export const governorBravoFormatters: { [functionName: string]: TransactionForma
 
     const name = await governanceInstance.callStatic.name()
 
-    return `Set the Whitelist Guardian of [${name}](https://${platform}/address/${governanceAddress}) to ${getRecipientNameWithLink(chain, decodedParams[0])}.`
+    return `Set the Whitelist Guardian of **[${name}](https://${platform}/address/${governanceAddress})** to ${getRecipientNameWithLink(
+      chain,
+      decodedParams[0]
+    )}.`
   },
   '_setVotingDelay(uint256)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = getPlatform(chain)
@@ -48,9 +51,9 @@ export const governorBravoFormatters: { [functionName: string]: TransactionForma
 
     const changeInVotingDelay = subtractFn(newVotingDelay, prevVotingDelay)
 
-    return `Voting Delay (number of Ethereum blocks to wait before voting on a proposal may begin) of [${name}](https://${platform}/address/${governanceAddress}) is changed from **${addCommas(
+    return `Voting Delay (number of Ethereum blocks to wait before voting on a proposal may begin) of **[${name}](https://${platform}/address/${governanceAddress})** is changed from ${addCommas(
       prevVotingDelay
-    )}** blocks to **${addCommas(newVotingDelay)}** blocks ${getChangeTextFn(changeInVotingDelay)}`
+    )} blocks to ${addCommas(newVotingDelay)} blocks ${getChangeTextFn(changeInVotingDelay)}`
   },
   '_setVotingPeriod(uint256)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = getPlatform(chain)
@@ -65,9 +68,9 @@ export const governorBravoFormatters: { [functionName: string]: TransactionForma
 
     const changeInVotingPeriod = subtractFn(newVotingPeriod, prevVotingPeriod)
 
-    return `The Voting Period (duration of voting on a proposal in terms of Ethereum blocks) of [${name}](https://${platform}/address/${governanceAddress}) is changed from **${addCommas(
+    return `The Voting Period (duration of voting on a proposal in terms of Ethereum blocks) of **[${name}](https://${platform}/address/${governanceAddress})** is changed from ${addCommas(
       prevVotingPeriod
-    )}** blocks to **${addCommas(newVotingPeriod)}** blocks ${getChangeTextFn(changeInVotingPeriod)}`
+    )} blocks to ${addCommas(newVotingPeriod)} blocks ${getChangeTextFn(changeInVotingPeriod)}`
   },
   'acceptOwnership()': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = getPlatform(chain)
@@ -75,7 +78,7 @@ export const governorBravoFormatters: { [functionName: string]: TransactionForma
 
     const { contractName } = await getContractNameAndAbiFromFile(chain, contractAddress)
 
-    return `Accept ownership of [${contractName}](https://${platform}/address/${contractAddress}).`
+    return `Accept ownership of **[${contractName}](https://${platform}/address/${contractAddress})**.`
   },
   'resume()': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = getPlatform(chain)
@@ -83,7 +86,7 @@ export const governorBravoFormatters: { [functionName: string]: TransactionForma
 
     const { contractName } = await getContractNameAndAbiFromFile(chain, contractAddress)
 
-    return `Resume the [${contractName}](https://${platform}/address/${contractAddress}), allowing the guardian to start rebalancing.`
+    return `Resume the **[${contractName}](https://${platform}/address/${contractAddress})**, allowing the guardian to start rebalancing.`
   },
   'deposit(tuple[])': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = getPlatform(chain)
@@ -92,6 +95,6 @@ export const governorBravoFormatters: { [functionName: string]: TransactionForma
     const depositedAssets = await formatCoinsAndAmounts(tuple, chain, platform)
     const { contractName } = await getContractNameAndAbiFromFile(chain, contractAddress)
 
-    return `🛑 Deposit ${depositedAssets} into [${contractName}](https://${platform}/address/${contractAddress}).`
+    return `🛑 Deposit **${depositedAssets}** into **[${contractName}](https://${platform}/address/${contractAddress})**.`
   },
 }
