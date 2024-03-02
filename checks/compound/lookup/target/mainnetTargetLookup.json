@@ -2241,7 +2241,7 @@
     "functions": {
       "cash(uint256)": {
         "description": "cash(uint256)",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20.cash(uint256)",
         "proposals": {
           "138": [
             "26855744800384711915777"
@@ -2320,7 +2320,7 @@
     "functions": {
       "deposit()": {
         "description": "deposit()",
-        "transactionFormatter": "",
+        "transactionFormatter": "ERC20.deposit()",
         "proposals": {
           "144": []
         }

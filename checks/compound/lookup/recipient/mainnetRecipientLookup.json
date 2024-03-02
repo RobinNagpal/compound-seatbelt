@@ -1,3 +1,5 @@
 {
-  "0x40ec5b33f54e0e8a33a975908c5ba1c14e5bbbdf": "Polygon(Matic) ERC20 Bridge"
+  "0x40ec5b33f54e0e8a33a975908c5ba1c14e5bbbdf": "Polygon(Matic) ERC20 Bridge",
+  "0xcee284f754e854890e311e3280b767f80797180d": "Arbitrum One: L1 Arb - Custom Gateway",
+  "0xa3a7b6f88361f48403514059f1f16c8e78d60eec": "Arbitrum One: L1 ERC20 Gateway"
 }

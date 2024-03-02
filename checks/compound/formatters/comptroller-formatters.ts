@@ -28,7 +28,7 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
 
     const numberOfCompTokens = defactorFn(decodedParams[1])
 
-    return `🛑 Grant **${addCommas(numberOfCompTokens)}** [${symbol}](https://${platform}/address/${compAddress}) tokens to ${getRecipientNameWithLink(
+    return `🛑 Grant **${addCommas(numberOfCompTokens)} [${symbol}](https://${platform}/address/${compAddress})** tokens to ${getRecipientNameWithLink(
       chain,
       decodedParams[0]
     )}.`
@@ -38,8 +38,8 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
       return 'No data provided for Comp speeds.'
     }
     const addresses = decodedParams[0].split(',')
-    const borrowSpeeds = decodedParams[1].split(',')
-    const supplySpeeds = decodedParams[2].split(',')
+    const supplySpeeds = decodedParams[1].split(',')
+    const borrowSpeeds = decodedParams[2].split(',')
 
     let finalText = ''
 
@@ -72,8 +72,7 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
 
       const changeInSpeedsText = (type: string, changeInSpeed: string, prevFormattedValue: string, newFormattedValue: string) => {
         return `${type} speed of ${symbol} to ${newFormattedValue} ${compSymbol}/block which was previously ${prevFormattedValue} ${compSymbol}/block ${getChangeTextFn(
-          changeInSpeed,
-          true
+          changeInSpeed
         )}`
       }
 
@@ -108,13 +107,13 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
       return `${getCriticalitySign(
         changeInFactor,
         15
-      )} Set [${symbol}](https://${platform}/address/${targetToken}) collateral factor from ${prevValue}% to ${newValue}% ${getChangeTextFn(
+      )} Set **[${symbol}](https://${platform}/address/${targetToken})** collateral factor from ${prevValue}% to ${newValue}% ${getChangeTextFn(
         changeInFactor,
         true
       )}`
     }
 
-    return `Set [${symbol}](https://${platform}/address/${targetToken}) collateral factor to ${newValue}%`
+    return `Set **[${symbol}](https://${platform}/address/${targetToken})** collateral factor to ${newValue}%`
   },
   '_setMarketBorrowCaps(address[],uint256[])': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     if (decodedParams.length === 0 || decodedParams.some((param) => param === '')) {
@@ -137,7 +136,7 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
 
       // There is no underlying asset for the address
       if (currentAddress === '0x4Ddc2D193948926D02f9B1fE9e1daa0718270ED5') {
-        finalText += `Set MarketBorrowCaps of [${symbol}](https://${platform}/address/${currentAddress}) to ${addCommas(currentValue)}`
+        finalText += `Set MarketBorrowCaps of **[${symbol}](https://${platform}/address/${currentAddress})** to ${addCommas(defactorFn(currentValue))}`
         if (i < addresses.length - 1) {
           finalText += '\n\n'
         }
@@ -158,9 +157,9 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
       finalText += `${getCriticalitySign(
         changeInCaps,
         100
-      )} Set MarketBorrowCaps of [${symbol}](https://${platform}/address/${currentAddress}) from ${addCommas(prevValue)} to ${addCommas(
-        newValue
-      )} ${getChangeTextFn(changeInCaps)} via [${contractName}](https://${platform}/address/${transaction.target}).`
+      )} Set MarketBorrowCaps of **[${symbol}](https://${platform}/address/${currentAddress})** via **[${contractName}](https://${platform}/address/${
+        transaction.target
+      })** from ${addCommas(prevValue)} to ${addCommas(newValue)} ${getChangeTextFn(changeInCaps)}.`
 
       if (i < addresses.length - 1) {
         finalText += '\n\n'
@@ -178,7 +177,7 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     const prevValue = await targetInstance.callStatic.oracle()
     const newValue = decodedParams[0]
 
-    return `⚠️ Set new price oracle to [${newValue}](https://${platform}/address/${newValue}). Previous oracle was [${prevValue}](https://${platform}/address/${prevValue}).`
+    return `⚠️ Set new price oracle to **[${newValue}](https://${platform}/address/${newValue})**. Previous oracle was **[${prevValue}](https://${platform}/address/${prevValue})**.`
   },
   '_setMintPaused(address,bool)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = getPlatform(chain)
@@ -186,9 +185,9 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     const coinLink = await getFormattedTokenNameWithLink(chain, decodedParams[0])
     const { contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
 
-    return `⚠️ ${decodedParams[1] === 'true' ? 'Pause' : 'Resume'} minting for ${coinLink} via [${contractName}](https://${platform}/address/${
+    return `⚠️ ${decodedParams[1] === 'true' ? 'Pause' : 'Resume'} minting for ${coinLink} via **[${contractName}](https://${platform}/address/${
       transaction.target
-    }).`
+    })**.`
   },
   '_setBorrowPaused(address,bool)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = getPlatform(chain)
@@ -196,18 +195,18 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     const coinLink = await getFormattedTokenNameWithLink(chain, decodedParams[0])
     const { contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
 
-    return `⚠️ ${decodedParams[1] === 'true' ? 'Pause' : 'Resume'} ${coinLink} borrowing via [${contractName}](https://${platform}/address/${
+    return `⚠️ ${decodedParams[1] === 'true' ? 'Pause' : 'Resume'} ${coinLink} borrowing via **[${contractName}](https://${platform}/address/${
       transaction.target
-    }).`
+    })**.`
   },
   '_setSeizePaused(bool)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = getPlatform(chain)
 
     const { contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
 
-    return `⚠️ ${decodedParams[0] === 'true' ? 'Pause' : 'Unpause'} market liquidation via [${contractName}](https://${platform}/address/${
+    return `⚠️ ${decodedParams[0] === 'true' ? 'Pause' : 'Unpause'} market liquidation via **[${contractName}](https://${platform}/address/${
       transaction.target
-    }).`
+    })**.`
   },
   '_setContributorCompSpeed(address,uint256)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = getPlatform(chain)
@@ -221,9 +220,11 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
 
     const changeInSpeed = subtractFn(newValue, prevValue)
 
-    return `Set ContributorCompSpeed for [${decodedParams[0]}](https://${platform}/address/${decodedParams[0]}) from **${addCommas(
-      prevValue
-    )}** to **${addCommas(newValue)}** ${getChangeTextFn(changeInSpeed)} via [${contractName}](https://${platform}/address/${transaction.target}).`
+    return `Set ContributorCompSpeed for **[${decodedParams[0]}](https://${platform}/address/${
+      decodedParams[0]
+    })** via **[${contractName}](https://${platform}/address/${transaction.target})** from ${addCommas(prevValue)} to ${addCommas(newValue)} ${getChangeTextFn(
+      changeInSpeed
+    )}.`
   },
   '_supportMarket(address)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const marketLink = await getFormattedTokenNameWithLink(chain, decodedParams[0])
@@ -236,9 +237,9 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     const { contractName: targetContractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
     const { contractName: guardianContractName } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
 
-    return `🛑 Set the Pause Guardian to ${getRecipientNameWithLink(chain, decodedParams[0])} via [${targetContractName}](https://${platform}/address/${
+    return `🛑 Set the Pause Guardian to ${getRecipientNameWithLink(chain, decodedParams[0])} via **[${targetContractName}](https://${platform}/address/${
       transaction.target
-    }).`
+    })**.`
   },
   '_become(address)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = getPlatform(chain)
@@ -246,7 +247,7 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     const targetAddress = transaction.target
     const newImplmentationAddress = decodedParams[0]
 
-    return `🛑 Upgrade of the Compound Comptroller contract to a new implementation [${newImplmentationAddress}](https://${platform}/address/${newImplmentationAddress}) from [${targetAddress}](https://${platform}/address/${targetAddress}).`
+    return `🛑 Upgrade of the Compound Comptroller contract to a new implementation **[${newImplmentationAddress}](https://${platform}/address/${newImplmentationAddress})** from **[${targetAddress}](https://${platform}/address/${targetAddress})**.`
   },
   'fixBadAccruals(address[],uint256[])': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = getPlatform(chain)
