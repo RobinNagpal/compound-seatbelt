@@ -1,0 +1,14 @@
+{
+  "TetherToken": "ERC20",
+  "Dai": "ERC20",
+  "Comp": "ERC20",
+  "DSToken": "ERC20",
+  "FiatTokenV2_2": "ERC20",
+  "ReputationToken": "ERC20",
+  "BAToken": "ERC20",
+  "ZRXToken": "ERC20",
+  "Fei": "ERC20",
+  "Uni": "ERC20",
+  "CErc20": "CErc20Delegate"
+
+}
