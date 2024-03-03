@@ -1,13 +1,18 @@
 import fs from 'fs'
-import mftch from 'micro-ftch'
 import { CheckResult, ProposalCheck, ProposalData } from './../../types'
+import { defactorFn } from './../../utils/roundingUtils'
 import { getContractNameAndAbiFromFile, getFunctionFragmentAndDecodedCalldata, getFunctionSignature } from './abi-utils'
-import { CometChains, ExecuteTransactionInfo, ExecuteTransactionsInfo, TargetLookupData, TransactionMessage } from './compound-types'
+import {
+  CometChains,
+  ContractNameAndAbi,
+  ContractTypeFormattingInfo,
+  ExecuteTransactionInfo,
+  ExecuteTransactionsInfo,
+  TargetTypeLookupData,
+  TransactionMessage,
+} from './compound-types'
 import { getDecodedBytesForChain, l2Bridges } from './l2-utils'
 import { formattersLookup } from './transaction-formatter'
-import { defactorFn } from './../../utils/roundingUtils'
-// @ts-ignore
-const fetchUrl = mftch.default
 
 /**
  * Decodes proposal target calldata into a human-readable format
@@ -29,13 +34,6 @@ export const checkCompoundProposalDetails: ProposalCheck = {
 async function updateLookupFile(chain: CometChains, proposalId: number, transactions: ExecuteTransactionsInfo, isL2 = false): Promise<CheckResult> {
   const { targets, signatures, calldatas, values } = transactions
   let messageCount = 0
-  const targetLookupFilePath = `./checks/compound/lookup/target/${chain}TargetLookup.json`
-  let lookupData: TargetLookupData = {}
-
-  if (fs.existsSync(targetLookupFilePath)) {
-    const fileContent = fs.readFileSync(targetLookupFilePath, 'utf-8')
-    lookupData = JSON.parse(fileContent || '{}')
-  }
 
   const checkResults: CheckResult = { info: [], warnings: [], errors: [] }
 
@@ -57,14 +55,13 @@ async function updateLookupFile(chain: CometChains, proposalId: number, transact
       continue
     }
 
-    await storeTargetInfo(chain, proposalId, lookupData, transactionInfo)
-    const message = await getTransactionMessages(chain, proposalId, lookupData, transactionInfo)
+    const message = await getTransactionMessages(chain, proposalId, transactionInfo)
     const messagePrefix = isL2 ? '' : `\n\n**${++messageCount}-** `
     const messageInfo = `${messagePrefix}${message.info}`
     pushMessageToCheckResults(checkResults, { info: messageInfo })
   }
 
-  fs.writeFileSync(targetLookupFilePath, JSON.stringify(lookupData, null, 2), 'utf-8')
+  // fs.writeFileSync(targetLookupFilePath, JSON.stringify(lookupData, null, 2), 'utf-8')
 
   return checkResults
 }
@@ -91,55 +88,31 @@ function nestCheckResultsForChain(chain: CometChains, checkResult: CheckResult):
 `
 }
 
-async function storeTargetInfo(chain: CometChains, proposalId: number, targetLookupData: TargetLookupData, transactionInfo: ExecuteTransactionInfo) {
-  const { target, value, signature, calldata } = transactionInfo
-  if (value?.toString() && value?.toString() !== '0') {
-    return
+function getForatterForContract(contractNameAndAbi: ContractNameAndAbi): ContractTypeFormattingInfo {
+  const contractName = contractNameAndAbi.contractName
+  const targetLookupFilePath = `./checks/compound/lookup/targetType.json`
+
+  const fileContent = fs.readFileSync(targetLookupFilePath, 'utf-8')
+  const lookupData: TargetTypeLookupData = JSON.parse(fileContent || '{}')
+
+  const targetNameToTypeFilePath = `./checks/compound/lookup/targetNameToType.json`
+  const targetNameToTypeFileContent = fs.readFileSync(targetNameToTypeFilePath, 'utf-8')
+  const targetNameToTypeLookupData: { [contractName: string]: string } = JSON.parse(targetNameToTypeFileContent || '{}')
+
+  const contractType = targetNameToTypeLookupData[contractNameAndAbi.contractName]
+
+  const contractFormatters: ContractTypeFormattingInfo = contractType ? lookupData[contractType] : lookupData[contractName]
+
+  if (!contractFormatters) {
+    throw new Error(`No contract formatters found for ContractName - ${contractName} and Type - ${contractType}`)
   }
-  if (isRemovedFunction(target, signature)) {
-    return
-  }
-  try {
-    // Debugging logs
-    const contractNameAndAbi = await getContractNameAndAbiFromFile(chain, target)
 
-    if (!contractNameAndAbi.abi) {
-      console.log('No ABI found for address:', target)
-      throw new Error('No ABI found for address ' + target)
-    }
-
-    const { fun, decodedCalldata } = await getFunctionFragmentAndDecodedCalldata(proposalId, chain, transactionInfo)
-
-    const functionSignature = getFunctionSignature(fun)
-
-    targetLookupData[target] ||= {
-      contractName: contractNameAndAbi.contractName,
-      functions: {},
-      proposals: [],
-    }
-    targetLookupData[target].functions[functionSignature] ||= {
-      description: functionSignature,
-      transactionFormatter: '',
-      proposals: {},
-    }
-
-    if (!targetLookupData[target].proposals.includes(proposalId)) {
-      targetLookupData[target].proposals.push(proposalId)
-    }
-    targetLookupData[target].functions[functionSignature].proposals[proposalId.toString()] = decodedCalldata.map((data) => data.toString())
-  } catch (e) {
-    console.error(e)
-    console.log(`Error decoding proposal: ${proposalId} target: ${target} signature: ${signature} calldata:${calldata}`)
-  }
+  return contractFormatters
 }
 
-async function getTransactionMessages(
-  chain: CometChains,
-  proposalId: number,
-  targetLookupData: TargetLookupData,
-  transactionInfo: ExecuteTransactionInfo
-): Promise<TransactionMessage> {
+async function getTransactionMessages(chain: CometChains, proposalId: number, transactionInfo: ExecuteTransactionInfo): Promise<TransactionMessage> {
   const { target, value, signature, calldata } = transactionInfo
+  const contractNameAndAbi = await getContractNameAndAbiFromFile(chain, target)
   // console.log('transaction info', transactionInfo)
   if (value?.toString() && value?.toString() !== '0') {
     if (!signature) {
@@ -159,7 +132,17 @@ async function getTransactionMessages(
 
   const functionSignature = getFunctionSignature(fun)
 
-  const transactionFormatter = targetLookupData[target].functions[functionSignature].transactionFormatter
+  const contractFormatters = getForatterForContract(contractNameAndAbi)
+
+  const functions = contractFormatters.functions
+  const functionMapping = functions?.[functionSignature]
+  const transactionFormatter = functionMapping?.transactionFormatter
+
+  if (!functions || !functionMapping || !transactionFormatter) {
+    throw new Error(
+      `No functions found for ContractName - ${contractNameAndAbi.contractName}. FunctionSignature - ${functionSignature}. TransactionFormatter - ${transactionFormatter}. FunctionMapping - ${functionMapping}`
+    )
+  }
 
   if (!transactionFormatter) {
     return { info: `**${target} - ${functionSignature} called with :** (${decodedCalldata.join(',')})` }

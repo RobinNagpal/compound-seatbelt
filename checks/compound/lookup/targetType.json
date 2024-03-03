@@ -115,6 +115,9 @@
       "setBaseTrackingBorrowSpeed(address,uint64)": {
         "transactionFormatter": "Configurator.setBaseTrackingBorrowSpeed(address,uint64)"
       },
+      "setBaseBorrowMin(address,uint104)": {
+        "transactionFormatter": "Configurator.setBaseBorrowMin(address,uint104)"
+      },
       "setFactory(address,address)": {
         "transactionFormatter": "Configurator.setFactory(address,address)"
       },

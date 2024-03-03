@@ -293,22 +293,21 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     let geckoResponse = ''
     const assetID = await fetchIdFromGecko(assetSymbol)
     if (assetID) {
-      await fetchDataForAsset(assetID).then((assetData) => {
-        geckoResponse += '\n\n**Asset Information From CoinGecko:**\n\n'
-        const platform = getPlatformFromGecko(chain)
-        const assetAddressOnGecko = assetData.platforms[`${platform}`]
-        geckoResponse +=
-          assetAddressOnGecko.toLowerCase() === assetAddress.toLowerCase()
-            ? `* 🟢 Asset address is verified on CoinGecko.`
-            : `* 🔴 Asset address is not verified on CoinGecko.`
-        geckoResponse += `\n\n* Asset has Market cap rank of ${assetData.market_cap_rank} \n\n* Current price of ${addCommas(
-          assetData.market_data.current_price.usd
-        )} USD \n\n* Price change in 24hrs is ${addCommas(assetData.market_data.price_change_percentage_24h)}% \n\n* Market cap is ${addCommas(
-          assetData.market_data.market_cap_change_24h_in_currency.usd
-        )} USD \n\n* Total volume is ${addCommas(assetData.market_data.total_volume.usd)} USD \n\n* Total supply is ${addCommas(
-          assetData.market_data.total_supply
-        )}`
-      })
+      const assetData = await fetchDataForAsset(assetID)
+      geckoResponse += '\n\n**Asset Information From CoinGecko:**\n\n'
+      const platform = getPlatformFromGecko(chain)
+      const assetAddressOnGecko = assetData.platforms[`${platform}`]
+      geckoResponse +=
+        assetAddressOnGecko.toLowerCase() === assetAddress.toLowerCase()
+          ? `* 🟢 Asset address is verified on CoinGecko.`
+          : `* 🔴 Asset address is not verified on CoinGecko.`
+      geckoResponse += `\n\n* Asset has Market cap rank of ${assetData.market_cap_rank} \n\n* Current price of ${addCommas(
+        assetData.market_data.current_price.usd
+      )} USD \n\n* Price change in 24hrs is ${addCommas(assetData.market_data.price_change_percentage_24h)}% \n\n* Market cap is ${addCommas(
+        assetData.market_data.market_cap_change_24h_in_currency.usd
+      )} USD \n\n* Total volume is ${addCommas(assetData.market_data.total_volume.usd)} USD \n\n* Total supply is ${addCommas(
+        assetData.market_data.total_supply
+      )}`
     }
 
     return `🛑 Add new asset to market **[${symbol}](https://${platform}/address/${baseToken})** with following asset configuration: \n\n{\n\n**asset:** [${assetSymbol}](https://${platform}/address/${assetAddress}),\n\n**priceFeed:** ${tupleList[1]},\n\n**decimals:** ${assetDecimals},\n\n**borrowCollateralFactor:** ${borrowCollateralFactor},\n\n**liquidateCollateralFactor:** ${liquidateCollateralFactor},\n\n**liquidationFactor:** ${liquidationFactor},\n\n**supplyCap:** ${supplyCap}\n\n}

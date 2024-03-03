@@ -1,16 +1,19 @@
 import dotenv from 'dotenv'
 dotenv.config()
+
 import { Contract, ethers } from 'ethers'
 import fs from 'fs'
-import { CometChains, SymbolAndDecimalsLookupData } from '../compound-types'
-import { customProvider } from './../../../utils/clients/ethers'
-import { getContractNameAndAbiFromFile } from './../abi-utils'
-import { defactorFn } from './../../../utils/roundingUtils'
-import { DISCORD_WEBHOOK_URL } from './../../../utils/constants'
-import mftch, { FETCH_OPT, InvalidStatusCodeError } from 'micro-ftch'
 import { add, commit, push } from 'isomorphic-git'
 import http from 'isomorphic-git/http/node'
+import mftch, { FETCH_OPT, InvalidStatusCodeError } from 'micro-ftch'
 import path from 'path'
+import { CometChains, SymbolAndDecimalsLookupData } from '../compound-types'
+import { customProvider } from './../../../utils/clients/ethers'
+import { DISCORD_WEBHOOK_URL } from './../../../utils/constants'
+import { defactorFn } from './../../../utils/roundingUtils'
+import { getContractNameAndAbiFromFile } from './../abi-utils'
+
+
 
 // @ts-ignore
 const fetchUrl = mftch.default
@@ -146,21 +149,18 @@ export async function fetchIdFromGecko(query: string) {
 }
 
 export async function fetchDataForAsset(query: string) {
-  const baseUrl = 'https://api.coingecko.com/api/v3/coins/'
-
   try {
-    const response = await fetchUrl(`${baseUrl}${encodeURIComponent(query)}`)
-    if (!response) {
-      return null
-    }
-    return response
+    const url = `https://api.coingecko.com/api/v3/coins/${encodeURIComponent(query)}`
+    console.log('Fetching data for Coin from Gecko API:', url)
+    return await fetchUrl(url)
   } catch (error) {
     console.error('Error fetching data for Coin from Gecko API:', error)
     return null
   }
 }
 
-export function addCommas(numberAsString: string): string {
+export function addCommas(number: string | number): string {
+  const numberAsString = number.toString()
   const isNegative = numberAsString.startsWith('-')
 
   let absNumberAsString = isNegative ? numberAsString.substring(1) : numberAsString
