@@ -10,7 +10,7 @@ import { provider } from './utils/clients/ethers'
 import { simulate } from './utils/clients/tenderly'
 import { AllCheckResults, GovernorType, SimulationConfig, SimulationConfigBase, SimulationData } from './types'
 import ALL_CHECKS from './checks'
-import { generateAndSaveReports } from './presentation/report'
+import { generateAndSaveReports, pushCompoundChecksToDiscord } from './presentation/report'
 import { PROPOSAL_STATES } from './utils/contracts/governor-bravo'
 import {
   formatProposalId,
@@ -66,7 +66,7 @@ async function main() {
     //
     //   151, 150, 149, 148, 147, 146, 145, 144, 143,
     // ]
-    const proposalIdsArr = [46]
+    const proposalIdsArr = [184]
     const proposalIds = proposalIdsArr.map((id) => BigNumber.from(id))
 
     governor = getGovernor(governorType, GOVERNOR_ADDRESS)
@@ -108,7 +108,7 @@ async function main() {
       const pdfDirectory = `./reports/${DAO_NAME}/${config.governorAddress}`
       const pdfExists = fs.existsSync(path.join(pdfDirectory, `${simProposal.id.toString()}.pdf`))
 
-      if (simProposal.simType !== 'executed' || pdfExists) {
+      if (simProposal.simType !== 'executed' && pdfExists) {
         console.log(`  Skipping simulation for proposal ${simProposal.id} (either not executed or PDF already exists)`)
         continue
       }
@@ -116,8 +116,7 @@ async function main() {
       console.log(`  Simulating ${DAO_NAME} proposal ${simProposal.id}...`)
       const { sim, proposal, latestBlock } = await simulate(config)
       simOutputs.push({ sim, proposal, latestBlock, config })
-      await postNotificationToDiscord(`**Proposal # ${simProposal.id}** has been simulated.\n\n`)
-      console.log(`    done`)
+      console.log(`done`)
     }
   }
 
@@ -162,10 +161,15 @@ async function main() {
       checkResults,
       dir
     )
-    await commitAndPushToGit(
-      `reports/${config.daoName}/${config.governorAddress}/${proposal.id?.toString()}.pdf`,
-      proposal.id!.toString()
+
+    await pushCompoundChecksToDiscord(
+      governorType,
+      { start: startBlock, end: endBlock, current: latestBlock },
+      proposal,
+      checkResults
     )
+
+    // await commitAndPushToGit(`reports/${config.daoName}/${config.governorAddress}`, proposal.id!.toString())
   }
   console.log('Done!')
 }

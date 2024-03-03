@@ -1,0 +1,261 @@
+{
+  "GovernorBravoDelegate": {
+    "contractName": "GovernorBravoDelegate",
+    "functions": {
+      "_setVotingDelay(uint256)": {
+        "transactionFormatter": "GovernorBravo._setVotingDelay(uint256)"
+      },
+      "_setVotingPeriod(uint256)": {
+        "transactionFormatter": "GovernorBravo._setVotingPeriod(uint256)"
+      },
+      "_setProposalThreshold(uint256)": {
+        "transactionFormatter": "GovernorBravo._setProposalThreshold(uint256)"
+      },
+      "_setWhitelistGuardian(address)": {
+        "transactionFormatter": "GovernorBravo._setWhitelistGuardian(address)"
+      }
+    }
+  },
+  "CErc20Delegate": {
+    "contractName": "CErc20Delegate",
+    "functions": {
+      "_setReserveFactor(uint256)": {
+        "transactionFormatter": "CErc20Delegate._setReserveFactor(uint256)"
+      },
+      "_reduceReserves(uint256)": {
+        "transactionFormatter": "CErc20Delegate._reduceReserves(uint256)"
+      },
+      "redeem(uint256)": {
+        "transactionFormatter": "CErc20Delegate.redeem(uint256)"
+      },
+      "transfer(address,uint256)": {
+        "transactionFormatter": "ERC20.transfer(address,uint256)"
+      },
+      "_setInterestRateModel(address)": {
+        "transactionFormatter": "CErc20Delegate._setInterestRateModel(address)"
+      }
+    }
+  },
+  "Comptroller": {
+    "contractName": "Comptroller",
+    "functions": {
+      "_setBorrowPaused(address,bool)": {
+        "transactionFormatter": "Comptroller._setBorrowPaused(address,bool)"
+      },
+      "_setMintPaused(address,bool)": {
+        "transactionFormatter": "Comptroller._setMintPaused(address,bool)"
+      },
+      "_setCollateralFactor(address,uint256)": {
+        "transactionFormatter": "Comptroller._setCollateralFactor(address,uint256)"
+      },
+      "_setPriceOracle(address)": {
+        "transactionFormatter": "Comptroller._setPriceOracle(address)"
+      },
+      "_supportMarket(address)": {
+        "transactionFormatter": "Comptroller._supportMarket(address)"
+      },
+      "_grantComp(address,uint256)": {
+        "transactionFormatter": "Comptroller._grantComp(address,uint256)"
+      },
+      "_setContributorCompSpeed(address,uint256)": {
+        "transactionFormatter": "Comptroller._setContributorCompSpeed(address,uint256)"
+      },
+      "_setMarketBorrowCaps(address[],uint256[])": {
+        "transactionFormatter": "Comptroller._setMarketBorrowCaps(address[],uint256[])"
+      },
+      "_setPauseGuardian(address)": {
+        "transactionFormatter": "Comptroller._setPauseGuardian(address)"
+      },
+      "fixBadAccruals(address[],uint256[])": {
+        "transactionFormatter": "Comptroller.fixBadAccruals(address[],uint256[])"
+      },
+      "_setCompSpeeds(address[],uint256[],uint256[])": {
+        "transactionFormatter": "Comptroller._setCompSpeeds(address[],uint256[],uint256[])"
+      },
+      "_setSeizePaused(bool)": {
+        "transactionFormatter": "Comptroller._setSeizePaused(bool)"
+      },
+      "_become(address)": {
+        "transactionFormatter": "Comptroller._become(address)"
+      }
+    }
+  },
+  "ERC20": {
+    "contractName": "ERC20",
+    "functions": {
+      "transfer(address,uint256)": {
+        "transactionFormatter": "ERC20.transfer(address,uint256)"
+      },
+      "approve(address,uint256)": {
+        "transactionFormatter": "ERC20.approve(address,uint256)"
+      }
+    }
+  },
+  "MerkleDistributor": {
+    "contractName": "MerkleDistributor",
+    "functions": {
+      "fund()": {
+        "transactionFormatter": "ERC20.fund()"
+      }
+    }
+  },
+  "Sablier": {
+    "functions": {
+      "createStream(address,uint256,address,uint256,uint256)": {
+        "transactionFormatter": "Sablier.createStream(address,uint256,address,uint256,uint256)"
+      }
+    }
+  },
+  "Configurator": {
+    "contractName": "Configurator",
+    "functions": {
+      "updateAssetSupplyCap(address,address,uint128)": {
+        "transactionFormatter": "Configurator.updateAssetSupplyCap(address,address,uint128)"
+      },
+      "setBaseTrackingBorrowSpeed(address,uint64)": {
+        "transactionFormatter": "Configurator.setBaseTrackingBorrowSpeed(address,uint64)"
+      },
+      "setBaseBorrowMin(address,uint104)": {
+        "transactionFormatter": "Configurator.setBaseBorrowMin(address,uint104)"
+      },
+      "setFactory(address,address)": {
+        "transactionFormatter": "Configurator.setFactory(address,address)"
+      },
+      "updateAssetLiquidationFactor(address,address,uint64)": {
+        "transactionFormatter": "Configurator.updateAssetLiquidationFactor(address,address,uint64)"
+      },
+      "setConfiguration(address,tuple)": {
+        "transactionFormatter": "Configurator.setConfiguration(address,tuple)"
+      },
+      "setStoreFrontPriceFactor(address,uint64)": {
+        "transactionFormatter": "Configurator.setStoreFrontPriceFactor(address,uint64)"
+      },
+      "setBorrowKink(address,uint64)": {
+        "transactionFormatter": "Configurator.setBorrowKink(address,uint64)"
+      },
+      "setBorrowPerYearInterestRateBase(address,uint64)": {
+        "transactionFormatter": "Configurator.setBorrowPerYearInterestRateBase(address,uint64)"
+      },
+      "setBorrowPerYearInterestRateSlopeLow(address,uint64)": {
+        "transactionFormatter": "Configurator.setBorrowPerYearInterestRateSlopeLow(address,uint64)"
+      },
+      "setBorrowPerYearInterestRateSlopeHigh(address,uint64)": {
+        "transactionFormatter": "Configurator.setBorrowPerYearInterestRateSlopeHigh(address,uint64)"
+      },
+      "setSupplyKink(address,uint64)": {
+        "transactionFormatter": "Configurator.setSupplyKink(address,uint64)"
+      },
+      "setSupplyPerYearInterestRateSlopeLow(address,uint64)": {
+        "transactionFormatter": "Configurator.setSupplyPerYearInterestRateSlopeLow(address,uint64)"
+      },
+      "setSupplyPerYearInterestRateSlopeHigh(address,uint64)": {
+        "transactionFormatter": "Configurator.setSupplyPerYearInterestRateSlopeHigh(address,uint64)"
+      },
+      "setBaseTrackingSupplySpeed(address,uint64)": {
+        "transactionFormatter": "Configurator.setBaseTrackingSupplySpeed(address,uint64)"
+      },
+      "addAsset(address,tuple)": {
+        "transactionFormatter": "Configurator.addAsset(address,tuple)"
+      }
+    }
+  },
+  "CometProxyAdmin": {
+    "functions": {
+      "deployAndUpgradeTo(address,address)": {
+        "transactionFormatter": "CometProxyAdmin.deployAndUpgradeTo(address,address)"
+      }
+    }
+  },
+  "SaiTap": {
+    "contractName": "SaiTap",
+    "functions": {
+      "cash(uint256)": {
+        "transactionFormatter": "SaiTap.cash(uint256)"
+      }
+    }
+  },
+  "CometRewards": {
+    "functions": {
+      "setRewardConfig(address,address)": {
+        "transactionFormatter": "CometRewards.setRewardConfig(address,address)"
+      }
+    }
+  },
+  "WETH9": {
+    "functions": {
+      "deposit()": {
+        "transactionFormatter": "WETH9.deposit()"
+      },
+      "transfer(address,uint256)": {
+        "transactionFormatter": "ERC20.transfer(address,uint256)"
+      }
+    }
+  },
+  "PublicResolver": {
+    "functions": {
+      "setText(bytes32,string,string)": {
+        "transactionFormatter": "ERC20.setText(bytes32,string,string)"
+      }
+    }
+  },
+  "RootChainManager": {
+    "functions": {
+      "depositFor(address,address,bytes)": {
+        "transactionFormatter": "BridgeFormatters.depositFor(address,address,bytes)"
+      }
+    }
+  },
+  "L1GatewayRouter": {
+    "functions": {
+      "outboundTransferCustomRefund(address,address,address,uint256,uint256,uint256,bytes)": {
+        "transactionFormatter": "BridgeFormatters.outboundTransferCustomRefund(address,address,address,uint256,uint256,uint256,bytes)"
+      }
+    }
+  },
+  "L1StandardBridge": {
+    "functions": {
+      "depositERC20To(address,address,address,uint256,uint32,bytes)": {
+        "description": "depositERC20To(address,address,address,uint256,uint32,bytes)",
+        "transactionFormatter": "##############################"
+      },
+      "depositETHTo(address,uint32,bytes)": {
+        "description": "depositETHTo(address,uint32,bytes)",
+        "transactionFormatter": "##############################"
+      }
+    }
+  },
+  "TokenMessenger": {
+    "functions": {
+      "depositForBurn(uint256,uint32,bytes32,address)": {
+        "transactionFormatter": "TokenMessenger.depositForBurn(uint256,uint32,bytes32,address)"
+      }
+    }
+  },
+  "AeraVaultV2": {
+    "functions": {
+      "acceptOwnership()": {
+        "transactionFormatter": "AeraVault.acceptOwnership()"
+      },
+      "deposit(tuple[])": {
+        "transactionFormatter": "AeraVault.deposit(tuple[])"
+      },
+      "resume()": {
+        "transactionFormatter": "AeraVault.resume()"
+      }
+    }
+  },
+  "AeraVaultAssetRegistry": {
+    "functions": {
+      "acceptOwnership()": {
+        "transactionFormatter": "AeraVault.acceptOwnership()"
+      }
+    }
+  },
+  "AeraVaultHooks": {
+    "functions": {
+      "acceptOwnership()": {
+        "transactionFormatter": "AeraVault.acceptOwnership()"
+      }
+    }
+  }
+}

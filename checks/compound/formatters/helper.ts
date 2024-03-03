@@ -1,15 +1,17 @@
 import dotenv from 'dotenv'
 dotenv.config()
+
 import { Contract, ethers } from 'ethers'
 import fs from 'fs'
-import { CometChains, SymbolAndDecimalsLookupData } from '../compound-types'
-import { customProvider } from './../../../utils/clients/ethers'
-import { getContractNameAndAbiFromFile } from './../abi-utils'
-import { defactorFn } from './../../../utils/roundingUtils'
-import { DISCORD_WEBHOOK_URL } from './../../../utils/constants'
-import mftch, { FETCH_OPT, InvalidStatusCodeError } from 'micro-ftch'
 import { add, commit, push } from 'isomorphic-git'
 import http from 'isomorphic-git/http/node'
+import mftch, { FETCH_OPT, InvalidStatusCodeError } from 'micro-ftch'
+import path from 'path'
+import { CometChains, SymbolAndDecimalsLookupData } from '../compound-types'
+import { customProvider } from './../../../utils/clients/ethers'
+import { DISCORD_WEBHOOK_URL } from './../../../utils/constants'
+import { defactorFn } from './../../../utils/roundingUtils'
+import { getContractNameAndAbiFromFile } from './../abi-utils'
 
 // @ts-ignore
 const fetchUrl = mftch.default
@@ -145,21 +147,20 @@ export async function fetchIdFromGecko(query: string) {
 }
 
 export async function fetchDataForAsset(query: string) {
-  const baseUrl = 'https://api.coingecko.com/api/v3/coins/'
-
   try {
-    const response = await fetchUrl(`${baseUrl}${encodeURIComponent(query)}`)
-    if (!response) {
-      return null
-    }
-    return response
+    const url = `https://api.coingecko.com/api/v3/coins/${encodeURIComponent(query)}`
+    console.log('Fetching data for Coin from Gecko API:', url)
+    return await fetchUrl(url)
   } catch (error) {
     console.error('Error fetching data for Coin from Gecko API:', error)
     return null
   }
 }
 
-export function addCommas(numberAsString: string): string {
+export function addCommas(number: string | number): string {
+  if (number === null || number === undefined) return '-'
+
+  const numberAsString = number.toString()
   const isNegative = numberAsString.startsWith('-')
 
   let absNumberAsString = isNegative ? numberAsString.substring(1) : numberAsString
@@ -235,10 +236,23 @@ export async function postNotificationToDiscord(text: string) {
   }
 }
 
-export async function commitAndPushToGit(filePath: string, proposalNo: string) {
+export async function commitAndPushToGit(directoryPath: string, proposalNo: string) {
   const message = `Add pdf report of Proposal # ${proposalNo} to the repository`
   const author = { name: process.env.GITHUB_USERNAME, email: process.env.GITHUB_EMAIL }
-  await add({ fs, dir: `${process.env.GIT_REPO_PATH}`, filepath: `${filePath}` })
+  const fullDirectoryPath = path.join(process.env.GIT_REPO_PATH!, directoryPath)
+
+  // List all files in the directory
+  const files = fs.readdirSync(fullDirectoryPath)
+
+  for (const file of files) {
+    // Ensure to only add files, not directories
+    const fullPath = path.join(fullDirectoryPath, file)
+    if (fs.statSync(fullPath).isFile()) {
+      // Adjust to use relative path from GIT_REPO_PATH
+      const relativePath = path.relative(process.env.GIT_REPO_PATH!, fullPath)
+      await add({ fs, dir: process.env.GIT_REPO_PATH!, filepath: relativePath })
+    }
+  }
   await commit({ fs, dir: `${process.env.GIT_REPO_PATH}`, message, author })
   const pushResult = await push({
     fs,
@@ -251,7 +265,7 @@ export async function commitAndPushToGit(filePath: string, proposalNo: string) {
   if (pushResult.ok) {
     console.log(`Successfully pushed pdf report of proposal # ${proposalNo} to the repository.`)
     await postNotificationToDiscord(
-      `Pdf report of **Proposal # ${proposalNo}** has been added to the repository which can be accessed **[here](${process.env.GITHUB_REPO_PATH}/${filePath})**.\n\n`
+      `Pdf report of **Proposal # ${proposalNo}** has been added to the repository which can be accessed **[here](${process.env.GITHUB_REPO_PATH})**.\n\n`
     )
   }
 }

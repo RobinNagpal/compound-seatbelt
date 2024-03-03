@@ -30,6 +30,19 @@ export interface TargetLookupData {
   }
 }
 
+export interface ContractTypeFormattingInfo {
+  transactionFormatter: string
+  functions: {
+    [functionName: string]: {
+      transactionFormatter: string
+    }
+  }
+}
+
+export interface TargetTypeLookupData {
+  [contractName: string]: ContractTypeFormattingInfo
+}
+
 export interface TransactionMessage {
   info?: string
   warning?: string
