@@ -294,20 +294,27 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     const assetID = await fetchIdFromGecko(assetSymbol)
     if (assetID) {
       const assetData = await fetchDataForAsset(assetID)
-      geckoResponse += '\n\n**Asset Information From CoinGecko:**\n\n'
       const platform = getPlatformFromGecko(chain)
       const assetAddressOnGecko = assetData.platforms[`${platform}`]
-      geckoResponse +=
+      const marketCapRank = assetData.market_cap_rank
+      const marketPriceUSD = assetData.market_data.current_price.usd
+      const priceChangePercentage24h = assetData.market_data.price_change_percentage_24h
+      const priceChange24hInUsd = assetData.market_data.market_cap_change_24h_in_currency.usd
+      const assetTotalVolume = assetData.market_data.total_volume.usd
+      const assetTotalSupply = assetData.market_data.total_supply
+
+      const addressesVerificationString =
         assetAddressOnGecko.toLowerCase() === assetAddress.toLowerCase()
-          ? `* 🟢 Asset address is verified on CoinGecko.`
-          : `* 🔴 Asset address is not verified on CoinGecko.`
-      geckoResponse += `\n\n* Asset has Market cap rank of ${assetData.market_cap_rank} \n\n* Current price of ${addCommas(
-        assetData.market_data.current_price.usd
-      )} USD \n\n* Price change in 24hrs is ${addCommas(assetData.market_data.price_change_percentage_24h)}% \n\n* Market cap is ${addCommas(
-        assetData.market_data.market_cap_change_24h_in_currency.usd
-      )} USD \n\n* Total volume is ${addCommas(assetData.market_data.total_volume.usd)} USD \n\n* Total supply is ${addCommas(
-        assetData.market_data.total_supply
-      )}`
+          ? `* 🟢 Asset address is verified on CoinGecko.\n\n`
+          : `* 🔴 Asset address is not verified on CoinGecko.\n\n`
+
+      const marketCapRankString = `* Asset has Market cap rank of ${marketCapRank} \n\n`
+      const currentPriceString = `* Current price of ${addCommas(marketPriceUSD)} USD \n\n`
+      const priceChangeString = `* Price change in 24hrs is ${addCommas(priceChangePercentage24h)}% \n\n`
+      const marketCapString = `* Market cap is ${addCommas(priceChange24hInUsd)} USD \n\n`
+      const totalVolumeString = `* Total volume is ${addCommas(assetTotalVolume)} USD \n\n`
+      const totalSupplyString = `* Total supply is ${addCommas(assetTotalSupply)}`
+      geckoResponse += `\n\n**Asset Information From CoinGecko:**\n\n${addressesVerificationString}${marketCapRankString}${currentPriceString}${priceChangeString}${marketCapString}${totalVolumeString}${totalSupplyString}`
     }
 
     return `🛑 Add new asset to market **[${symbol}](https://${platform}/address/${baseToken})** with following asset configuration: \n\n{\n\n**asset:** [${assetSymbol}](https://${platform}/address/${assetAddress}),\n\n**priceFeed:** ${tupleList[1]},\n\n**decimals:** ${assetDecimals},\n\n**borrowCollateralFactor:** ${borrowCollateralFactor},\n\n**liquidateCollateralFactor:** ${liquidateCollateralFactor},\n\n**liquidationFactor:** ${liquidationFactor},\n\n**supplyCap:** ${supplyCap}\n\n}

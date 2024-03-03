@@ -13,8 +13,6 @@ import { DISCORD_WEBHOOK_URL } from './../../../utils/constants'
 import { defactorFn } from './../../../utils/roundingUtils'
 import { getContractNameAndAbiFromFile } from './../abi-utils'
 
-
-
 // @ts-ignore
 const fetchUrl = mftch.default
 
@@ -160,6 +158,8 @@ export async function fetchDataForAsset(query: string) {
 }
 
 export function addCommas(number: string | number): string {
+  if (number === null || number === undefined) return '-'
+
   const numberAsString = number.toString()
   const isNegative = numberAsString.startsWith('-')
 
