@@ -216,7 +216,7 @@
     "functions": {
       "depositERC20To(address,address,address,uint256,uint32,bytes)": {
         "description": "depositERC20To(address,address,address,uint256,uint32,bytes)",
-        "transactionFormatter": "##############################"
+        "transactionFormatter": "BridgeFormatters.depositERC20To(address,address,address,uint256,uint32,bytes)"
       },
       "depositETHTo(address,uint32,bytes)": {
         "description": "depositETHTo(address,uint32,bytes)",
@@ -255,6 +255,13 @@
     "functions": {
       "acceptOwnership()": {
         "transactionFormatter": "AeraVault.acceptOwnership()"
+      }
+    }
+  },
+  "ENSRegistryWithFallback": {
+    "functions": {
+      "setSubnodeRecord(bytes32,bytes32,address,address,uint64)": {
+        "transactionFormatter": "ENSRegistryWithFallback.setSubnodeRecord(bytes32,bytes32,address,address,uint64)"
       }
     }
   }

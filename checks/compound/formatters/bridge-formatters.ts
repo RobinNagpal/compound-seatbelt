@@ -21,6 +21,22 @@ export const bridgeFormatters: { [functionName: string]: TransactionFormatter } 
 
     throw new Error('Unknown bridge contract')
   },
+
+  'depositERC20To(address,address,address,uint256,uint32,bytes)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
+    if (transaction.target === '0x3154cf16ccdb4c6d922629664174b904d80f2c35') {
+      const [localToken, remoteToken, toAddress, amount] = decodedParams
+
+      const platform = getPlatform(chain)
+      const { abi: compAddressAbi } = await getContractNameAndAbiFromFile(chain, localToken)
+      const compInstance = new Contract(localToken, compAddressAbi, customProvider(chain))
+      const { symbol, decimals } = await getContractSymbolAndDecimalsFromFile(localToken, compInstance, chain)
+      const defactoredAmount = defactorFn(amount, `${decimals}`)
+      const recipientWithLink = getRecipientNameWithLink(CometChains.base, toAddress)
+      return `🛑 Bridge **${addCommas(defactoredAmount)} [${symbol}](https://${platform}/address/${localToken})** tokens over Base to ${recipientWithLink}.`
+    }
+
+    throw new Error('Unknown bridge contract')
+  },
   'depositETHTo(address,uint32,bytes)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     console.log('transaction', JSON.stringify(transaction, null, 2))
     if (transaction.target === '0x3154cf16ccdb4c6d922629664174b904d80f2c35') {
