@@ -66,7 +66,7 @@ async function main() {
     //
     //   151, 150, 149, 148, 147, 146, 145, 144, 143,
     // ]
-    const proposalIdsArr = [184]
+    const proposalIdsArr = [174]
     const proposalIds = proposalIdsArr.map((id) => BigNumber.from(id))
 
     governor = getGovernor(governorType, GOVERNOR_ADDRESS)

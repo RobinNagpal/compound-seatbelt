@@ -194,7 +194,7 @@
   "PublicResolver": {
     "functions": {
       "setText(bytes32,string,string)": {
-        "transactionFormatter": "ERC20.setText(bytes32,string,string)"
+        "transactionFormatter": "PublicResolver.setText(bytes32,string,string)"
       }
     }
   },
@@ -220,7 +220,7 @@
       },
       "depositETHTo(address,uint32,bytes)": {
         "description": "depositETHTo(address,uint32,bytes)",
-        "transactionFormatter": "##############################"
+        "transactionFormatter": "BridgeFormatters.depositETHTo(address,uint32,bytes)"
       }
     }
   },
