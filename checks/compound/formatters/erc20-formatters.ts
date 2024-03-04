@@ -37,15 +37,4 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
       decodedParams[0]
     )}`
   },
-
-  'migrateFromLegacyReputationToken()': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    const platform = getPlatform(chain)
-    const newTokenAddress = transaction.target
-    const { abi: newTokenAbi } = await getContractNameAndAbiFromFile(chain, newTokenAddress)
-    const newTokenInstance = new Contract(newTokenAddress, newTokenAbi, customProvider(chain))
-    const { symbol: newTokenSymbol } = await getContractSymbolAndDecimalsFromFile(newTokenAddress, newTokenInstance, chain)
-    const legacyTokenAddress = await newTokenInstance.callStatic.legacyRepToken()
-    const legacyTokenLink = await getFormattedTokenNameWithLink(chain, legacyTokenAddress)
-    return `Migrate the balance of legacy reputation token ${legacyTokenLink} to new reputation token **[${newTokenSymbol}](https://${platform}/address/${transaction.target})**.`
-  },
 }

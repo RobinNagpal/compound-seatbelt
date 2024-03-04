@@ -11,6 +11,7 @@ import { ERC20Formatters } from './formatters/erc20-formatters'
 import { governorBravoFormatters } from './formatters/governor-bravo-formatters'
 import { merkleDistributorFormatters } from './formatters/merkle-distributor-formatters'
 import { publicResolverFormatter } from './formatters/public-resolver-formatter'
+import { reputationTokenFormatters } from './formatters/reputation-token-formatters'
 import { sablierFormatters } from './formatters/sablier-formatters'
 import { saiTapFormatters } from './formatters/sai-tap-formatters'
 import { tokenMessengerFormatters } from './formatters/token-messenger-formatters'
@@ -37,4 +38,5 @@ export const formattersLookup: {
   TokenMessenger: tokenMessengerFormatters,
   AeraVault: aeraVaultFormatters,
   ENSRegistryWithFallback: ensRegistryWithFallbackFormatters,
+  ReputationToken: reputationTokenFormatters,
 }

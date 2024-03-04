@@ -95,7 +95,7 @@
     "contractName": "MerkleDistributor",
     "functions": {
       "fund()": {
-        "transactionFormatter": "ERC20.fund()"
+        "transactionFormatter": "MerkleDistributor.fund()"
       }
     }
   },
@@ -262,6 +262,26 @@
     "functions": {
       "setSubnodeRecord(bytes32,bytes32,address,address,uint64)": {
         "transactionFormatter": "ENSRegistryWithFallback.setSubnodeRecord(bytes32,bytes32,address,address,uint64)"
+      }
+    }
+  },
+  "ReputationToken": {
+    "functions": {
+      "migrateFromLegacyReputationToken()": {
+        "transactionFormatter": "ReputationToken.migrateFromLegacyReputationToken()"
+      },
+      "transfer(address,uint256)": {
+        "transactionFormatter": "ERC20.transfer(address,uint256)"
+      },
+      "approve(address,uint256)": {
+        "transactionFormatter": "ERC20.approve(address,uint256)"
+      }
+    }
+  },
+  "ComptrollerSweeper": {
+    "functions": {
+      "_become(address)": {
+        "transactionFormatter": "Comptroller._become(address)"
       }
     }
   }
