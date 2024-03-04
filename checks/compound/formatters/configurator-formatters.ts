@@ -7,7 +7,7 @@ import {
   getContractSymbolAndDecimalsFromFile,
   getFormattedTokenNameWithLink,
   getCriticalitySign,
-  fetchIdFromGecko,
+  fetchAssertIdFromCoinGeckoForSymbol,
   fetchDataForAsset,
   getPlatformFromGecko,
   addCommas,
@@ -281,7 +281,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     const baseTokenInstance = new Contract(baseToken, baseTokenAbi, customProvider(chain))
     const { symbol } = await getContractSymbolAndDecimalsFromFile(baseToken, baseTokenInstance, chain)
 
-    const { abi: assetAbi } = await getContractNameAndAbiFromFile(chain, tupleList[0])
+    const { abi: assetAbi } = await getContractNameAndAbiFromFile(chain, assetAddress)
     const assetInstance = new Contract(tupleList[0], assetAbi, customProvider(chain))
     const { symbol: assetSymbol, decimals: assetDecimals } = await getContractSymbolAndDecimalsFromFile(tupleList[0], assetInstance, chain)
 
@@ -291,7 +291,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     const supplyCap = defactorFn(tupleList[6], `${assetDecimals}`)
 
     let geckoResponse = ''
-    const assetID = await fetchIdFromGecko(assetSymbol)
+    const assetID = await fetchAssertIdFromCoinGeckoForSymbol(assetSymbol)
     if (assetID) {
       const assetData = await fetchDataForAsset(assetID)
       const platform = getPlatformFromGecko(chain)

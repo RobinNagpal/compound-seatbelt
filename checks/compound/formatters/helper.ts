@@ -126,17 +126,19 @@ export function getCriticalitySign(changeInString: string, optimumChange: number
   }
 }
 
-export async function fetchIdFromGecko(query: string) {
+export async function fetchAssertIdFromCoinGeckoForSymbol(symbol: string) {
   const baseUrl = 'https://api.coingecko.com/api/v3/search?query='
 
   try {
-    const response = await fetchUrl(`${baseUrl}${encodeURIComponent(query)}`)
+    const response = (await fetchUrl(`${baseUrl}${encodeURIComponent(symbol)}`)) as { coins: { id: string; symbol: string }[] }
     if (!response) {
       return null
     }
 
     if (response.coins && response.coins.length > 0) {
-      return response.coins[0].id
+      const token = response.coins.find((c) => c.symbol.toLowerCase() === symbol.toLowerCase())
+
+      return token ? token.id : response.coins[0].id
     } else {
       return null
     }

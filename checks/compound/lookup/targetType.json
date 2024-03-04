@@ -95,7 +95,7 @@
     "contractName": "MerkleDistributor",
     "functions": {
       "fund()": {
-        "transactionFormatter": "ERC20.fund()"
+        "transactionFormatter": "MerkleDistributor.fund()"
       }
     }
   },
@@ -194,7 +194,7 @@
   "PublicResolver": {
     "functions": {
       "setText(bytes32,string,string)": {
-        "transactionFormatter": "ERC20.setText(bytes32,string,string)"
+        "transactionFormatter": "PublicResolver.setText(bytes32,string,string)"
       }
     }
   },
@@ -216,11 +216,11 @@
     "functions": {
       "depositERC20To(address,address,address,uint256,uint32,bytes)": {
         "description": "depositERC20To(address,address,address,uint256,uint32,bytes)",
-        "transactionFormatter": "##############################"
+        "transactionFormatter": "BridgeFormatters.depositERC20To(address,address,address,uint256,uint32,bytes)"
       },
       "depositETHTo(address,uint32,bytes)": {
         "description": "depositETHTo(address,uint32,bytes)",
-        "transactionFormatter": "##############################"
+        "transactionFormatter": "BridgeFormatters.depositETHTo(address,uint32,bytes)"
       }
     }
   },
@@ -255,6 +255,33 @@
     "functions": {
       "acceptOwnership()": {
         "transactionFormatter": "AeraVault.acceptOwnership()"
+      }
+    }
+  },
+  "ENSRegistryWithFallback": {
+    "functions": {
+      "setSubnodeRecord(bytes32,bytes32,address,address,uint64)": {
+        "transactionFormatter": "ENSRegistryWithFallback.setSubnodeRecord(bytes32,bytes32,address,address,uint64)"
+      }
+    }
+  },
+  "ReputationToken": {
+    "functions": {
+      "migrateFromLegacyReputationToken()": {
+        "transactionFormatter": "ReputationToken.migrateFromLegacyReputationToken()"
+      },
+      "transfer(address,uint256)": {
+        "transactionFormatter": "ERC20.transfer(address,uint256)"
+      },
+      "approve(address,uint256)": {
+        "transactionFormatter": "ERC20.approve(address,uint256)"
+      }
+    }
+  },
+  "ComptrollerSweeper": {
+    "functions": {
+      "_become(address)": {
+        "transactionFormatter": "Comptroller._become(address)"
       }
     }
   }

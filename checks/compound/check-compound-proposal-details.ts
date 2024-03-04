@@ -11,6 +11,7 @@ import {
   TargetTypeLookupData,
   TransactionMessage,
 } from './compound-types'
+import { getPlatform } from './formatters/helper'
 import { getDecodedBytesForChain, l2Bridges } from './l2-utils'
 import { formattersLookup } from './transaction-formatter'
 
@@ -21,18 +22,18 @@ export const checkCompoundProposalDetails: ProposalCheck = {
   name: 'Checks Compound Proposal Details',
   async checkProposal(proposal, sim, deps: ProposalData) {
     const { targets: targets, signatures: signatures, calldatas: calldatas, values } = proposal
-    // console.log(proposal)
     const chain = CometChains.mainnet
     const proposalId = proposal.id?.toNumber() || 0
 
-    const checkResults = await updateLookupFile(chain, proposalId, { targets, signatures, calldatas, values })
+    const checkResults = await getCompoundCheckResults(chain, proposalId, { targets, signatures, calldatas, values })
 
     return checkResults
   },
 }
 
-async function updateLookupFile(chain: CometChains, proposalId: number, transactions: ExecuteTransactionsInfo, isL2 = false): Promise<CheckResult> {
+async function getCompoundCheckResults(chain: CometChains, proposalId: number, transactions: ExecuteTransactionsInfo, isL2 = false): Promise<CheckResult> {
   const { targets, signatures, calldatas, values } = transactions
+
   let messageCount = 0
 
   const checkResults: CheckResult = { info: [], warnings: [], errors: [] }
@@ -48,7 +49,7 @@ async function updateLookupFile(chain: CometChains, proposalId: number, transact
     if (Object.keys(l2Bridges).includes(target)) {
       const cometChain = l2Bridges[target]
       const l2TransactionsInfo = await getDecodedBytesForChain(cometChain, proposalId, transactionInfo)
-      const l2CheckResults = await updateLookupFile(cometChain, proposalId, l2TransactionsInfo, true)
+      const l2CheckResults = await getCompoundCheckResults(cometChain, proposalId, l2TransactionsInfo, true)
       const l2Messages = nestCheckResultsForChain(cometChain, l2CheckResults)
       const countPrefixedL2Messages = `\n\n**${++messageCount}-** ${l2Messages}`
       pushMessageToCheckResults(checkResults, { info: countPrefixedL2Messages })
@@ -111,7 +112,7 @@ function getForatterForContract(contractNameAndAbi: ContractNameAndAbi): Contrac
 }
 
 async function getTransactionMessages(chain: CometChains, proposalId: number, transactionInfo: ExecuteTransactionInfo): Promise<TransactionMessage> {
-  const { target, value, signature, calldata } = transactionInfo
+  const { target, value, signature } = transactionInfo
   const contractNameAndAbi = await getContractNameAndAbiFromFile(chain, target)
   // console.log('transaction info', transactionInfo)
   if (value?.toString() && value?.toString() !== '0') {
@@ -119,6 +120,12 @@ async function getTransactionMessages(chain: CometChains, proposalId: number, tr
       return { info: `\n\nTransfer ${defactorFn(value.toString())} ETH to ${target}` }
     } else {
       const { decodedCalldata } = await getFunctionFragmentAndDecodedCalldata(proposalId, chain, transactionInfo)
+      if (contractNameAndAbi.contractName.toLowerCase() === 'WETH9'.toLowerCase() && signature === 'deposit()') {
+        const platform = getPlatform(chain)
+        return {
+          info: `Wrap ${defactorFn(value.toString())} ETH to [WETH](https://${platform}/address/${target})`,
+        }
+      }
       return {
         info: `\n\n${target}.${signature.split('(')[0]}(${decodedCalldata.join(',')}) and Transfer ${defactorFn(value.toString())} ETH to ${target}`,
       }
@@ -148,7 +155,13 @@ async function getTransactionMessages(chain: CometChains, proposalId: number, tr
     return { info: `**${target} - ${functionSignature} called with :** (${decodedCalldata.join(',')})` }
   } else {
     const [contractName, formatterName] = transactionFormatter.split('.')
-    const message = await formattersLookup[contractName][formatterName](
+    const formattersLookupElement = formattersLookup[contractName]?.[formatterName]
+    if (!formattersLookupElement) {
+      throw new Error(
+        `No formattersLookupElement found for ContractName - ${contractNameAndAbi.contractName}. FunctionSignature - ${functionSignature}. FormatterName - ${formatterName}`
+      )
+    }
+    const message = await formattersLookupElement(
       chain,
       transactionInfo,
       decodedCalldata.map((data) => data.toString())
