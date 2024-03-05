@@ -33,7 +33,7 @@ export const governorBravoFormatters: { [functionName: string]: TransactionForma
 
     const name = await governanceInstance.callStatic.name()
 
-    return `Set the Whitelist Guardian of **[${name}](https://${platform}/address/${governanceAddress})** to ${getRecipientNameWithLink(
+    return `Set the Whitelist Guardian of **[${name}](https://${platform}/address/${governanceAddress})** to ${await getRecipientNameWithLink(
       chain,
       decodedParams[0]
     )}.`

@@ -32,6 +32,6 @@ export const saiTapFormatters: { [functionName: string]: TransactionFormatter } 
 
     return `Cash **${addCommas(saiAmount)} [${tokenSymbol}](https://${platform}/address/${saiAddress})** into collateral **${addCommas(
       collateralAmount
-    )} [${collateralSymbol}](https://${platform}/address/${gemAddress})** and send to ${getRecipientNameWithLink(chain, targetAddress)}`
+    )} [${collateralSymbol}](https://${platform}/address/${gemAddress})** and send to ${await getRecipientNameWithLink(chain, targetAddress)}`
   },
 }

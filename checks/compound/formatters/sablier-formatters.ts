@@ -19,7 +19,7 @@ export const sablierFormatters: { [functionName: string]: TransactionFormatter }
 
     const amount = defactorFn(decodedParams[1], `${tokenDecimals}`)
 
-    const recipientWithLink = getRecipientNameWithLink(chain, recipientAddress)
+    const recipientWithLink = await getRecipientNameWithLink(chain, recipientAddress)
 
     return `🛑 Create a stream on **[${senderName}](https://${platform}/address/${senderAddress})** to transfer **${addCommas(
       amount
