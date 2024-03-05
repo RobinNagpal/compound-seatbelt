@@ -28,7 +28,7 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
 
     const numberOfCompTokens = defactorFn(decodedParams[1])
 
-    return `🛑 Grant **${addCommas(numberOfCompTokens)} [${symbol}](https://${platform}/address/${compAddress})** tokens to ${getRecipientNameWithLink(
+    return `🛑 Grant **${addCommas(numberOfCompTokens)} [${symbol}](https://${platform}/address/${compAddress})** tokens to ${await getRecipientNameWithLink(
       chain,
       decodedParams[0]
     )}.`
@@ -237,7 +237,7 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     const { contractName: targetContractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
     const { contractName: guardianContractName } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
 
-    return `🛑 Set the Pause Guardian to ${getRecipientNameWithLink(chain, decodedParams[0])} via **[${targetContractName}](https://${platform}/address/${
+    return `🛑 Set the Pause Guardian to ${await getRecipientNameWithLink(chain, decodedParams[0])} via **[${targetContractName}](https://${platform}/address/${
       transaction.target
     })**.`
   },

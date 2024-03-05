@@ -15,7 +15,7 @@ export const bridgeFormatters: { [functionName: string]: TransactionFormatter } 
       const compInstance = new Contract(token, compAddressAbi, customProvider(chain))
       const { symbol, decimals } = await getContractSymbolAndDecimalsFromFile(token, compInstance, chain)
       const defactoredAmount = defactorFn(amount, `${decimals}`)
-      const recipientWithLink = getRecipientNameWithLink(CometChains.polygon, recipient)
+      const recipientWithLink = await getRecipientNameWithLink(CometChains.polygon, recipient)
       return `🛑 Bridge **${addCommas(defactoredAmount)} [${symbol}](https://${platform}/address/${token})** tokens over Polygon to ${recipientWithLink}.`
     }
 
@@ -31,7 +31,7 @@ export const bridgeFormatters: { [functionName: string]: TransactionFormatter } 
       const compInstance = new Contract(localToken, compAddressAbi, customProvider(chain))
       const { symbol, decimals } = await getContractSymbolAndDecimalsFromFile(localToken, compInstance, chain)
       const defactoredAmount = defactorFn(amount, `${decimals}`)
-      const recipientWithLink = getRecipientNameWithLink(CometChains.base, toAddress)
+      const recipientWithLink = await getRecipientNameWithLink(CometChains.base, toAddress)
       return `🛑 Bridge **${addCommas(defactoredAmount)} [${symbol}](https://${platform}/address/${localToken})** tokens over Base to ${recipientWithLink}.`
     }
 
@@ -40,7 +40,7 @@ export const bridgeFormatters: { [functionName: string]: TransactionFormatter } 
   'depositETHTo(address,uint32,bytes)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     console.log('transaction', JSON.stringify(transaction, null, 2))
     if (transaction.target === '0x3154cf16ccdb4c6d922629664174b904d80f2c35') {
-      const recipent = getRecipientNameWithLink(chain, decodedParams[0])
+      const recipent = await getRecipientNameWithLink(chain, decodedParams[0])
       return `🛑 Bridge ETH on Base to ${recipent}.`
     }
 
@@ -59,7 +59,7 @@ export const bridgeFormatters: { [functionName: string]: TransactionFormatter } 
       const tokenInstance = new Contract(tokenAddress, tokenAbi, customProvider(chain))
       const { symbol: tokenSymbol, decimals: tokenDecimals } = await getContractSymbolAndDecimalsFromFile(tokenAddress, tokenInstance, chain)
       const amount = defactorFn(decodedParams[3], `${tokenDecimals}`)
-      const recipientWithLink = getRecipientNameWithLink(CometChains.arbitrum, decodedParams[2])
+      const recipientWithLink = await getRecipientNameWithLink(CometChains.arbitrum, decodedParams[2])
 
       return `🛑 Bridge **${addCommas(amount)} [${tokenSymbol}](https://${platform}/address/${tokenAddress})** tokens over Arbitrum to ${recipientWithLink}.`
     }

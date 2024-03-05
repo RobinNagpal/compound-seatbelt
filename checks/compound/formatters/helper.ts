@@ -16,6 +16,8 @@ import { getContractNameAndAbiFromFile } from './../abi-utils'
 // @ts-ignore
 const fetchUrl = mftch.default
 
+const markets = ['Comet']
+
 export function getPlatform(chain: CometChains) {
   switch (chain) {
     case CometChains.mainnet:
@@ -85,13 +87,27 @@ export async function getFormattedTokenNameWithLink(chain: CometChains, tokenAdd
   return `**[${symbol}](https://${platform}/address/${tokenAddress})**`
 }
 
-export function getRecipientNameWithLink(chain: CometChains, recipient: string) {
+async function getSymbolFromAbi(address: string, abi: any[], chain: CometChains) {
+  const marketInstance = new Contract(address, abi, customProvider(chain))
+  const baseToken = await marketInstance.callStatic.baseToken()
+  const { abi: baseTokenAbi } = await getContractNameAndAbiFromFile(chain, baseToken)
+  const baseTokenInstance = new Contract(baseToken, baseTokenAbi, customProvider(chain))
+  const { symbol } = await getContractSymbolAndDecimalsFromFile(baseToken, baseTokenInstance, chain)
+  return symbol
+}
+
+export async function getRecipientNameWithLink(chain: CometChains, recipient: string) {
   let recipientName = recipient
   const targetLookupFilePath = `./checks/compound/lookup/recipient/${chain}RecipientLookup.json`
   if (fs.existsSync(targetLookupFilePath)) {
     const fileContent = fs.readFileSync(targetLookupFilePath, 'utf-8')
     const lookupData = JSON.parse(fileContent || '{}')
     recipientName = lookupData[recipient.toLowerCase()] || recipient
+  }
+  if (recipientName === recipient) {
+    const { abi, contractName } = await getContractNameAndAbiFromFile(chain, recipient)
+
+    recipientName = markets.includes(contractName) ? `${contractName} - ${await getSymbolFromAbi(recipient, abi, chain)}` : recipient
   }
   const platform = getPlatform(chain)
 

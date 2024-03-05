@@ -240,7 +240,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
 
     const changeInSupplyCap = subtractFn(newSupplyCap, prevSupplyCap)
 
-    return `${getCriticalitySign(changeInSupplyCap, 10000)} Set supply cap for **[${tokenSymbol}](https://${platform}/address/${
+    return `${getCriticalitySign(changeInSupplyCap, 1000000)} Set supply cap for **[${tokenSymbol}](https://${platform}/address/${
       decodedParams[1]
     })** on **[${baseTokenSymbol}](https://${platform}/address/${baseToken})** via **[${contractName}](https://${platform}/address/${
       transaction.target
@@ -392,10 +392,10 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
 
     return `🛑 Set configuration for **[${contractBaseSymbol}](https://${platform}/address/${contractBaseToken})** to: \n\n{
       \n\ngovernor: **[${governor}](https://${platform}/address/${tupleList[0]})**,
-      \n\npauseGuardian: ${getRecipientNameWithLink(chain, tupleList[1])},
+      \n\npauseGuardian: ${await getRecipientNameWithLink(chain, tupleList[1])},
       \n\nbaseToken: **[${baseSymbol}](https://${platform}/address/${tupleList[2]})**,
       \n\nbaseTokenPriceFeed: **[PriceFeed](https://${platform}/address/${tupleList[3]})**,
-      \n\nextensionDelegate: ${getRecipientNameWithLink(chain, tupleList[4])},
+      \n\nextensionDelegate: ${await getRecipientNameWithLink(chain, tupleList[4])},
       \n\nsupplyKink: ${percentageFn(supplyKink)}%,
       \n\nsupplyPerYearInterestRateSlopeLow: ${percentageFn(supplyPerYearInterestRateSlopeLow)}%,
       \n\nsupplyPerYearInterestRateSlopeHigh: ${percentageFn(supplyPerYearInterestRateSlopeHigh)}%,
