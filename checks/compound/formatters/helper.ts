@@ -17,6 +17,7 @@ import { getContractNameAndAbiFromFile } from './../abi-utils'
 const fetchUrl = mftch.default
 
 const markets = ['Comet']
+export const tab = '    '
 
 export function getPlatform(chain: CometChains) {
   switch (chain) {

@@ -18,7 +18,7 @@ export const aeraVaultFormatters: { [functionName: string]: TransactionFormatter
     const depositedAssets = await formatCoinsAndAmounts(tuple, chain, platform)
     const { contractName } = await getContractNameAndAbiFromFile(chain, contractAddress)
 
-    return `🛑 Deposit **${depositedAssets}** into **[${contractName}](https://${platform}/address/${contractAddress})**.`
+    return `🛑 Deposit ${depositedAssets} into **[${contractName}](https://${platform}/address/${contractAddress})**.`
   },
   'resume()': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = getPlatform(chain)

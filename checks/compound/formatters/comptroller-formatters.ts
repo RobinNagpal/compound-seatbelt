@@ -11,6 +11,7 @@ import {
   getFormattedTokenNameWithLink,
   getPlatform,
   getRecipientNameWithLink,
+  tab,
 } from './helper'
 import { defactorFn, percentageFn, subtractFn } from './../../../utils/roundingUtils'
 
@@ -41,7 +42,7 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     const supplySpeeds = decodedParams[1].split(',')
     const borrowSpeeds = decodedParams[2].split(',')
 
-    let finalText = ''
+    let finalText = 'Set CompSpeeds for token(s):\n'
 
     for (let i = 0; i < addresses.length; i++) {
       const currentAddress = addresses[i]
@@ -79,9 +80,9 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
       const supplySpeedText = changeInSpeedsText('Supply', changeInSupply, prevFormattedSupplySpeed, newFormattedSupplySpeed)
       const borrowSpeedText = changeInSpeedsText('Borrow', changeInBorrow, prevFormattedBorrowSpeed, newFormattedBorrowSpeed)
 
-      finalText += `${baseText}. ${supplySpeedText} ${borrowSpeedText}`
+      finalText += `${tab}* ${baseText}. ${supplySpeedText} ${borrowSpeedText}`
       if (i < addresses.length - 1) {
-        finalText += '\n\n'
+        finalText += '\n'
       }
     }
 
@@ -124,7 +125,7 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     const addresses = decodedParams[0].split(',')
     const values = decodedParams[1].split(',')
 
-    let finalText = ''
+    let finalText = 'Set MarketBorrowCaps for token(s):\n'
 
     for (let i = 0; i < addresses.length; i++) {
       const currentAddress = addresses[i]
@@ -136,9 +137,9 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
 
       // There is no underlying asset for the address
       if (currentAddress === '0x4Ddc2D193948926D02f9B1fE9e1daa0718270ED5') {
-        finalText += `Set MarketBorrowCaps of **[${symbol}](https://${platform}/address/${currentAddress})** to ${addCommas(defactorFn(currentValue))}`
+        finalText += `${tab}* Set MarketBorrowCaps of **[${symbol}](https://${platform}/address/${currentAddress})** to ${addCommas(defactorFn(currentValue))}`
         if (i < addresses.length - 1) {
-          finalText += '\n\n'
+          finalText += '\n'
         }
         continue
       }
@@ -154,7 +155,7 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
 
       const changeInCaps = subtractFn(newValue, prevValue)
 
-      finalText += `${getCriticalitySign(
+      finalText += `${tab}* ${getCriticalitySign(
         changeInCaps,
         100
       )} Set MarketBorrowCaps of **[${symbol}](https://${platform}/address/${currentAddress})** via **[${contractName}](https://${platform}/address/${
@@ -162,7 +163,7 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
       })** from ${addCommas(prevValue)} to ${addCommas(newValue)} ${getChangeTextFn(changeInCaps)}.`
 
       if (i < addresses.length - 1) {
-        finalText += '\n\n'
+        finalText += '\n'
       }
     }
 
