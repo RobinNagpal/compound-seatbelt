@@ -166,8 +166,9 @@ export async function pushCompoundChecksToDiscord(
   })
 
   const markdownReport = String(await remark().use(remarkFixEmojiLinks).process(baseReport))
+  const id = formatProposalId(governorType, proposal.id!)
 
-  await pushChecksSummaryToDiscord(markdownReport, proposal.id!.toString())
+  await pushChecksSummaryToDiscord(markdownReport, id)
 }
 
 /**
@@ -183,7 +184,7 @@ async function toMarkdownProposalReport(
   checks: AllCheckResults
 ): Promise<string> {
   const { id, proposer, targets, endBlock, startBlock, description } = proposal
-
+  const proposalID = formatProposalId(governorType, id!)
   // Generate the report. We insert an empty table of contents header which is populated later using remark-toc.
   const report = `
 # ${getProposalTitle(description.trim())}
@@ -192,7 +193,7 @@ _Updated as of block [${blocks.current.number}](https://etherscan.io/block/${blo
     blocks.current.timestamp
   )}_
 
-- ID: ${formatProposalId(governorType, id!)}
+- ID: ${proposalID}
 - Proposer: ${toAddressLink(proposer)}
 - Start Block: ${startBlock} (${
     blocks.start ? formatTime(blocks.start.timestamp) : formatTime(estimateTime(blocks.current, startBlock))
@@ -204,7 +205,7 @@ _Updated as of block [${blocks.current.number}](https://etherscan.io/block/${blo
 
 ## Forum Post
 
-${checkforumPost(description.trim())} 
+${checkforumPost(description.trim(), proposalID)} 
 
 ## Table of contents
 

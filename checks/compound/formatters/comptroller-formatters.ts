@@ -14,6 +14,7 @@ import {
   tab,
 } from './helper'
 import { defactorFn, percentageFn, subtractFn } from './../../../utils/roundingUtils'
+import { changeThresholds } from '../change-threshold'
 
 export const comptrollerFormatters: { [functionName: string]: TransactionFormatter } = {
   '_grantComp(address,uint256)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
@@ -104,11 +105,9 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     if (currentValue) {
       const prevValue = percentageFn(defactorFn(currentValue.toString()))
       const changeInFactor = subtractFn(newValue, prevValue)
+      const sign = getCriticalitySign(changeInFactor, changeThresholds.V2.collateralFactor)
 
-      return `${getCriticalitySign(
-        changeInFactor,
-        15
-      )} Set **[${symbol}](https://${platform}/address/${targetToken})** collateral factor from ${prevValue}% to ${newValue}% ${getChangeTextFn(
+      return `${sign} Set **[${symbol}](https://${platform}/address/${targetToken})** collateral factor from ${prevValue}% to ${newValue}% ${getChangeTextFn(
         changeInFactor,
         true
       )}`
@@ -154,11 +153,9 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
       const newValue = defactorFn(currentValue, `${assetDecimals}`)
 
       const changeInCaps = subtractFn(newValue, prevValue)
+      const sign = getCriticalitySign(changeInCaps, changeThresholds.V2.marketBorrowCaps)
 
-      finalText += `${tab}* ${getCriticalitySign(
-        changeInCaps,
-        100
-      )} Set MarketBorrowCaps of **[${symbol}](https://${platform}/address/${currentAddress})** via **[${contractName}](https://${platform}/address/${
+      finalText += `${tab}* ${sign} Set MarketBorrowCaps of **[${symbol}](https://${platform}/address/${currentAddress})** via **[${contractName}](https://${platform}/address/${
         transaction.target
       })** from ${addCommas(prevValue)} to ${addCommas(newValue)} ${getChangeTextFn(changeInCaps)}.`
 
@@ -238,7 +235,7 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     const { contractName: targetContractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
     const { contractName: guardianContractName } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
 
-    return `🛑 Set the Pause Guardian to ${await getRecipientNameWithLink(chain, decodedParams[0])} via **[${targetContractName}](https://${platform}/address/${
+    return `⚠️ Set the Pause Guardian to ${await getRecipientNameWithLink(chain, decodedParams[0])} via **[${targetContractName}](https://${platform}/address/${
       transaction.target
     })**.`
   },
@@ -248,7 +245,7 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     const targetAddress = transaction.target
     const newImplmentationAddress = decodedParams[0]
 
-    return `🛑 Upgrade of the Compound Comptroller contract to a new implementation **[${newImplmentationAddress}](https://${platform}/address/${newImplmentationAddress})** from **[${targetAddress}](https://${platform}/address/${targetAddress})**.`
+    return `⚠️ Upgrade of the Compound Comptroller contract to a new implementation **[${newImplmentationAddress}](https://${platform}/address/${newImplmentationAddress})** from **[${targetAddress}](https://${platform}/address/${targetAddress})**.`
   },
   'fixBadAccruals(address[],uint256[])': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = getPlatform(chain)

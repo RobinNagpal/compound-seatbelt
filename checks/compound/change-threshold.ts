@@ -1,6 +1,4 @@
-import { ChangeThresholdCategories } from './formatters/helper'
-
-export const changeThresholds: ChangeThresholdCategories = {
+export const changeThresholds = {
   Common: {
     // Add example of values we get in the proposal
     // How we normalize that value

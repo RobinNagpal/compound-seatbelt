@@ -16,6 +16,7 @@ import {
   tab,
 } from './helper'
 import { annualizeFn, dailyRateFn, defactorFn, percentageFn, subtractFn } from './../../../utils/roundingUtils'
+import { changeThresholds } from '../change-threshold'
 
 interface AssetConfig {
   asset: string
@@ -59,7 +60,8 @@ async function getTextForKinkChange(
   decodedParams: string[],
   getFunction: (contract: Contract) => Promise<BigNumber>,
   functionName: string,
-  platform: string
+  platform: string,
+  threshold: number
 ) {
   const { contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
 
@@ -75,8 +77,8 @@ async function getTextForKinkChange(
   const newValue = percentageFn(defactorFn(decodedParams[1]))
 
   const changeInValues = subtractFn(newValue, prevValue)
-
-  return `Set ${functionName} of **[${symbol}](https://${platform}/address/${baseToken})** via **[${contractName}](https://${platform}/address/${
+  const sign = getCriticalitySign(changeInValues, threshold)
+  return `${sign} Set ${functionName} of **[${symbol}](https://${platform}/address/${baseToken})** via **[${contractName}](https://${platform}/address/${
     transaction.target
   }})** from ${addCommas(prevValue)}% to ${addCommas(newValue)}% ${getChangeTextFn(changeInValues, true)}`
 }
@@ -184,10 +186,26 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     )
   },
   'setBorrowKink(address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    return getTextForKinkChange(chain, transaction, decodedParams, async (contract) => await contract.callStatic.borrowKink(), 'BorrowKink', getPlatform(chain))
+    return getTextForKinkChange(
+      chain,
+      transaction,
+      decodedParams,
+      async (contract) => await contract.callStatic.borrowKink(),
+      'BorrowKink',
+      getPlatform(chain),
+      changeThresholds.V3.borrowKink
+    )
   },
   'setSupplyKink(address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    return getTextForKinkChange(chain, transaction, decodedParams, async (contract) => await contract.callStatic.supplyKink(), 'SupplyKink', getPlatform(chain))
+    return getTextForKinkChange(
+      chain,
+      transaction,
+      decodedParams,
+      async (contract) => await contract.callStatic.supplyKink(),
+      'SupplyKink',
+      getPlatform(chain),
+      changeThresholds.V3.supplyKink
+    )
   },
   'updateAssetLiquidationFactor(address,address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = getPlatform(chain)
@@ -211,8 +229,9 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     const { symbol: baseTokenSymbol } = await getContractSymbolAndDecimalsFromFile(baseToken, baseTokenInstance, chain)
 
     const changeInLiquidationFactor = subtractFn(newLiquidationFactor, prevLiquidationFactor)
+    const sign = getCriticalitySign(changeInLiquidationFactor, changeThresholds.V3.liquidationFactor)
 
-    return `${getCriticalitySign(changeInLiquidationFactor, 5)} Set liquidation factor for **[${tokenSymbol}](https://${platform}/address/${
+    return `${sign} Set liquidation factor for **[${tokenSymbol}](https://${platform}/address/${
       decodedParams[1]
     })** on **[${baseTokenSymbol}](https://${platform}/address/${baseToken})** via **[${contractName}](https://${platform}/address/${
       transaction.target
@@ -240,8 +259,9 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     const newSupplyCap = defactorFn(decodedParams[2], `${decimals}`)
 
     const changeInSupplyCap = subtractFn(newSupplyCap, prevSupplyCap)
+    const sign = getCriticalitySign(changeInSupplyCap, changeThresholds.V3.supplyCap)
 
-    return `${getCriticalitySign(changeInSupplyCap, 1000000)} Set supply cap for **[${tokenSymbol}](https://${platform}/address/${
+    return `${sign} Set supply cap for **[${tokenSymbol}](https://${platform}/address/${
       decodedParams[1]
     })** on **[${baseTokenSymbol}](https://${platform}/address/${baseToken})** via **[${contractName}](https://${platform}/address/${
       transaction.target
@@ -441,7 +461,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     mainTable += `| BaseBorrowMin | ${addCommas(baseBorrowMin)} |\n`
     mainTable += `| TargetReserves | ${addCommas(targetReserves)} |\n`
 
-    return `🛑 Set configuration for **[${contractBaseSymbol}](https://${platform}/address/${contractBaseToken})** to: \n\n${tab}${mainTable}\n${tab}${assetConfigTables}`
+    return `⚠️ Set configuration for **[${contractBaseSymbol}](https://${platform}/address/${contractBaseToken})** to: \n\n${tab}${mainTable}\n${tab}${assetConfigTables}`
   },
   'setStoreFrontPriceFactor(address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
@@ -455,10 +475,8 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     const priceFactorNew = percentageFn(defactorFn(decodedParams[1]))
 
     const changeInFactor = subtractFn(priceFactorNew, priceFactorOld)
+    const sign = getCriticalitySign(changeInFactor, changeThresholds.V3.storeFrontPriceFactor)
 
-    return `${getCriticalitySign(
-      changeInFactor,
-      15
-    )}Set StoreFrontPriceFactor for ${tokenNameWithLink} from ${priceFactorOld}% to ${priceFactorNew}% ${getChangeTextFn(changeInFactor, true)}`
+    return `${sign} Set StoreFrontPriceFactor for ${tokenNameWithLink} from ${priceFactorOld}% to ${priceFactorNew}% ${getChangeTextFn(changeInFactor, true)}`
   },
 }
