@@ -13,6 +13,7 @@ import {
   addCommas,
   getChangeTextFn,
   getRecipientNameWithLink,
+  tab,
 } from './helper'
 import { annualizeFn, dailyRateFn, defactorFn, percentageFn, subtractFn } from './../../../utils/roundingUtils'
 
@@ -290,6 +291,17 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     const liquidationFactor = defactorFn(tupleList[5], `${assetDecimals}`)
     const supplyCap = defactorFn(tupleList[6], `${assetDecimals}`)
 
+    let assetTable = ''
+    assetTable += `| Parameter | Value |\n`
+    assetTable += `|-----------|-------|\n`
+    assetTable += `| Asset | [${assetSymbol}](https://${platform}/address/${assetAddress}) |\n`
+    assetTable += `| PriceFeed | [PriceFeed](https://${platform}/address/${tupleList[1]}) |\n`
+    assetTable += `| Decimals | ${assetDecimals} |\n`
+    assetTable += `| BorrowCollateralFactor | ${percentageFn(borrowCollateralFactor)}% |\n`
+    assetTable += `| LiquidateCollateralFactor |  ${percentageFn(liquidateCollateralFactor)}% |\n`
+    assetTable += `| LiquidationFactor | ${percentageFn(liquidationFactor)}% |\n`
+    assetTable += `| SupplyCap | ${addCommas(supplyCap)} |\n\n`
+
     let geckoResponse = ''
     const assetID = await fetchAssertIdFromCoinGeckoForSymbol(assetSymbol)
     if (assetID) {
@@ -305,20 +317,18 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
 
       const addressesVerificationString =
         assetAddressOnGecko.toLowerCase() === assetAddress.toLowerCase()
-          ? `* 🟢 Asset address is verified on CoinGecko.\n\n`
-          : `* 🔴 Asset address is not verified on CoinGecko.\n\n`
+          ? `${tab}* 🟢 Asset address is verified on CoinGecko.\n`
+          : `${tab}* 🔴 Asset address is not verified on CoinGecko.\n`
 
-      const marketCapRankString = `* Asset has Market cap rank of ${marketCapRank} \n\n`
-      const currentPriceString = `* Current price of ${addCommas(marketPriceUSD)} USD \n\n`
-      const priceChangeString = `* Price change in 24hrs is ${addCommas(priceChangePercentage24h)}% \n\n`
-      const marketCapString = `* Market cap is ${addCommas(priceChange24hInUsd)} USD \n\n`
-      const totalVolumeString = `* Total volume is ${addCommas(assetTotalVolume)} USD \n\n`
-      const totalSupplyString = `* Total supply is ${addCommas(assetTotalSupply)}`
-      geckoResponse += `\n\n**Asset Information From CoinGecko:**\n\n${addressesVerificationString}${marketCapRankString}${currentPriceString}${priceChangeString}${marketCapString}${totalVolumeString}${totalSupplyString}`
+      const marketCapRankString = `${tab}* Asset has Market cap rank of ${marketCapRank}\n`
+      const currentPriceString = `${tab}* Current price is ${addCommas(marketPriceUSD)} USD\n`
+      const priceChangeString = `${tab}* Price change in 24hrs is ${addCommas(priceChangePercentage24h)}%\n`
+      const marketCapString = `${tab}* Market cap is ${addCommas(priceChange24hInUsd)} USD\n`
+      const totalVolumeString = `${tab}* Total volume is ${addCommas(assetTotalVolume)} USD\n`
+      const totalSupplyString = `${tab}* Total supply is ${addCommas(assetTotalSupply)}`
+      geckoResponse += `${tab}**Asset Information from CoinGecko:**\n${addressesVerificationString}${marketCapRankString}${currentPriceString}${priceChangeString}${marketCapString}${totalVolumeString}${totalSupplyString}`
     }
-
-    return `🛑 Add new asset to market **[${symbol}](https://${platform}/address/${baseToken})** with following asset configuration: \n\n{\n\n**asset:** [${assetSymbol}](https://${platform}/address/${assetAddress}),\n\n**priceFeed:** ${tupleList[1]},\n\n**decimals:** ${assetDecimals},\n\n**borrowCollateralFactor:** ${borrowCollateralFactor},\n\n**liquidateCollateralFactor:** ${liquidateCollateralFactor},\n\n**liquidationFactor:** ${liquidationFactor},\n\n**supplyCap:** ${supplyCap}\n\n}
-    \n\n${geckoResponse}`
+    return `🛑 Add new asset to market **[${symbol}](https://${platform}/address/${baseToken})** with following asset configuration:\n\n${tab}${assetTable}\n${geckoResponse}`
   },
   'setFactory(address,address)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = getPlatform(chain)
@@ -379,7 +389,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
 
       const assetConfigBlock: AssetConfig = {
         asset: `**[${assetSymbol}](https://${platform}/address/${tupleList[i]})**`,
-        priceFeed: tupleList[i + 1],
+        priceFeed: `**[PriceFeed](https://${platform}/address/${tupleList[i + 1]})**`,
         decimals: tupleList[i + 2],
         borrowCollateralFactor: percentageFn(defactorFn(tupleList[i + 3])) + `%`,
         liquidateCollateralFactor: percentageFn(defactorFn(tupleList[i + 4])) + `%`,
@@ -390,29 +400,48 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       assetConfigs.push(assetConfigBlock)
     }
 
-    return `🛑 Set configuration for **[${contractBaseSymbol}](https://${platform}/address/${contractBaseToken})** to: \n\n{
-      \n\ngovernor: **[${governor}](https://${platform}/address/${tupleList[0]})**,
-      \n\npauseGuardian: ${await getRecipientNameWithLink(chain, tupleList[1])},
-      \n\nbaseToken: **[${baseSymbol}](https://${platform}/address/${tupleList[2]})**,
-      \n\nbaseTokenPriceFeed: **[PriceFeed](https://${platform}/address/${tupleList[3]})**,
-      \n\nextensionDelegate: ${await getRecipientNameWithLink(chain, tupleList[4])},
-      \n\nsupplyKink: ${percentageFn(supplyKink)}%,
-      \n\nsupplyPerYearInterestRateSlopeLow: ${percentageFn(supplyPerYearInterestRateSlopeLow)}%,
-      \n\nsupplyPerYearInterestRateSlopeHigh: ${percentageFn(supplyPerYearInterestRateSlopeHigh)}%,
-      \n\nsupplyPerYearInterestRateBase: ${percentageFn(supplyPerYearInterestRateBase)}%,
-      \n\nborrowKink: ${percentageFn(borrowKink)}%,
-      \n\nborrowPerYearInterestRateSlopeLow: ${percentageFn(borrowPerYearInterestRateSlopeLow)}%,
-      \n\nborrowPerYearInterestRateSlopeHigh: ${percentageFn(borrowPerYearInterestRateSlopeHigh)}%,
-      \n\nborrowPerYearInterestRateBase: ${percentageFn(borrowPerYearInterestRateBase)}%,
-      \n\nstoreFrontPriceFactor: ${percentageFn(storeFrontPriceFactor)}%,
-      \n\ntrackingIndexScale: ${addCommas(trackingIndexScale)},
-      \n\nbaseTrackingSupplySpeed: ${addCommas(baseTrackingSupplySpeed)},
-      \n\nbaseTrackingBorrowSpeed: ${addCommas(baseTrackingBorrowSpeed)},
-      \n\nbaseMinForRewards: ${addCommas(baseMinForRewards)},
-      \n\nbaseBorrowMin: ${addCommas(baseBorrowMin)},
-      \n\ntargetReserves: ${addCommas(targetReserves)},
-      \n\nassetConfigs: ${JSON.stringify(assetConfigs, null, 2)}
-    }`
+    function generateAssetConfigTables(assetConfigs: AssetConfig[]) {
+      let tablesString = ''
+      assetConfigs.forEach((config) => {
+        tablesString += `\n\n${tab}Asset Configuration for ${config.asset}:\n${tab}`
+        tablesString += `| Parameter | Value |\n`
+        tablesString += `|-----------|-------|\n`
+        tablesString += `| Asset | ${config.asset} |\n`
+        tablesString += `| PriceFeed | ${config.priceFeed} |\n`
+        tablesString += `| Decimals | ${config.decimals} |\n`
+        tablesString += `| BorrowCollateralFactor | ${config.borrowCollateralFactor} |\n`
+        tablesString += `| LiquidateCollateralFactor | ${config.liquidateCollateralFactor} |\n`
+        tablesString += `| LiquidationFactor | ${config.liquidationFactor} |\n`
+        tablesString += `| SupplyCap | ${config.supplyCap} |`
+      })
+      return tablesString
+    }
+
+    const assetConfigTables = generateAssetConfigTables(assetConfigs)
+
+    let mainTable = `| Parameter | Value |\n|-----------|-------|\n`
+    mainTable += `| Governor | **[${governor}](https://${platform}/address/${tupleList[0]})** |\n`
+    mainTable += `| PauseGuardian | ${await getRecipientNameWithLink(chain, tupleList[1])} |\n`
+    mainTable += `| BaseToken | **[${baseSymbol}](https://${platform}/address/${tupleList[2]})** |\n`
+    mainTable += `| BaseToken PriceFeed | **[PriceFeed](https://${platform}/address/${tupleList[3]})** |\n`
+    mainTable += `| ExtensionDelegate | ${await getRecipientNameWithLink(chain, tupleList[4])} |\n`
+    mainTable += `| SupplyKink | ${percentageFn(supplyKink)}% |\n`
+    mainTable += `| SupplyPerYearInterestRateSlopeLow | ${percentageFn(supplyPerYearInterestRateSlopeLow)}% |\n`
+    mainTable += `| SupplyPerYearInterestRateSlopeHigh | ${percentageFn(supplyPerYearInterestRateSlopeHigh)}% |\n`
+    mainTable += `| SupplyPerYearInterestRateBase | ${percentageFn(supplyPerYearInterestRateBase)}% |\n`
+    mainTable += `| BorrowKink | ${percentageFn(borrowKink)}% |\n`
+    mainTable += `| BorrowPerYearInterestRateSlopeLow | ${percentageFn(borrowPerYearInterestRateSlopeLow)}% |\n`
+    mainTable += `| BorrowPerYearInterestRateSlopeHigh | ${percentageFn(borrowPerYearInterestRateSlopeHigh)}% |\n`
+    mainTable += `| BorrowPerYearInterestRateBase | ${percentageFn(borrowPerYearInterestRateBase)}% |\n`
+    mainTable += `| StoreFrontPriceFactor | ${percentageFn(storeFrontPriceFactor)}% |\n`
+    mainTable += `| TrackingIndexScale | ${addCommas(trackingIndexScale)} |\n`
+    mainTable += `| BaseTrackingSupplySpeed | ${addCommas(baseTrackingSupplySpeed)} |\n`
+    mainTable += `| BaseTrackingBorrowSpeed | ${addCommas(baseTrackingBorrowSpeed)} |\n`
+    mainTable += `| BaseMinForRewards | ${addCommas(baseMinForRewards)} |\n`
+    mainTable += `| BaseBorrowMin | ${addCommas(baseBorrowMin)} |\n`
+    mainTable += `| TargetReserves | ${addCommas(targetReserves)} |\n`
+
+    return `🛑 Set configuration for **[${contractBaseSymbol}](https://${platform}/address/${contractBaseToken})** to: \n\n${tab}${mainTable}\n${tab}${assetConfigTables}`
   },
   'setStoreFrontPriceFactor(address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])

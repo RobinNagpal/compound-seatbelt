@@ -11,7 +11,7 @@ import {
   TargetTypeLookupData,
   TransactionMessage,
 } from './compound-types'
-import { getPlatform } from './formatters/helper'
+import { getPlatform, getRecipientNameWithLink, tab } from './formatters/helper'
 import { getDecodedBytesForChain, l2Bridges } from './l2-utils'
 import { formattersLookup } from './transaction-formatter'
 
@@ -51,13 +51,13 @@ async function getCompoundCheckResults(chain: CometChains, proposalId: number, t
       const l2TransactionsInfo = await getDecodedBytesForChain(cometChain, proposalId, transactionInfo)
       const l2CheckResults = await getCompoundCheckResults(cometChain, proposalId, l2TransactionsInfo, true)
       const l2Messages = nestCheckResultsForChain(cometChain, l2CheckResults)
-      const countPrefixedL2Messages = `\n\n**${++messageCount}-** ${l2Messages}`
+      const countPrefixedL2Messages = `\n\n${++messageCount}. ${l2Messages}`
       pushMessageToCheckResults(checkResults, { info: countPrefixedL2Messages })
       continue
     }
 
     const message = await getTransactionMessages(chain, proposalId, transactionInfo)
-    const messagePrefix = isL2 ? '' : `\n\n**${++messageCount}-** `
+    const messagePrefix = isL2 ? '' : `\n\n${++messageCount}. `
     const messageInfo = `${messagePrefix}${message.info}`
     pushMessageToCheckResults(checkResults, { info: messageInfo })
   }
@@ -81,12 +81,9 @@ function nestCheckResultsForChain(chain: CometChains, checkResult: CheckResult):
   const capitalizedChain = `${chain.charAt(0).toUpperCase()}${chain.slice(1)}`
   const alphabetPrefixedL2Messages = checkResult.info.map((message, index) => {
     const letter = String.fromCharCode(97 + index)
-    return `${letter}- ${message}`
+    return `\n\n${tab}${letter}. ${message}`
   })
-  return `**Bridge wrapped actions to ${capitalizedChain}**\n\n
-  
-&nbsp;&nbsp;&nbsp;&nbsp;${alphabetPrefixedL2Messages.join('\n\n&nbsp;&nbsp;&nbsp;&nbsp;')}
-`
+  return `**Bridge wrapped actions to ${capitalizedChain}**\n\n${tab}${alphabetPrefixedL2Messages.join()}`
 }
 
 function getForatterForContract(contractNameAndAbi: ContractNameAndAbi): ContractTypeFormattingInfo {
@@ -114,16 +111,15 @@ function getForatterForContract(contractNameAndAbi: ContractNameAndAbi): Contrac
 async function getTransactionMessages(chain: CometChains, proposalId: number, transactionInfo: ExecuteTransactionInfo): Promise<TransactionMessage> {
   const { target, value, signature } = transactionInfo
   const contractNameAndAbi = await getContractNameAndAbiFromFile(chain, target)
-  // console.log('transaction info', transactionInfo)
   if (value?.toString() && value?.toString() !== '0') {
+    const platform = getPlatform(chain)
     if (!signature) {
-      return { info: `\n\nTransfer ${defactorFn(value.toString())} ETH to ${target}` }
+      return { info: `Transfer **${defactorFn(value.toString())} ETH** to ${await getRecipientNameWithLink(chain, target)}.` }
     } else {
       const { decodedCalldata } = await getFunctionFragmentAndDecodedCalldata(proposalId, chain, transactionInfo)
       if (contractNameAndAbi.contractName.toLowerCase() === 'WETH9'.toLowerCase() && signature === 'deposit()') {
-        const platform = getPlatform(chain)
         return {
-          info: `Wrap ${defactorFn(value.toString())} ETH to [WETH](https://${platform}/address/${target})`,
+          info: `Wrap **${defactorFn(value.toString())} ETH** to **[WETH](https://${platform}/address/${target})**.`,
         }
       }
       return {
