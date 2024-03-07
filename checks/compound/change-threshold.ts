@@ -75,7 +75,7 @@ export const changeThresholds = {
     // Increase cUNI Borrow Cap from 550000 to 700000
 
     // How we normalize that value
-    // defactor by asset decimals
+    // defactor by underlying asset decimals
 
     // Proposal No. 147
     // 30000000000000000000
@@ -103,7 +103,7 @@ export const changeThresholds = {
     // Increase Supply Kink from 80% to 95%
 
     // How we normalize that value
-    // defactor by asset decimals and then percentage
+    // defactor and then percentage
 
     // Proposal No. 205
     // 850000000000000000
@@ -134,7 +134,7 @@ export const changeThresholds = {
     // Increase Borrow Kink from 80% to 90%
 
     // How we normalize that value
-    // defactor by asset decimals and then percentage
+    // defactor and then percentage
 
     // Proposal No. 205
     // 850000000000000000
@@ -235,5 +235,63 @@ export const changeThresholds = {
     //avg change is 30
     storeFrontPriceFactorWarningThreshold: 30,
     storeFrontPriceFactorCriticalThreshold: 50,
+
+    // Add example of values we get in the proposal
+    // Proposal No. 195
+    // Increase baseBorrowMin from 1e-18 to 1e-6
+
+    // How we normalize that value
+    // defactor by base token decimals
+
+    // Proposal No. 195
+    // 1000000000000
+
+    // How we have chosen that threshold
+    //
+    baseBorrowMinWarningThreshold: 0.0000001,
+    baseBorrowMinCriticalThreshold: 0.00000001,
+
+    // Add example of values we get in the proposal
+    // Proposal No. 204
+    // Decrease Daily COMP Borrow Rewards from 381.40 to 100
+
+    // Proposal No. 168
+    // Decrease daily USDC COMP borrow rewards from 481.41 to 381.41
+
+    // How we normalize that value
+    // defactor by 15 and multiply with 86400 (seconds in a day)
+
+    // Proposal No. 204
+    // 1157407407407
+
+    // Proposal No. 168
+    // 4414467592592
+
+    // How we have chosen that threshold
+    // avg change is 150
+    baseTrackingBorrowSpeedWarningThreshold: 200,
+    baseTrackingBorrowSpeedCriticalThreshold: 400,
+
+    // Add example of values we get in the proposal
+
+    // Proposal No. 168
+    // Increase daily USDC COMP supply rewards from 0 to 100
+
+    // Proposal No. 176
+    // Increase COMP daily supply distribution from 38 to 70.
+
+    // How we normalize that value
+    // defactor by 15 and multiply with 86400 (seconds in a day)
+
+    // Proposal No. 168
+    // 1157407407407
+
+    // Proposal No. 176
+    // 810185185185
+
+    // How we have chosen that threshold
+    // avg change is 60
+    baseTrackingSupplySpeedWarningThreshold: 100,
+    baseTrackingSupplySpeedCriticalThreshold: 200,
   },
 }
