@@ -247,7 +247,7 @@ export const changeThresholds = {
     // How we have chosen that threshold
     //
     baseBorrowMinWarningThreshold: 0.0000001,
-    baseBorrowMinCriticalThreshold: 0.00000001,
+    baseBorrowMinCriticalThreshold: 0.000001,
 
     // Add example of values we get in the proposal
     // Proposal No. 204
@@ -258,6 +258,7 @@ export const changeThresholds = {
 
     // How we normalize that value
     // defactor by 15 and multiply with 86400 (seconds in a day)
+    // https://github.com/compound-finance/comet/blob/55960cdd9dc32dee3dde8ed8ec72c8542b7750b5/deployments/base-goerli/usdc/migrations/1679592519_configurate_and_ens.ts#L146
 
     // Proposal No. 204
     // 1157407407407
@@ -280,6 +281,7 @@ export const changeThresholds = {
 
     // How we normalize that value
     // defactor by 15 and multiply with 86400 (seconds in a day)
+    // https://github.com/compound-finance/comet/blob/55960cdd9dc32dee3dde8ed8ec72c8542b7750b5/deployments/base-goerli/usdc/migrations/1679592519_configurate_and_ens.ts#L145
 
     // Proposal No. 168
     // 1157407407407
