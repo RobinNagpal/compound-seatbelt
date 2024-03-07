@@ -61,7 +61,7 @@ async function getTextForKinkChange(
   getFunction: (contract: Contract) => Promise<BigNumber>,
   functionName: string,
   platform: string,
-  threshold: number
+  threshold: { warningThreshold: number; criticalThreshold: number }
 ) {
   const { contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
 
@@ -186,6 +186,10 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     )
   },
   'setBorrowKink(address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
+    const thresholds = {
+      warningThreshold: changeThresholds.V3.borrowKinkWarningThreshold,
+      criticalThreshold: changeThresholds.V3.borrowKinkCriticalThreshold,
+    }
     return getTextForKinkChange(
       chain,
       transaction,
@@ -193,10 +197,14 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       async (contract) => await contract.callStatic.borrowKink(),
       'BorrowKink',
       getPlatform(chain),
-      changeThresholds.V3.borrowKink
+      thresholds
     )
   },
   'setSupplyKink(address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
+    const thresholds = {
+      warningThreshold: changeThresholds.V3.supplyKinkWarningThreshold,
+      criticalThreshold: changeThresholds.V3.supplyKinkCriticalThreshold,
+    }
     return getTextForKinkChange(
       chain,
       transaction,
@@ -204,7 +212,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       async (contract) => await contract.callStatic.supplyKink(),
       'SupplyKink',
       getPlatform(chain),
-      changeThresholds.V3.supplyKink
+      thresholds
     )
   },
   'updateAssetLiquidationFactor(address,address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
@@ -229,7 +237,12 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     const { symbol: baseTokenSymbol } = await getContractSymbolAndDecimalsFromFile(baseToken, baseTokenInstance, chain)
 
     const changeInLiquidationFactor = subtractFn(newLiquidationFactor, prevLiquidationFactor)
-    const sign = getCriticalitySign(changeInLiquidationFactor, changeThresholds.V3.liquidationFactor)
+
+    const thresholds = {
+      warningThreshold: changeThresholds.V3.liquidationFactorWarningThreshold,
+      criticalThreshold: changeThresholds.V3.liquidationFactorCriticalThreshold,
+    }
+    const sign = getCriticalitySign(changeInLiquidationFactor, thresholds)
 
     return `${sign} Set liquidation factor for **[${tokenSymbol}](https://${platform}/address/${
       decodedParams[1]
@@ -259,7 +272,12 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     const newSupplyCap = defactorFn(decodedParams[2], `${decimals}`)
 
     const changeInSupplyCap = subtractFn(newSupplyCap, prevSupplyCap)
-    const sign = getCriticalitySign(changeInSupplyCap, changeThresholds.V3.supplyCap)
+
+    const thresholds = {
+      warningThreshold: changeThresholds.V3.supplyCapWarningThreshold,
+      criticalThreshold: changeThresholds.V3.supplyCapCriticalThreshold,
+    }
+    const sign = getCriticalitySign(changeInSupplyCap, thresholds)
 
     return `${sign} Set supply cap for **[${tokenSymbol}](https://${platform}/address/${
       decodedParams[1]
@@ -475,7 +493,12 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     const priceFactorNew = percentageFn(defactorFn(decodedParams[1]))
 
     const changeInFactor = subtractFn(priceFactorNew, priceFactorOld)
-    const sign = getCriticalitySign(changeInFactor, changeThresholds.V3.storeFrontPriceFactor)
+
+    const thresholds = {
+      warningThreshold: changeThresholds.V3.storeFrontPriceFactorWarningThreshold,
+      criticalThreshold: changeThresholds.V3.storeFrontPriceFactorCriticalThreshold,
+    }
+    const sign = getCriticalitySign(changeInFactor, thresholds)
 
     return `${sign} Set StoreFrontPriceFactor for ${tokenNameWithLink} from ${priceFactorOld}% to ${priceFactorNew}% ${getChangeTextFn(changeInFactor, true)}`
   },

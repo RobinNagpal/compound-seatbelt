@@ -105,7 +105,12 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     if (currentValue) {
       const prevValue = percentageFn(defactorFn(currentValue.toString()))
       const changeInFactor = subtractFn(newValue, prevValue)
-      const sign = getCriticalitySign(changeInFactor, changeThresholds.V2.collateralFactor)
+
+      const thresholds = {
+        warningThreshold: changeThresholds.V2.collateralFactorWarningThreshold,
+        criticalThreshold: changeThresholds.V2.collateralFactorCriticalThreshold,
+      }
+      const sign = getCriticalitySign(changeInFactor, thresholds)
 
       return `${sign} Set **[${symbol}](https://${platform}/address/${targetToken})** collateral factor from ${prevValue}% to ${newValue}% ${getChangeTextFn(
         changeInFactor,
@@ -153,7 +158,12 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
       const newValue = defactorFn(currentValue, `${assetDecimals}`)
 
       const changeInCaps = subtractFn(newValue, prevValue)
-      const sign = getCriticalitySign(changeInCaps, changeThresholds.V2.marketBorrowCaps)
+
+      const thresholds = {
+        warningThreshold: changeThresholds.V2.marketBorrowCapsWarningThreshold,
+        criticalThreshold: changeThresholds.V2.marketBorrowCapsCriticalThreshold,
+      }
+      const sign = getCriticalitySign(changeInCaps, thresholds)
 
       finalText += `${tab}* ${sign} Set MarketBorrowCaps of **[${symbol}](https://${platform}/address/${currentAddress})** via **[${contractName}](https://${platform}/address/${
         transaction.target
