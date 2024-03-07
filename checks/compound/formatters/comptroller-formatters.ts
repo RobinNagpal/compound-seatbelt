@@ -245,7 +245,7 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     const { contractName: targetContractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
     const { contractName: guardianContractName } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
 
-    return `⚠️ Set the Pause Guardian to ${await getRecipientNameWithLink(chain, decodedParams[0])} via **[${targetContractName}](https://${platform}/address/${
+    return `🛑 Set the Pause Guardian to ${await getRecipientNameWithLink(chain, decodedParams[0])} via **[${targetContractName}](https://${platform}/address/${
       transaction.target
     })**.`
   },
@@ -255,7 +255,7 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     const targetAddress = transaction.target
     const newImplmentationAddress = decodedParams[0]
 
-    return `⚠️ Upgrade of the Compound Comptroller contract to a new implementation **[${newImplmentationAddress}](https://${platform}/address/${newImplmentationAddress})** from **[${targetAddress}](https://${platform}/address/${targetAddress})**.`
+    return `🛑 Upgrade of the Compound Comptroller contract to a new implementation **[${newImplmentationAddress}](https://${platform}/address/${newImplmentationAddress})** from **[${targetAddress}](https://${platform}/address/${targetAddress})**.`
   },
   'fixBadAccruals(address[],uint256[])': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = getPlatform(chain)
