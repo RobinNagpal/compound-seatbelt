@@ -132,12 +132,12 @@ export function formatTimestamp(timestampString: string) {
   })} ET`
 }
 
-export function getCriticalitySign(changeInString: string, optimumChange: number | null) {
-  if (!optimumChange) return ''
+export function getCriticalitySign(changeInString: string, { warningThreshold, criticalThreshold }: { warningThreshold: number; criticalThreshold: number }) {
   const change = parseFloat(changeInString)
-  if (change <= -2 * optimumChange || change >= 2 * optimumChange) {
+
+  if (change <= -criticalThreshold || change >= criticalThreshold) {
     return '🛑'
-  } else if (change <= -optimumChange || change >= optimumChange) {
+  } else if (change <= -warningThreshold || change >= warningThreshold) {
     return '⚠️'
   } else {
     return ''
