@@ -33,7 +33,8 @@ async function getTextForChangeInInterestRate(
   decodedParams: string[],
   getInterestRateFunction: (contract: Contract) => Promise<BigNumber>,
   interestRateName: string,
-  platform: string
+  platform: string,
+  thresholds: { warningThreshold: number; criticalThreshold: number }
 ) {
   const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
   const currentCometInstance = new Contract(decodedParams[0], abi, customProvider(chain))
@@ -44,8 +45,8 @@ async function getTextForChangeInInterestRate(
   const { symbol } = await getContractSymbolAndDecimalsFromFile(baseToken, baseTokenInstance, chain)
 
   const prevInterestRate = annualizeFn((await getInterestRateFunction(currentCometInstance)).toString())
-  const previousRateInPercent = percentageFn(prevInterestRate)
-  const currentRateInPercent = percentageFn(defactorFn(decodedParams[1]))
+  const previousRateInPercent = prevInterestRate
+  const currentRateInPercent = defactorFn(decodedParams[1])
 
   const changeInRate = subtractFn(currentRateInPercent, previousRateInPercent)
 
@@ -124,48 +125,73 @@ async function getTextForSpeedChange(
 
 export const configuratorFormatters: { [functionName: string]: TransactionFormatter } = {
   'setBorrowPerYearInterestRateBase(address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
+    const thresholds = {
+      warningThreshold: changeThresholds.V3.borrowPerYearInterestRateBaseWarningThreshold,
+      criticalThreshold: changeThresholds.V3.borrowPerYearInterestRateBaseCriticalThreshold,
+    }
     return getTextForChangeInInterestRate(
       chain,
       decodedParams,
       async (contract) => await contract.callStatic.borrowPerSecondInterestRateBase(),
       'BorrowPerYearInterestRateBase',
-      getPlatform(chain)
+      getPlatform(chain),
+      thresholds
     )
   },
   'setBorrowPerYearInterestRateSlopeLow(address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
+    const thresholds = {
+      warningThreshold: changeThresholds.V3.borrowPerYearInterestRateSlopeLowWarningThreshold,
+      criticalThreshold: changeThresholds.V3.borrowPerYearInterestRateSlopeLowCriticalThreshold,
+    }
     return getTextForChangeInInterestRate(
       chain,
       decodedParams,
       async (contract) => await contract.callStatic.borrowPerSecondInterestRateSlopeLow(),
       'BorrowPerYearInterestRateSlopeLow',
-      getPlatform(chain)
+      getPlatform(chain),
+      thresholds
     )
   },
   'setBorrowPerYearInterestRateSlopeHigh(address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
+    const thresholds = {
+      warningThreshold: changeThresholds.V3.borrowPerYearInterestRateSlopeHighWarningThreshold,
+      criticalThreshold: changeThresholds.V3.borrowPerYearInterestRateSlopeHighCriticalThreshold,
+    }
     return getTextForChangeInInterestRate(
       chain,
       decodedParams,
       async (contract) => await contract.callStatic.borrowPerSecondInterestRateSlopeHigh(),
       'BorrowPerYearInterestRateSlopeHigh',
-      getPlatform(chain)
+      getPlatform(chain),
+      thresholds
     )
   },
   'setSupplyPerYearInterestRateSlopeLow(address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
+    const thresholds = {
+      warningThreshold: changeThresholds.V3.supplyPerYearInterestRateSlopeLowWarningThreshold,
+      criticalThreshold: changeThresholds.V3.supplyPerYearInterestRateSlopeLowCriticalThreshold,
+    }
     return getTextForChangeInInterestRate(
       chain,
       decodedParams,
       async (contract) => await contract.callStatic.supplyPerSecondInterestRateSlopeLow(),
       'SupplyPerYearInterestRateSlopeLow',
-      getPlatform(chain)
+      getPlatform(chain),
+      thresholds
     )
   },
   'setSupplyPerYearInterestRateSlopeHigh(address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
+    const thresholds = {
+      warningThreshold: changeThresholds.V3.supplyPerYearInterestRateSlopeHighWarningThreshold,
+      criticalThreshold: changeThresholds.V3.supplyPerYearInterestRateSlopeHighCriticalThreshold,
+    }
     return getTextForChangeInInterestRate(
       chain,
       decodedParams,
       async (contract) => await contract.callStatic.supplyPerSecondInterestRateSlopeHigh(),
       'SupplyPerYearInterestRateSlopeHigh',
-      getPlatform(chain)
+      getPlatform(chain),
+      thresholds
     )
   },
   'setBaseTrackingBorrowSpeed(address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
