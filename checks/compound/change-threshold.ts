@@ -27,7 +27,6 @@ export const changeThresholds = {
     // Decrease cSUSHI Collateral Factor from 47% to 42%
     // Decrease cYFI Collateral Factor from 55% to 50%
     // Decrease cZRX Collateral Factor from 45% to 40%
-    // Increase v2 USDC Reserve Factor from 45% to 60%.
 
     // Proposal No. 147
     // Decrease cBAT Collateral Factor from 62% to 60%
@@ -55,7 +54,6 @@ export const changeThresholds = {
     // 420000000000000000
     // 500000000000000000
     // 400000000000000000
-    // 600000000000000000
 
     // Proposal No. 147
     // 600000000000000000
@@ -293,5 +291,129 @@ export const changeThresholds = {
     // avg change is 60
     baseTrackingSupplySpeedWarningThreshold: 100,
     baseTrackingSupplySpeedCriticalThreshold: 200,
+
+    // Add example of values we get in the proposal
+
+    // Proposal No. 211
+    // Raise Annual Borrow Interest Rate Base from 0.01 to 0.015
+
+    // Proposal No. 209
+    // Raise Annual Borrow Interest Rate Base from 0.01 to 0.015
+
+    // How we normalize that value
+    // defactor
+
+    // Proposal No. 211
+    // 15000000000000000
+
+    // Proposal No. 209
+    // 15000000000000000
+
+    // How we have chosen that threshold
+    // avg change is 0.005
+    borrowPerYearInterestRateBaseWarningThreshold: 0.01,
+    borrowPerYearInterestRateBaseCriticalThreshold: 0.1,
+
+    // Add example of values we get in the proposal
+
+    // Proposal No. 211
+    // Raise Annual Supply Interest Rate Slope Low from 0.034 to 0.048
+    // Raise Annual Supply Interest Rate Slope Low from 0.04 to 0.048
+
+    // Proposal No. 207
+    // Raise Annual Supply Interest Rate Slope Low from 0.0325 to 0.048
+
+    // How we normalize that value
+    // defactor
+
+    // Proposal No. 211
+    // 48400000000000000
+    // 48400000000000000
+
+    // Proposal No. 207
+    // 48000000000000000
+
+    // How we have chosen that threshold
+    // avg change is 0.0125
+    supplyPerYearInterestRateSlopeLowWarningThreshold: 0.03,
+    supplyPerYearInterestRateSlopeLowCriticalThreshold: 0.1,
+
+    // Add example of values we get in the proposal
+
+    // Proposal No. 176
+    // Decrease Annual Borrow Interest Rate Slope Low from 0.051 to 0.037
+
+    // Proposal No. 211
+    // Raise Annual Borrow Interest Rate Slope Low from 0.0333 to 0.0484
+    // Raise Annual Borrow Interest Rate Slope Low from 0.04 to 0.053
+
+    // Proposal No. 207
+    // Raise Annual Borrow Interest Rate Slope Low from 0.035 to 0.053
+
+    // How we normalize that value
+    // defactor
+
+    // Proposal No. 176
+    // 37000000000000000
+
+    // Proposal No. 211
+    // 48400000000000000
+    // 53000000000000000
+
+    // Proposal No. 207
+    // 53000000000000000
+
+    // How we have chosen that threshold
+    // avg change is 0.01536
+    borrowPerYearInterestRateSlopeLowWarningThreshold: 0.03,
+    borrowPerYearInterestRateSlopeLowCriticalThreshold: 0.1,
+
+    // Add example of values we get in the proposal
+
+    // Proposal No. 211
+    // Raise Annual Supply Interest Rate Slope High from 1.5 to 3.4
+    // Raise Annual Supply Interest Rate Slope High from 0.65 to 1.6
+
+    // Proposal No. 207
+    // Raise Annual Supply Interest Rate Slope High from 0.4 to 1.6
+
+    // How we normalize that value
+    // defactor
+
+    // Proposal No. 211
+    // 3400000000000000000
+    // 1600000000000000000
+
+    // Proposal No. 207
+    // 1600000000000000000
+
+    // How we have chosen that threshold
+    // avg change is 1.35
+    supplyPerYearInterestRateSlopeHighWarningThreshold: 2,
+    supplyPerYearInterestRateSlopeHighCriticalThreshold: 5,
+
+    // Add example of values we get in the proposal
+
+    // Proposal No. 211
+    // Raise Annual Borrow Interest Rate Slope High from 1.5 to 3.9
+    // Raise Annual Borrow Interest Rate Slope High from 0.7 to 1.8
+
+    // Proposal No. 207
+    // Raise Annual Borrow Interest Rate Slope High from 0.25 to 1.8
+
+    // How we normalize that value
+    // defactor
+
+    // Proposal No. 211
+    // 3900000000000000000
+    // 1800000000000000000
+
+    // Proposal No. 207
+    // 1800000000000000000
+
+    // How we have chosen that threshold
+    // avg change is 5.05
+    borrowPerYearInterestRateSlopeHighWarningThreshold: 7,
+    borrowPerYearInterestRateSlopeHighCriticalThreshold: 10,
   },
 }
