@@ -61,7 +61,7 @@ async function getTextForKinkChange(
   getFunction: (contract: Contract) => Promise<BigNumber>,
   functionName: string,
   platform: string,
-  threshold: { warningThreshold: number; criticalThreshold: number }
+  thresholds: { warningThreshold: number; criticalThreshold: number }
 ) {
   const { contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
 
@@ -77,7 +77,9 @@ async function getTextForKinkChange(
   const newValue = percentageFn(defactorFn(decodedParams[1]))
 
   const changeInValues = subtractFn(newValue, prevValue)
-  const sign = getCriticalitySign(changeInValues, threshold)
+
+  const sign = getCriticalitySign(changeInValues, thresholds)
+
   return `${sign} Set ${functionName} of **[${symbol}](https://${platform}/address/${baseToken})** via **[${contractName}](https://${platform}/address/${
     transaction.target
   }})** from ${addCommas(prevValue)}% to ${addCommas(newValue)}% ${getChangeTextFn(changeInValues, true)}`
@@ -90,7 +92,8 @@ async function getTextForSpeedChange(
   getFunction: (contract: Contract) => Promise<BigNumber>,
   functionName: string,
   platform: string,
-  speedName: string
+  speedName: string,
+  threshold: { warningThreshold: number; criticalThreshold: number }
 ) {
   const { contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
 
@@ -110,7 +113,9 @@ async function getTextForSpeedChange(
   const newRewardValue = dailyRateFn(defactorFn(newSpeedValue, '15'))
   const changeInRewardValues = subtractFn(newRewardValue, prevRewardValue)
 
-  return `Set ${functionName} of **[${symbol}](https://${platform}/address/${baseToken}) [${contractName}](https://${platform}/address/${
+  const sign = getCriticalitySign(changeInRewardValues, threshold)
+
+  return `${sign} Set ${functionName} of **[${symbol}](https://${platform}/address/${baseToken}) [${contractName}](https://${platform}/address/${
     transaction.target
   })** from ${addCommas(prevSpeedValue)} to ${addCommas(newSpeedValue)} ${getChangeTextFn(
     changeInSpeedValues
@@ -164,6 +169,10 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     )
   },
   'setBaseTrackingBorrowSpeed(address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
+    const thresholds = {
+      warningThreshold: changeThresholds.V3.baseTrackingBorrowSpeedWarningThreshold,
+      criticalThreshold: changeThresholds.V3.baseTrackingBorrowSpeedCriticalThreshold,
+    }
     return getTextForSpeedChange(
       chain,
       transaction,
@@ -171,10 +180,15 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       async (contract) => await contract.callStatic.baseTrackingBorrowSpeed(),
       'BaseTrackingBorrowSpeed',
       getPlatform(chain),
-      'Borrow'
+      'Borrow',
+      thresholds
     )
   },
   'setBaseTrackingSupplySpeed(address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
+    const thresholds = {
+      warningThreshold: changeThresholds.V3.baseTrackingSupplySpeedWarningThreshold,
+      criticalThreshold: changeThresholds.V3.baseTrackingSupplySpeedCriticalThreshold,
+    }
     return getTextForSpeedChange(
       chain,
       transaction,
@@ -182,7 +196,8 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       async (contract) => await contract.callStatic.baseTrackingSupplySpeed(),
       'BaseTrackingSupplySpeed',
       getPlatform(chain),
-      'Supply'
+      'Supply',
+      thresholds
     )
   },
   'setBorrowKink(address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
@@ -302,7 +317,13 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
 
     const changeInBaseBorrowMin = subtractFn(newBaseBorrowMin, prevBaseBorrowMin)
 
-    return `Set BaseBorrowMin of **[${symbol}](https://${platform}/address/${decodedParams[0]})** from ${addCommas(prevBaseBorrowMin)} to ${addCommas(
+    const thresholds = {
+      warningThreshold: changeThresholds.V3.baseBorrowMinWarningThreshold,
+      criticalThreshold: changeThresholds.V3.baseBorrowMinCriticalThreshold,
+    }
+    const sign = getCriticalitySign(changeInBaseBorrowMin, thresholds)
+
+    return `${sign} Set BaseBorrowMin of **[${symbol}](https://${platform}/address/${decodedParams[0]})** from ${addCommas(prevBaseBorrowMin)} to ${addCommas(
       newBaseBorrowMin
     )} ${getChangeTextFn(changeInBaseBorrowMin)}`
   },
