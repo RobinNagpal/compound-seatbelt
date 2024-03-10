@@ -14,6 +14,7 @@ import {
   tab,
 } from './helper'
 import { defactorFn, percentageFn, subtractFn } from './../../../utils/roundingUtils'
+import { changeThresholds } from '../change-threshold'
 
 export const comptrollerFormatters: { [functionName: string]: TransactionFormatter } = {
   '_grantComp(address,uint256)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
@@ -105,10 +106,13 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
       const prevValue = percentageFn(defactorFn(currentValue.toString()))
       const changeInFactor = subtractFn(newValue, prevValue)
 
-      return `${getCriticalitySign(
-        changeInFactor,
-        15
-      )} Set **[${symbol}](https://${platform}/address/${targetToken})** collateral factor from ${prevValue}% to ${newValue}% ${getChangeTextFn(
+      const thresholds = {
+        warningThreshold: changeThresholds.V2.collateralFactorWarningThreshold,
+        criticalThreshold: changeThresholds.V2.collateralFactorCriticalThreshold,
+      }
+      const sign = getCriticalitySign(changeInFactor, thresholds)
+
+      return `${sign} Set **[${symbol}](https://${platform}/address/${targetToken})** collateral factor from ${prevValue}% to ${newValue}% ${getChangeTextFn(
         changeInFactor,
         true
       )}`
@@ -155,10 +159,13 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
 
       const changeInCaps = subtractFn(newValue, prevValue)
 
-      finalText += `${tab}* ${getCriticalitySign(
-        changeInCaps,
-        100
-      )} Set MarketBorrowCaps of **[${symbol}](https://${platform}/address/${currentAddress})** via **[${contractName}](https://${platform}/address/${
+      const thresholds = {
+        warningThreshold: changeThresholds.V2.marketBorrowCapsWarningThreshold,
+        criticalThreshold: changeThresholds.V2.marketBorrowCapsCriticalThreshold,
+      }
+      const sign = getCriticalitySign(changeInCaps, thresholds)
+
+      finalText += `${tab}* ${sign} Set MarketBorrowCaps of **[${symbol}](https://${platform}/address/${currentAddress})** via **[${contractName}](https://${platform}/address/${
         transaction.target
       })** from ${addCommas(prevValue)} to ${addCommas(newValue)} ${getChangeTextFn(changeInCaps)}.`
 

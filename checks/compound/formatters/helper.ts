@@ -132,11 +132,12 @@ export function formatTimestamp(timestampString: string) {
   })} ET`
 }
 
-export function getCriticalitySign(changeInString: string, optimumChange: number) {
+export function getCriticalitySign(changeInString: string, { warningThreshold, criticalThreshold }: { warningThreshold: number; criticalThreshold: number }) {
   const change = parseFloat(changeInString)
-  if (change <= -2 * optimumChange || change >= 2 * optimumChange) {
+
+  if (change <= -criticalThreshold || change >= criticalThreshold) {
     return '🛑'
-  } else if (change <= -optimumChange || change >= optimumChange) {
+  } else if (change <= -warningThreshold || change >= warningThreshold) {
     return '⚠️'
   } else {
     return ''
@@ -215,16 +216,18 @@ export async function formatCoinsAndAmounts(list: string[], chain: CometChains, 
   return results.join(', ')
 }
 
-export function checkforumPost(text: string) {
+export function checkforumPost(text: string, proposalID: string) {
   const urlRegex = /https:\/\/www\.comp\.xyz\/t\/[^\s\)]+/g
 
   const matches = text.match(urlRegex)
-
+  let forumPost = ''
   if (matches && matches.length > 0) {
-    return `Forum post is present here: [Forum Post](${matches[0]})`
+    forumPost = `Forum post for Proposal # ${proposalID} is present here: [Forum Post](${matches[0]})`
   } else {
-    return 'No forum post is present.'
+    forumPost = 'No forum post is present.'
   }
+  // await postNotificationToDiscord(forumPost)
+  return forumPost
 }
 
 export function formatAddressesAndAmounts(addressesList: string[], amountsList: string[], platform: string) {
@@ -298,7 +301,9 @@ function extractTextFromMarkdown(markdownText: string) {
 }
 
 export async function pushChecksSummaryToDiscord(reportMarkdown: string, proposalNo: string) {
-  const header = `# Summary of Compound Checks for proposal # ${proposalNo}\n\n`
+  const forumPost = checkforumPost(reportMarkdown, proposalNo)
+  let header = `# Summary of Compound Checks for proposal # ${proposalNo}\n\n`
+  header += `\n\n### ${forumPost}\n\n`
   const appendix = '... \n\n(see report for full text)'
   const maxLength = 2000 - appendix.length - header.length
   let discordPayload = extractChecksMarkdown(reportMarkdown)

@@ -16,6 +16,7 @@ import {
   tab,
 } from './helper'
 import { annualizeFn, dailyRateFn, defactorFn, percentageFn, subtractFn } from './../../../utils/roundingUtils'
+import { changeThresholds } from '../change-threshold'
 
 interface AssetConfig {
   asset: string
@@ -32,7 +33,8 @@ async function getTextForChangeInInterestRate(
   decodedParams: string[],
   getInterestRateFunction: (contract: Contract) => Promise<BigNumber>,
   interestRateName: string,
-  platform: string
+  platform: string,
+  thresholds: { warningThreshold: number; criticalThreshold: number }
 ) {
   const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
   const currentCometInstance = new Contract(decodedParams[0], abi, customProvider(chain))
@@ -43,8 +45,8 @@ async function getTextForChangeInInterestRate(
   const { symbol } = await getContractSymbolAndDecimalsFromFile(baseToken, baseTokenInstance, chain)
 
   const prevInterestRate = annualizeFn((await getInterestRateFunction(currentCometInstance)).toString())
-  const previousRateInPercent = percentageFn(prevInterestRate)
-  const currentRateInPercent = percentageFn(defactorFn(decodedParams[1]))
+  const previousRateInPercent = prevInterestRate
+  const currentRateInPercent = defactorFn(decodedParams[1])
 
   const changeInRate = subtractFn(currentRateInPercent, previousRateInPercent)
 
@@ -59,7 +61,8 @@ async function getTextForKinkChange(
   decodedParams: string[],
   getFunction: (contract: Contract) => Promise<BigNumber>,
   functionName: string,
-  platform: string
+  platform: string,
+  thresholds: { warningThreshold: number; criticalThreshold: number }
 ) {
   const { contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
 
@@ -76,7 +79,9 @@ async function getTextForKinkChange(
 
   const changeInValues = subtractFn(newValue, prevValue)
 
-  return `Set ${functionName} of **[${symbol}](https://${platform}/address/${baseToken})** via **[${contractName}](https://${platform}/address/${
+  const sign = getCriticalitySign(changeInValues, thresholds)
+
+  return `${sign} Set ${functionName} of **[${symbol}](https://${platform}/address/${baseToken})** via **[${contractName}](https://${platform}/address/${
     transaction.target
   }})** from ${addCommas(prevValue)}% to ${addCommas(newValue)}% ${getChangeTextFn(changeInValues, true)}`
 }
@@ -88,7 +93,8 @@ async function getTextForSpeedChange(
   getFunction: (contract: Contract) => Promise<BigNumber>,
   functionName: string,
   platform: string,
-  speedName: string
+  speedName: string,
+  threshold: { warningThreshold: number; criticalThreshold: number }
 ) {
   const { contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
 
@@ -108,7 +114,9 @@ async function getTextForSpeedChange(
   const newRewardValue = dailyRateFn(defactorFn(newSpeedValue, '15'))
   const changeInRewardValues = subtractFn(newRewardValue, prevRewardValue)
 
-  return `Set ${functionName} of **[${symbol}](https://${platform}/address/${baseToken}) [${contractName}](https://${platform}/address/${
+  const sign = getCriticalitySign(changeInRewardValues, threshold)
+
+  return `${sign} Set ${functionName} of **[${symbol}](https://${platform}/address/${baseToken}) [${contractName}](https://${platform}/address/${
     transaction.target
   })** from ${addCommas(prevSpeedValue)} to ${addCommas(newSpeedValue)} ${getChangeTextFn(
     changeInSpeedValues
@@ -117,51 +125,80 @@ async function getTextForSpeedChange(
 
 export const configuratorFormatters: { [functionName: string]: TransactionFormatter } = {
   'setBorrowPerYearInterestRateBase(address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
+    const thresholds = {
+      warningThreshold: changeThresholds.V3.borrowPerYearInterestRateBaseWarningThreshold,
+      criticalThreshold: changeThresholds.V3.borrowPerYearInterestRateBaseCriticalThreshold,
+    }
     return getTextForChangeInInterestRate(
       chain,
       decodedParams,
       async (contract) => await contract.callStatic.borrowPerSecondInterestRateBase(),
       'BorrowPerYearInterestRateBase',
-      getPlatform(chain)
+      getPlatform(chain),
+      thresholds
     )
   },
   'setBorrowPerYearInterestRateSlopeLow(address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
+    const thresholds = {
+      warningThreshold: changeThresholds.V3.borrowPerYearInterestRateSlopeLowWarningThreshold,
+      criticalThreshold: changeThresholds.V3.borrowPerYearInterestRateSlopeLowCriticalThreshold,
+    }
     return getTextForChangeInInterestRate(
       chain,
       decodedParams,
       async (contract) => await contract.callStatic.borrowPerSecondInterestRateSlopeLow(),
       'BorrowPerYearInterestRateSlopeLow',
-      getPlatform(chain)
+      getPlatform(chain),
+      thresholds
     )
   },
   'setBorrowPerYearInterestRateSlopeHigh(address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
+    const thresholds = {
+      warningThreshold: changeThresholds.V3.borrowPerYearInterestRateSlopeHighWarningThreshold,
+      criticalThreshold: changeThresholds.V3.borrowPerYearInterestRateSlopeHighCriticalThreshold,
+    }
     return getTextForChangeInInterestRate(
       chain,
       decodedParams,
       async (contract) => await contract.callStatic.borrowPerSecondInterestRateSlopeHigh(),
       'BorrowPerYearInterestRateSlopeHigh',
-      getPlatform(chain)
+      getPlatform(chain),
+      thresholds
     )
   },
   'setSupplyPerYearInterestRateSlopeLow(address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
+    const thresholds = {
+      warningThreshold: changeThresholds.V3.supplyPerYearInterestRateSlopeLowWarningThreshold,
+      criticalThreshold: changeThresholds.V3.supplyPerYearInterestRateSlopeLowCriticalThreshold,
+    }
     return getTextForChangeInInterestRate(
       chain,
       decodedParams,
       async (contract) => await contract.callStatic.supplyPerSecondInterestRateSlopeLow(),
       'SupplyPerYearInterestRateSlopeLow',
-      getPlatform(chain)
+      getPlatform(chain),
+      thresholds
     )
   },
   'setSupplyPerYearInterestRateSlopeHigh(address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
+    const thresholds = {
+      warningThreshold: changeThresholds.V3.supplyPerYearInterestRateSlopeHighWarningThreshold,
+      criticalThreshold: changeThresholds.V3.supplyPerYearInterestRateSlopeHighCriticalThreshold,
+    }
     return getTextForChangeInInterestRate(
       chain,
       decodedParams,
       async (contract) => await contract.callStatic.supplyPerSecondInterestRateSlopeHigh(),
       'SupplyPerYearInterestRateSlopeHigh',
-      getPlatform(chain)
+      getPlatform(chain),
+      thresholds
     )
   },
   'setBaseTrackingBorrowSpeed(address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
+    const thresholds = {
+      warningThreshold: changeThresholds.V3.baseTrackingBorrowSpeedWarningThreshold,
+      criticalThreshold: changeThresholds.V3.baseTrackingBorrowSpeedCriticalThreshold,
+    }
     return getTextForSpeedChange(
       chain,
       transaction,
@@ -169,10 +206,15 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       async (contract) => await contract.callStatic.baseTrackingBorrowSpeed(),
       'BaseTrackingBorrowSpeed',
       getPlatform(chain),
-      'Borrow'
+      'Borrow',
+      thresholds
     )
   },
   'setBaseTrackingSupplySpeed(address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
+    const thresholds = {
+      warningThreshold: changeThresholds.V3.baseTrackingSupplySpeedWarningThreshold,
+      criticalThreshold: changeThresholds.V3.baseTrackingSupplySpeedCriticalThreshold,
+    }
     return getTextForSpeedChange(
       chain,
       transaction,
@@ -180,14 +222,39 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       async (contract) => await contract.callStatic.baseTrackingSupplySpeed(),
       'BaseTrackingSupplySpeed',
       getPlatform(chain),
-      'Supply'
+      'Supply',
+      thresholds
     )
   },
   'setBorrowKink(address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    return getTextForKinkChange(chain, transaction, decodedParams, async (contract) => await contract.callStatic.borrowKink(), 'BorrowKink', getPlatform(chain))
+    const thresholds = {
+      warningThreshold: changeThresholds.V3.borrowKinkWarningThreshold,
+      criticalThreshold: changeThresholds.V3.borrowKinkCriticalThreshold,
+    }
+    return getTextForKinkChange(
+      chain,
+      transaction,
+      decodedParams,
+      async (contract) => await contract.callStatic.borrowKink(),
+      'BorrowKink',
+      getPlatform(chain),
+      thresholds
+    )
   },
   'setSupplyKink(address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    return getTextForKinkChange(chain, transaction, decodedParams, async (contract) => await contract.callStatic.supplyKink(), 'SupplyKink', getPlatform(chain))
+    const thresholds = {
+      warningThreshold: changeThresholds.V3.supplyKinkWarningThreshold,
+      criticalThreshold: changeThresholds.V3.supplyKinkCriticalThreshold,
+    }
+    return getTextForKinkChange(
+      chain,
+      transaction,
+      decodedParams,
+      async (contract) => await contract.callStatic.supplyKink(),
+      'SupplyKink',
+      getPlatform(chain),
+      thresholds
+    )
   },
   'updateAssetLiquidationFactor(address,address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = getPlatform(chain)
@@ -212,7 +279,13 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
 
     const changeInLiquidationFactor = subtractFn(newLiquidationFactor, prevLiquidationFactor)
 
-    return `${getCriticalitySign(changeInLiquidationFactor, 5)} Set liquidation factor for **[${tokenSymbol}](https://${platform}/address/${
+    const thresholds = {
+      warningThreshold: changeThresholds.V3.liquidationFactorWarningThreshold,
+      criticalThreshold: changeThresholds.V3.liquidationFactorCriticalThreshold,
+    }
+    const sign = getCriticalitySign(changeInLiquidationFactor, thresholds)
+
+    return `${sign} Set liquidation factor for **[${tokenSymbol}](https://${platform}/address/${
       decodedParams[1]
     })** on **[${baseTokenSymbol}](https://${platform}/address/${baseToken})** via **[${contractName}](https://${platform}/address/${
       transaction.target
@@ -241,7 +314,13 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
 
     const changeInSupplyCap = subtractFn(newSupplyCap, prevSupplyCap)
 
-    return `${getCriticalitySign(changeInSupplyCap, 1000000)} Set supply cap for **[${tokenSymbol}](https://${platform}/address/${
+    const thresholds = {
+      warningThreshold: changeThresholds.V3.supplyCapWarningThreshold,
+      criticalThreshold: changeThresholds.V3.supplyCapCriticalThreshold,
+    }
+    const sign = getCriticalitySign(changeInSupplyCap, thresholds)
+
+    return `${sign} Set supply cap for **[${tokenSymbol}](https://${platform}/address/${
       decodedParams[1]
     })** on **[${baseTokenSymbol}](https://${platform}/address/${baseToken})** via **[${contractName}](https://${platform}/address/${
       transaction.target
@@ -264,7 +343,13 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
 
     const changeInBaseBorrowMin = subtractFn(newBaseBorrowMin, prevBaseBorrowMin)
 
-    return `Set BaseBorrowMin of **[${symbol}](https://${platform}/address/${decodedParams[0]})** from ${addCommas(prevBaseBorrowMin)} to ${addCommas(
+    const thresholds = {
+      warningThreshold: changeThresholds.V3.baseBorrowMinWarningThreshold,
+      criticalThreshold: changeThresholds.V3.baseBorrowMinCriticalThreshold,
+    }
+    const sign = getCriticalitySign(changeInBaseBorrowMin, thresholds)
+
+    return `${sign} Set BaseBorrowMin of **[${symbol}](https://${platform}/address/${decodedParams[0]})** from ${addCommas(prevBaseBorrowMin)} to ${addCommas(
       newBaseBorrowMin
     )} ${getChangeTextFn(changeInBaseBorrowMin)}`
   },
@@ -441,7 +526,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     mainTable += `| BaseBorrowMin | ${addCommas(baseBorrowMin)} |\n`
     mainTable += `| TargetReserves | ${addCommas(targetReserves)} |\n`
 
-    return `🛑 Set configuration for **[${contractBaseSymbol}](https://${platform}/address/${contractBaseToken})** to: \n\n${tab}${mainTable}\n${tab}${assetConfigTables}`
+    return `⚠️ Set configuration for **[${contractBaseSymbol}](https://${platform}/address/${contractBaseToken})** to: \n\n${tab}${mainTable}\n${tab}${assetConfigTables}`
   },
   'setStoreFrontPriceFactor(address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
@@ -456,9 +541,12 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
 
     const changeInFactor = subtractFn(priceFactorNew, priceFactorOld)
 
-    return `${getCriticalitySign(
-      changeInFactor,
-      15
-    )}Set StoreFrontPriceFactor for ${tokenNameWithLink} from ${priceFactorOld}% to ${priceFactorNew}% ${getChangeTextFn(changeInFactor, true)}`
+    const thresholds = {
+      warningThreshold: changeThresholds.V3.storeFrontPriceFactorWarningThreshold,
+      criticalThreshold: changeThresholds.V3.storeFrontPriceFactorCriticalThreshold,
+    }
+    const sign = getCriticalitySign(changeInFactor, thresholds)
+
+    return `${sign} Set StoreFrontPriceFactor for ${tokenNameWithLink} from ${priceFactorOld}% to ${priceFactorNew}% ${getChangeTextFn(changeInFactor, true)}`
   },
 }
