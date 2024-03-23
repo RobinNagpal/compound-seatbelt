@@ -7,6 +7,7 @@ import FormData from 'form-data'
 import fs from 'fs'
 import mftch from 'micro-ftch'
 import { CometChains, SymbolAndDecimalsLookupData } from '../compound-types'
+import { CheckResult } from './../../../types'
 import { customProvider } from './../../../utils/clients/ethers'
 import { DISCORD_WEBHOOK_URL } from './../../../utils/constants'
 import { defactorFn } from './../../../utils/roundingUtils'
@@ -251,10 +252,23 @@ export async function pushChecksSummaryToDiscord(reportMarkdown: string, proposa
   const forumPost = checkforumPost(reportMarkdown, proposalNo)
   let header = `# Summary of Compound Checks for proposal # ${proposalNo}\n\n`
   header += `\n\n### ${forumPost}\n\n`
-  const appendix = '... \n\n(see report for full text)'
+  const appendix = `... \n\n[See Full Report](https://compound-governance-proposals.s3.amazonaws.com/all-proposals/${proposalNo}.pdf)`
   let discordPayload = extractChecksMarkdown(reportMarkdown)
 
   await postNotificationToDiscord(`${header} ${discordPayload} ${appendix}`)
+}
+
+export async function pushChecksSummaryToDiscordAsEmbeds(checkResult: CheckResult, proposalNo: string) {
+  await axios.post(DISCORD_WEBHOOK_URL, {
+    content: `
+    ## Summary of Compound Checks - ${proposalNo}
+    [Full Report](https://compound-governance-proposals.s3.amazonaws.com/all-proposals/${proposalNo}.pdf)
+    `,
+    embeds: checkResult.info.map((m) => ({
+      description: m,
+      color: 1127128,
+    })),
+  })
 }
 
 export async function postNotificationToDiscord(rawText: string) {

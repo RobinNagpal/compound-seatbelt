@@ -13,7 +13,11 @@ import { unified } from 'unified'
 import { mdToPdf } from 'md-to-pdf'
 import { formatProposalId } from '../utils/contracts/governor'
 import { AllCheckResults, GovernorType, ProposalEvent } from '../types'
-import { checkforumPost, pushChecksSummaryToDiscord } from '../checks/compound/formatters/helper'
+import {
+  checkforumPost,
+  pushChecksSummaryToDiscord,
+  pushChecksSummaryToDiscordAsEmbeds,
+} from '../checks/compound/formatters/helper'
 
 // --- Markdown helpers ---
 
@@ -165,10 +169,14 @@ export async function pushCompoundChecksToDiscord(
     checkCompoundProposalDetails: compoundChecks,
   })
 
-  const markdownReport = String(await remark().use(remarkFixEmojiLinks).process(baseReport))
-  const id = formatProposalId(governorType, proposal.id!)
+  if (compoundChecks.result.info.length < 10) {
+    await pushChecksSummaryToDiscordAsEmbeds(compoundChecks.result, proposal.id!.toString())
+  } else {
+    const markdownReport = String(await remark().use(remarkFixEmojiLinks).process(baseReport))
+    const id = formatProposalId(governorType, proposal.id!)
 
-  await pushChecksSummaryToDiscord(markdownReport, id)
+    await pushChecksSummaryToDiscord(markdownReport, id)
+  }
 }
 
 /**
