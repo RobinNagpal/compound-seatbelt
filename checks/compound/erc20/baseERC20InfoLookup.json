@@ -14,5 +14,9 @@
   "0x9e1028f5f1d5ede59748ffcee5532509976840e0": {
     "symbol": "COMP",
     "decimals": "18"
+  },
+  "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": {
+    "symbol": "USDC",
+    "decimals": "6"
   }
 }

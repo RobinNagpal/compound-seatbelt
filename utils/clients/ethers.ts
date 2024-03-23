@@ -1,6 +1,6 @@
 import { providers } from 'ethers'
 import { CometChains } from '../../checks/compound/compound-types'
-import { RPC_URL_ARBITRUM, RPC_URL_BASE, RPC_URL_MAINNET, RPC_URL_POLYGON } from '../constants'
+import { RPC_URL_ARBITRUM, RPC_URL_BASE, RPC_URL_MAINNET, RPC_URL_POLYGON, RPC_URL_SCROLL } from '../constants'
 
 export const provider = new providers.JsonRpcProvider(RPC_URL_MAINNET)
 
@@ -14,5 +14,7 @@ export function customProvider(chain: CometChains) {
       return new providers.JsonRpcProvider(RPC_URL_ARBITRUM)
     case CometChains.base:
       return new providers.JsonRpcProvider(RPC_URL_BASE)
+    case CometChains.scroll:
+      return new providers.JsonRpcProvider(RPC_URL_SCROLL)
   }
 }

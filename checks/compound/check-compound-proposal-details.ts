@@ -80,13 +80,14 @@ function pushMessageToCheckResults(checkResults: CheckResult, message: Transacti
 function nestCheckResultsForChain(chain: CometChains, checkResult: CheckResult): string {
   const capitalizedChain = `${chain.charAt(0).toUpperCase()}${chain.slice(1)}`
   const alphabetPrefixedL2Messages = checkResult.info.map((message, index) => {
+    // use a..z for nested messages
     const letter = String.fromCharCode(97 + index)
     return `\n\n${tab}${letter}. ${message}`
   })
   return `**Bridge wrapped actions to ${capitalizedChain}**\n\n${tab}${alphabetPrefixedL2Messages.join()}`
 }
 
-function getForatterForContract(contractNameAndAbi: ContractNameAndAbi): ContractTypeFormattingInfo {
+function getFormatterForContract(contractNameAndAbi: ContractNameAndAbi): ContractTypeFormattingInfo {
   const contractName = contractNameAndAbi.contractName
   const targetLookupFilePath = `./checks/compound/lookup/targetType.json`
 
@@ -97,7 +98,7 @@ function getForatterForContract(contractNameAndAbi: ContractNameAndAbi): Contrac
   const targetNameToTypeFileContent = fs.readFileSync(targetNameToTypeFilePath, 'utf-8')
   const targetNameToTypeLookupData: { [contractName: string]: string } = JSON.parse(targetNameToTypeFileContent || '{}')
 
-  const contractType = targetNameToTypeLookupData[contractNameAndAbi.contractName]
+  const contractType = targetNameToTypeLookupData[contractName]
 
   const contractFormatters: ContractTypeFormattingInfo = contractType ? lookupData[contractType] : lookupData[contractName]
 
@@ -131,38 +132,44 @@ async function getTransactionMessages(chain: CometChains, proposalId: number, tr
     return { info: `🛑 Function ${signature} is removed from ${target} contract` }
   }
 
-  const { fun, decodedCalldata } = await getFunctionFragmentAndDecodedCalldata(proposalId, chain, transactionInfo)
+  try {
+    const { fun, decodedCalldata } = await getFunctionFragmentAndDecodedCalldata(proposalId, chain, transactionInfo)
 
-  const functionSignature = getFunctionSignature(fun)
+    const functionSignature = getFunctionSignature(fun)
 
-  const contractFormatters = getForatterForContract(contractNameAndAbi)
+    const contractFormatters = getFormatterForContract(contractNameAndAbi)
 
-  const functions = contractFormatters.functions
-  const functionMapping = functions?.[functionSignature]
-  const transactionFormatter = functionMapping?.transactionFormatter
+    const functions = contractFormatters.functions
+    const functionMapping = functions?.[functionSignature]
+    const transactionFormatter = functionMapping?.transactionFormatter
 
-  if (!functions || !functionMapping || !transactionFormatter) {
-    throw new Error(
-      `No functions found for ContractName - ${contractNameAndAbi.contractName}. FunctionSignature - ${functionSignature}. TransactionFormatter - ${transactionFormatter}. FunctionMapping - ${functionMapping}`
-    )
-  }
-
-  if (!transactionFormatter) {
-    return { info: `**${target} - ${functionSignature} called with :** (${decodedCalldata.join(',')})` }
-  } else {
-    const [contractName, formatterName] = transactionFormatter.split('.')
-    const formattersLookupElement = formattersLookup[contractName]?.[formatterName]
-    if (!formattersLookupElement) {
-      throw new Error(
-        `No formattersLookupElement found for ContractName - ${contractNameAndAbi.contractName}. FunctionSignature - ${functionSignature}. FormatterName - ${formatterName}`
+    if (!functions || !functionMapping || !transactionFormatter) {
+      console.error(
+        `No functions found for ContractName - ${contractNameAndAbi.contractName}. FunctionSignature - ${functionSignature}. TransactionFormatter - ${transactionFormatter}. FunctionMapping - ${functionMapping}`
       )
+      return { info: `**${target}.${functionSignature} called with :** (${decodedCalldata.join(',')})` }
     }
-    const message = await formattersLookupElement(
-      chain,
-      transactionInfo,
-      decodedCalldata.map((data) => data.toString())
-    )
-    return { info: message }
+
+    if (!transactionFormatter) {
+      return { info: `**${target} - ${functionSignature} called with :** (${decodedCalldata.join(',')})` }
+    } else {
+      const [contractName, formatterName] = transactionFormatter.split('.')
+      console.log(`GetFormatter: ContractName - ${contractName} and FormatterName - ${formatterName}`)
+      const formattersLookupElement = formattersLookup[contractName]?.[formatterName]
+
+      const message = !formattersLookupElement
+        ? `${target}.${functionSignature} - called with ${decodedCalldata}`
+        : await formattersLookupElement(
+            chain,
+            transactionInfo,
+            decodedCalldata.map((data) => data.toString())
+          )
+      return { info: message }
+    }
+  } catch (error) {
+    console.error(`Error in decoding transaction ${JSON.stringify(transactionInfo)}`)
+    console.error(error)
+    return { info: `Error in decoding transaction ${transactionInfo.target} - ${transactionInfo.signature} called with ${transactionInfo.calldata}` }
   }
 }
 

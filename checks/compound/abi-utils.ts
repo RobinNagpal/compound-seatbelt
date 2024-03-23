@@ -74,14 +74,16 @@ function delay(ms: number) {
 }
 
 function getExplorerApiUrl(chain: CometChains, address: string) {
-  if (chain === 'mainnet') {
+  if (chain === CometChains.mainnet) {
     return `https://api.etherscan.io/api?module=contract&action=getsourcecode&address=${address}&apikey=${process.env.ETHERSCAN_API_KEY}`
-  } else if (chain === 'polygon') {
+  } else if (chain === CometChains.polygon) {
     return `https://api.polygonscan.com/api?module=contract&action=getsourcecode&address=${address}&apikey=${process.env.POLYGONSCAN_API_KEY}`
-  } else if (chain === 'arbitrum') {
+  } else if (chain === CometChains.arbitrum) {
     return `https://api.arbiscan.io/api?module=contract&action=getsourcecode&address=${address}&apikey=${process.env.ARBITRUMSCAN_API_KEY}`
-  } else if (chain === 'base') {
+  } else if (chain === CometChains.base) {
     return `https://api.basescan.org/api?module=contract&action=getsourcecode&address=${address}&apikey=${process.env.BASESCAN_API_KEY}`
+  } else if (chain === CometChains.scroll) {
+    return `https://api.scrollscan.com/api?module=contract&action=getsourcecode&address=${address}&apikey=${process.env.SCROLL_API_KEY}`
   } else {
     throw new Error('Unknown chain: ' + chain)
   }
@@ -109,8 +111,9 @@ export async function getFunctionFragmentAndDecodedCalldata(proposalId: number, 
       decodedCalldata = iface._decodeParams(fun.inputs, `0x${data}`)
     }
   } catch (e) {
-    console.error(e)
     console.log(`Error decoding function: ${proposalId} target: ${target} signature: ${signature} calldata:${calldata}`)
+    console.log(`ContractName: ${contractNameAndAbi.contractName} chain: ${chain}`)
+    console.error(e)
     throw e
   }
 

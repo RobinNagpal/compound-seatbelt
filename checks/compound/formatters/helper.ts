@@ -1,12 +1,11 @@
 import dotenv from 'dotenv'
 dotenv.config()
 
+import axios from 'axios'
 import { Contract, ethers } from 'ethers'
+import FormData from 'form-data'
 import fs from 'fs'
-import { add, commit, push } from 'isomorphic-git'
-import http from 'isomorphic-git/http/node'
-import mftch, { FETCH_OPT, InvalidStatusCodeError } from 'micro-ftch'
-import path from 'path'
+import mftch from 'micro-ftch'
 import { CometChains, SymbolAndDecimalsLookupData } from '../compound-types'
 import { customProvider } from './../../../utils/clients/ethers'
 import { DISCORD_WEBHOOK_URL } from './../../../utils/constants'
@@ -29,6 +28,8 @@ export function getPlatform(chain: CometChains) {
       return 'arbiscan.io'
     case CometChains.base:
       return 'basescan.org'
+    case CometChains.scroll:
+      return 'scrollscan.com'
   }
 }
 
@@ -238,60 +239,6 @@ export function formatAddressesAndAmounts(addressesList: string[], amountsList: 
   return results.join('\n\n')
 }
 
-export async function postNotificationToDiscord(text: string) {
-  const message = text.length > 2000 ? 'Text length exceeds 2000 characters' : text
-
-  const fetchOptions = <Partial<FETCH_OPT>>{
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    data: JSON.stringify({ content: message }) as unknown as object,
-  }
-  try {
-    const response = await fetchUrl(DISCORD_WEBHOOK_URL, fetchOptions)
-    console.log('Successfully posted summary to Discord.')
-  } catch (error) {
-    if (error instanceof InvalidStatusCodeError && error.statusCode === 204) {
-      console.log('Successfully posted message to Discord.')
-    } else {
-      console.error('Error posting to Discord:', error)
-    }
-  }
-}
-
-export async function commitAndPushToGit(directoryPath: string, proposalNo: string) {
-  const message = `Add pdf report of Proposal # ${proposalNo} to the repository`
-  const author = { name: process.env.GITHUB_USERNAME, email: process.env.GITHUB_EMAIL }
-  const fullDirectoryPath = path.join(process.env.GIT_REPO_PATH!, directoryPath)
-
-  // List all files in the directory
-  const files = fs.readdirSync(fullDirectoryPath)
-
-  for (const file of files) {
-    // Ensure to only add files, not directories
-    const fullPath = path.join(fullDirectoryPath, file)
-    if (fs.statSync(fullPath).isFile()) {
-      // Adjust to use relative path from GIT_REPO_PATH
-      const relativePath = path.relative(process.env.GIT_REPO_PATH!, fullPath)
-      await add({ fs, dir: process.env.GIT_REPO_PATH!, filepath: relativePath })
-    }
-  }
-  await commit({ fs, dir: `${process.env.GIT_REPO_PATH}`, message, author })
-  const pushResult = await push({
-    fs,
-    http,
-    dir: `${process.env.GIT_REPO_PATH}`,
-    remote: 'origin',
-    ref: 'main',
-    onAuth: () => ({ username: process.env.GITHUB_TOKEN }),
-  })
-  if (pushResult.ok) {
-    console.log(`Successfully pushed pdf report of proposal # ${proposalNo} to the repository.`)
-    await postNotificationToDiscord(
-      `Pdf report of **Proposal # ${proposalNo}** has been added to the repository which can be accessed **[here](${process.env.GITHUB_REPO_PATH})**.\n\n`
-    )
-  }
-}
-
 function extractChecksMarkdown(reportMarkdown: string) {
   return reportMarkdown.slice(reportMarkdown.indexOf('## Checks'))
 }
@@ -308,14 +255,35 @@ export async function pushChecksSummaryToDiscord(reportMarkdown: string, proposa
   const maxLength = 2000 - appendix.length - header.length
   let discordPayload = extractChecksMarkdown(reportMarkdown)
 
-  if (discordPayload.length >= 2000) {
-    let checksText = extractTextFromMarkdown(discordPayload)
-    discordPayload = header + (checksText.length < maxLength ? checksText : checksText.slice(0, maxLength) + appendix)
+  await postNotificationToDiscord(`${header} ${discordPayload} ${appendix}`)
+}
+
+export async function postNotificationToDiscord(rawText: string) {
+  const text = rawText.length > 2000 ? extractTextFromMarkdown(rawText) : rawText
+
+  if (text.length <= 2000) {
+    // If text is within the character limit, send as plain text
+    try {
+      await axios.post(DISCORD_WEBHOOK_URL, { content: text })
+      console.log('Successfully sent message to Discord.')
+    } catch (error) {
+      console.error('Error sending message to Discord:', error)
+    }
   } else {
-    discordPayload = header + discordPayload
-    if (discordPayload.length > 2000) {
-      discordPayload = header + discordPayload.slice(0, maxLength) + appendix
+    // If text exceeds the limit, upload as a file
+    const formData = new FormData()
+    formData.append('files[0]', Buffer.from(text, 'utf-8'), 'message.md')
+    formData.append('payload_json', JSON.stringify({ content: 'The message exceeded 2000 characters. Please see the attached file.' }))
+
+    try {
+      await axios.post(DISCORD_WEBHOOK_URL, formData, {
+        headers: {
+          ...formData.getHeaders(),
+        },
+      })
+      console.log('Successfully sent file to Discord.')
+    } catch (error) {
+      console.error('Error sending file to Discord:', error)
     }
   }
-  await postNotificationToDiscord(discordPayload)
 }

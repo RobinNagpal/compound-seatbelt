@@ -1,0 +1,14 @@
+{
+  "0x06efdbff2a14a7c8e15944d1f4a48f9f95f663a4": {
+    "symbol": "USDC",
+    "decimals": "6"
+  },
+  "0x5300000000000000000000000000000000000004": {
+    "symbol": "WETH",
+    "decimals": "18"
+  },
+  "0xf610a9dfb7c89644979b4a0f27063e9e7d7cda32": {
+    "symbol": "wstETH",
+    "decimals": "18"
+  }
+}

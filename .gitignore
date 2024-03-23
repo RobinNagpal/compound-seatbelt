@@ -6,6 +6,7 @@ node_modules
 
 # hardhat
 artifacts/
+reports/
 cache/
 
 # slither

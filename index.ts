@@ -4,6 +4,8 @@
 
 import dotenv from 'dotenv'
 dotenv.config()
+
+import { listFilesInFolder, uploadFileToS3 } from './checks/compound/s3-utils'
 import { BigNumber, constants, Contract } from 'ethers'
 import { DAO_NAME, GOVERNOR_ADDRESS, SIM_NAME } from './utils/constants'
 import { provider } from './utils/clients/ethers'
@@ -20,9 +22,6 @@ import {
   inferGovernorType,
 } from './utils/contracts/governor'
 import { getAddress } from '@ethersproject/address'
-import fs from 'fs'
-import path from 'path'
-import { commitAndPushToGit, postNotificationToDiscord } from './checks/compound/formatters/helper'
 
 /**
  * @notice Simulate governance proposals and run proposal checks against them
@@ -54,7 +53,7 @@ async function main() {
 
     // Fetch all proposal IDs
     governorType = await inferGovernorType(GOVERNOR_ADDRESS)
-    // const proposalIds = await getProposalIds(governorType, GOVERNOR_ADDRESS, latestBlock.number)
+    const allProposalIds = await getProposalIds(governorType, GOVERNOR_ADDRESS, latestBlock.number)
     // const proposalIds: BigNumber[] = [BigNumber.from('213')]
     // const proposalIdsArr = [
     //   214, 213, 212, 211, 210, 209, 208, 207, 206, 205, 204, 203, 202, 201, 200, 199, 198, 197, 196, 195, 194, 193, 192,
@@ -66,7 +65,10 @@ async function main() {
     //
     //   151, 150, 149, 148, 147, 146, 145, 144, 143,
     // ]
-    const proposalIdsArr = [59, 58, 57, 56, 55, 54, 53, 52, 51, 50, 49, 48, 47, 46, 45, 44, 43]
+
+    const files = await listFilesInFolder()
+    console.log('files', files)
+    const proposalIdsArr = [233] // allProposalIds.filter((id) => id.toNumber() > 228)
     const proposalIds = proposalIdsArr.map((id) => BigNumber.from(id))
 
     governor = getGovernor(governorType, GOVERNOR_ADDRESS)
@@ -105,8 +107,7 @@ async function main() {
         proposalId: simProposal.id,
       }
 
-      const pdfDirectory = `./reports/${DAO_NAME}/${config.governorAddress}`
-      const pdfExists = fs.existsSync(path.join(pdfDirectory, `${simProposal.id.toString()}.pdf`))
+      const pdfExists = files.includes(`${simProposal.id.toString()}.pdf`)
 
       if (simProposal.simType !== 'executed' && pdfExists) {
         console.log(`  Skipping simulation for proposal ${simProposal.id} (either not executed or PDF already exists)`)
@@ -169,7 +170,10 @@ async function main() {
       checkResults
     )
 
-    // await commitAndPushToGit(`reports/${config.daoName}/${config.governorAddress}`, proposal.id!.toString())
+    const reportPath = `reports/${config.daoName}/${config.governorAddress}/${proposal.id}`
+    await uploadFileToS3(`${proposal.id}.md`, `${reportPath}.md`)
+    await uploadFileToS3(`${proposal.id}.pdf`, `${reportPath}.pdf`)
+    await uploadFileToS3(`${proposal.id}.html`, `${reportPath}.html`)
   }
   console.log('Done!')
 }
