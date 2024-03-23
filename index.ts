@@ -54,18 +54,6 @@ async function main() {
     // Fetch all proposal IDs
     governorType = await inferGovernorType(GOVERNOR_ADDRESS)
     const allProposalIds = await getProposalIds(governorType, GOVERNOR_ADDRESS, latestBlock.number)
-    // const proposalIds: BigNumber[] = [BigNumber.from('213')]
-    // const proposalIdsArr = [
-    //   214, 213, 212, 211, 210, 209, 208, 207, 206, 205, 204, 203, 202, 201, 200, 199, 198, 197, 196, 195, 194, 193, 192,
-    //   191, 190, 189, 188, 187, 186, 185, 184, 183, 182, 181, 180, 179, 178, 177, 176, 175, 174, 173, 172, 171, 170, 169,
-    // ]
-    // const proposalIdsArr = [
-    //   138, 137, 136, 135, 134, 133, 132, 131, 130, 129, 128, 127, 126, 125, 124, 123, 122, 121, 120, 119, 118, 117, 116,
-    //   115, 114, 113, 112,
-    //
-    //   151, 150, 149, 148, 147, 146, 145, 144, 143,
-    // ]
-
     const files = await listFilesInFolder()
     console.log('files', files)
     const proposalIdsArr = allProposalIds.filter((id) => id.toNumber() > 228)
@@ -107,10 +95,10 @@ async function main() {
         proposalId: simProposal.id,
       }
 
-      const pdfExists = files.includes(`${simProposal.id.toString()}.pdf`)
+      const pdfExists = files.includes(`all-proposals/${simProposal.id.toString()}.pdf`)
 
-      if (simProposal.simType !== 'executed' && pdfExists) {
-        console.log(`  Skipping simulation for proposal ${simProposal.id} (either not executed or PDF already exists)`)
+      if (pdfExists) {
+        console.log(`Skipping simulation for proposal ${simProposal.id}  as PDF already exisis in S3...`)
         continue
       }
 
