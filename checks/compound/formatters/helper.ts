@@ -252,7 +252,6 @@ export async function pushChecksSummaryToDiscord(reportMarkdown: string, proposa
   let header = `# Summary of Compound Checks for proposal # ${proposalNo}\n\n`
   header += `\n\n### ${forumPost}\n\n`
   const appendix = '... \n\n(see report for full text)'
-  const maxLength = 2000 - appendix.length - header.length
   let discordPayload = extractChecksMarkdown(reportMarkdown)
 
   await postNotificationToDiscord(`${header} ${discordPayload} ${appendix}`)
@@ -272,7 +271,7 @@ export async function postNotificationToDiscord(rawText: string) {
   } else {
     // If text exceeds the limit, upload as a file
     const formData = new FormData()
-    formData.append('files[0]', Buffer.from(text, 'utf-8'), 'message.md')
+    formData.append('files[0]', Buffer.from(rawText, 'utf-8'), 'message.md')
     formData.append('payload_json', JSON.stringify({ content: 'The message exceeded 2000 characters. Please see the attached file.' }))
 
     try {

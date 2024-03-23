@@ -10,5 +10,9 @@
   "0xf610a9dfb7c89644979b4a0f27063e9e7d7cda32": {
     "symbol": "wstETH",
     "decimals": "18"
+  },
+  "0x643e160a3c3e2b7eae198f0beb1bfd2441450e86": {
+    "symbol": "COMP",
+    "decimals": "18"
   }
 }

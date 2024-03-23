@@ -1,12 +1,11 @@
 name: Governance Checks
 
 on:
-  schedule:
-    - cron: '0 */2 * * *'
+#  schedule:
+#    - cron: '0 */2 * * *'
   push:
     branches:
       - main
-  workflow_dispatch:
 
 jobs:
   check-proposals:
@@ -15,21 +14,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - DAO_NAME: 'Uniswap'
-            GOVERNOR_ADDRESS: '0x408ED6354d4973f66138C91495F2f2FCbd8724C3'
           - DAO_NAME: 'Compound'
             GOVERNOR_ADDRESS: '0xc0Da02939E1441F497fd74F78cE7Decb17B66529'
-          - DAO_NAME: 'Idle'
-            GOVERNOR_ADDRESS: '0x3D5Fc645320be0A085A32885F078F7121e5E5375'
-          - DAO_NAME: 'Unlock'
-            GOVERNOR_ADDRESS: '0x7757f7f21F5Fa9b1fd168642B79416051cd0BB94'
-          - DAO_NAME: 'ENS'
-            GOVERNOR_ADDRESS: '0x323A76393544d5ecca80cd6ef2A560C6a395b7E3'
-          - DAO_NAME: 'Hop'
-            GOVERNOR_ADDRESS: '0xed8Bdb5895B8B7f9Fdb3C087628FD8410E853D48'
 
     name: Check all live proposals
     runs-on: ubuntu-latest
+    environment: prod
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -77,6 +67,20 @@ jobs:
           TENDERLY_PROJECT_SLUG: ${{ secrets.TENDERLY_PROJECT_SLUG }}
           DAO_NAME: ${{ matrix.DAO_NAME }}
           GOVERNOR_ADDRESS: ${{ matrix.GOVERNOR_ADDRESS }}
+          BASESCAN_API_KEY: ${{ secrets.BASESCAN_API_KEY }}
+          POLYGONSCAN_API_KEY: ${{ secrets.POLYGONSCAN_API_KEY }}
+          ARBITRUMSCAN_API_KEY: ${{ secrets.ARBITRUMSCAN_API_KEY }}
+          SCROLL_API_KEY: ${{ secrets.SCROLL_API_KEY }}
+          RPC_URL_MAINNET: ${{ secrets.RPC_URL_MAINNET }}
+          RPC_URL_POLYGON: ${{ secrets.RPC_URL_POLYGON }}
+          RPC_URL_BASE: ${{ secrets.RPC_URL_BASE }}
+          RPC_URL_ARBITRUM: ${{ secrets.RPC_URL_ARBITRUM }}
+          RPC_URL_SCROLL: ${{ secrets.RPC_URL_SCROLL }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+
 
       - name: Upload artifacts
         # We always upload artifacts, even if certain proposal sims/checks failed. This is because
