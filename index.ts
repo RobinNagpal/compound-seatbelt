@@ -27,6 +27,7 @@ import { getAddress } from '@ethersproject/address'
  * @notice Simulate governance proposals and run proposal checks against them
  */
 async function main() {
+  const s3ReportsFolder = process.env.AWS_BUCKET_BASE_PATH || 'all-proposals'
   // --- Run simulations ---
   // Prepare array to store all simulation outputs
   const simOutputs: SimulationData[] = []
@@ -54,7 +55,7 @@ async function main() {
     // Fetch all proposal IDs
     governorType = await inferGovernorType(GOVERNOR_ADDRESS)
     const allProposalIds = await getProposalIds(governorType, GOVERNOR_ADDRESS, latestBlock.number)
-    const files = await listFilesInFolder()
+    const files = await listFilesInFolder(s3ReportsFolder)
     console.log('files', files)
     const proposalIdsArr = allProposalIds.filter((id) => id.toNumber() > 228)
     const proposalIds = proposalIdsArr.map((id) => BigNumber.from(id))
@@ -95,7 +96,7 @@ async function main() {
         proposalId: simProposal.id,
       }
 
-      const pdfExists = files.includes(`all-proposals/${simProposal.id.toString()}.pdf`)
+      const pdfExists = files.includes(`${s3ReportsFolder}/${simProposal.id.toString()}.pdf`)
 
       if (pdfExists) {
         console.log(`Skipping simulation for proposal ${simProposal.id}  as PDF already exisis in S3...`)
@@ -159,9 +160,9 @@ async function main() {
     )
 
     const reportPath = `reports/${config.daoName}/${config.governorAddress}/${proposal.id}`
-    await uploadFileToS3(`${proposal.id}.md`, `${reportPath}.md`)
-    await uploadFileToS3(`${proposal.id}.pdf`, `${reportPath}.pdf`)
-    await uploadFileToS3(`${proposal.id}.html`, `${reportPath}.html`)
+    await uploadFileToS3(`${s3ReportsFolder}/${proposal.id}.md`, `${reportPath}.md`)
+    await uploadFileToS3(`${s3ReportsFolder}/${proposal.id}.pdf`, `${reportPath}.pdf`)
+    await uploadFileToS3(`${s3ReportsFolder}/${proposal.id}.html`, `${reportPath}.html`)
   }
   console.log('Done!')
 }

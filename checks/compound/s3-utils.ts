@@ -7,11 +7,10 @@ const s3Client = new S3Client({ region: 'us-east-1' })
 
 // Specify the name of your bucket and the prefix (folder path)
 const bucketName = 'compound-governance-proposals'
-const folderPath = 'all-proposals' // Make sure to end with a slash
 
 // Method to list all files in the specified folder
 // This function lists all files in a specified folder
-export async function listFilesInFolder(): Promise<string[]> {
+export async function listFilesInFolder(folderPath: string): Promise<string[]> {
   const files: string[] = []
 
   let isTruncated = true
@@ -52,7 +51,7 @@ export async function uploadFileToS3(key: string, filePath: string): Promise<voi
       client: s3Client,
       params: {
         Bucket: bucketName,
-        Key: `${folderPath}/${key}`,
+        Key: key,
         Body: fileStream,
       },
     })

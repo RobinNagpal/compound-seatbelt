@@ -30,19 +30,14 @@ interface AssetConfig {
 
 async function getTextForChangeInInterestRate(
   chain: CometChains,
+  transaction: ExecuteTransactionInfo,
   decodedParams: string[],
   getInterestRateFunction: (contract: Contract) => Promise<BigNumber>,
   interestRateName: string,
-  platform: string,
   thresholds: { warningThreshold: number; criticalThreshold: number }
 ) {
   const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
   const currentCometInstance = new Contract(decodedParams[0], abi, customProvider(chain))
-
-  const baseToken = await currentCometInstance.callStatic.baseToken()
-  const { abi: baseTokenAbi } = await getContractNameAndAbiFromFile(chain, baseToken)
-  const baseTokenInstance = new Contract(baseToken, baseTokenAbi, customProvider(chain))
-  const { symbol } = await getContractSymbolAndDecimalsFromFile(baseToken, baseTokenInstance, chain)
 
   const prevInterestRate = annualizeFn((await getInterestRateFunction(currentCometInstance)).toString())
   const previousRateInPercent = prevInterestRate
@@ -50,9 +45,14 @@ async function getTextForChangeInInterestRate(
 
   const changeInRate = subtractFn(currentRateInPercent, previousRateInPercent)
 
-  return `Set ${interestRateName} of **[${symbol}](https://${platform}/address/${baseToken})** from ${addCommas(previousRateInPercent)} to ${addCommas(
-    currentRateInPercent
-  )} ${getChangeTextFn(changeInRate)}`
+  const functionDesc = await functionDescription({
+    sign: '',
+    chain,
+    functionName: interestRateName,
+    targetAddress: transaction.target,
+    cometAddress: decodedParams[0],
+  })
+  return `${functionDesc} from ${addCommas(previousRateInPercent)} to ${addCommas(currentRateInPercent)} ${getChangeTextFn(changeInRate)}`
 }
 
 async function getTextForKinkChange(
@@ -61,18 +61,10 @@ async function getTextForKinkChange(
   decodedParams: string[],
   getFunction: (contract: Contract) => Promise<BigNumber>,
   functionName: string,
-  platform: string,
   thresholds: { warningThreshold: number; criticalThreshold: number }
 ) {
-  const { contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
-
   const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
   const currentCometInstance = new Contract(decodedParams[0], abi, customProvider(chain))
-
-  const baseToken = await currentCometInstance.callStatic.baseToken()
-  const { abi: baseTokenAbi } = await getContractNameAndAbiFromFile(chain, baseToken)
-  const baseTokenInstance = new Contract(baseToken, baseTokenAbi, customProvider(chain))
-  const { symbol } = await getContractSymbolAndDecimalsFromFile(baseToken, baseTokenInstance, chain)
 
   const prevValue = percentageFn(defactorFn((await getFunction(currentCometInstance)).toString()))
   const newValue = percentageFn(defactorFn(decodedParams[1]))
@@ -81,9 +73,15 @@ async function getTextForKinkChange(
 
   const sign = getCriticalitySign(changeInValues, thresholds)
 
-  return `${sign} Set ${functionName} of **[${symbol}](https://${platform}/address/${baseToken})** via **[${contractName}](https://${platform}/address/${
-    transaction.target
-  }})** from ${addCommas(prevValue)}% to ${addCommas(newValue)}% ${getChangeTextFn(changeInValues, true)}`
+  const functionDesc = await functionDescription({
+    sign: sign,
+    chain,
+    functionName: functionName,
+    targetAddress: transaction.target,
+    cometAddress: decodedParams[0],
+  })
+
+  return `${functionDesc} from ${addCommas(prevValue)}% to ${addCommas(newValue)}% ${getChangeTextFn(changeInValues, true)}`
 }
 
 async function getTextForSpeedChange(
@@ -92,19 +90,11 @@ async function getTextForSpeedChange(
   decodedParams: string[],
   getFunction: (contract: Contract) => Promise<BigNumber>,
   functionName: string,
-  platform: string,
   speedName: string,
   threshold: { warningThreshold: number; criticalThreshold: number }
 ) {
-  const { contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
-
   const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
   const currentCometInstance = new Contract(decodedParams[0], abi, customProvider(chain))
-
-  const baseToken = await currentCometInstance.callStatic.baseToken()
-  const { abi: baseTokenAbi } = await getContractNameAndAbiFromFile(chain, baseToken)
-  const baseTokenInstance = new Contract(baseToken, baseTokenAbi, customProvider(chain))
-  const { symbol } = await getContractSymbolAndDecimalsFromFile(baseToken, baseTokenInstance, chain)
 
   const prevSpeedValue = (await getFunction(currentCometInstance)).toString()
   const newSpeedValue = decodedParams[1]
@@ -116,9 +106,15 @@ async function getTextForSpeedChange(
 
   const sign = getCriticalitySign(changeInRewardValues, threshold)
 
-  return `${sign} Set ${functionName} of **[${symbol}](https://${platform}/address/${baseToken}) [${contractName}](https://${platform}/address/${
-    transaction.target
-  })** from ${addCommas(prevSpeedValue)} to ${addCommas(newSpeedValue)} ${getChangeTextFn(
+  const functionDesc = await functionDescription({
+    sign: sign,
+    chain,
+    functionName: functionName,
+    targetAddress: transaction.target,
+    cometAddress: decodedParams[0],
+  })
+
+  return `${functionDesc} from ${addCommas(prevSpeedValue)} to ${addCommas(newSpeedValue)} ${getChangeTextFn(
     changeInSpeedValues
   )}. Hence changing Daily ${speedName} rewards from ${addCommas(prevRewardValue)} to ${addCommas(newRewardValue)} ${getChangeTextFn(changeInRewardValues)}`
 }
@@ -131,10 +127,10 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     }
     return getTextForChangeInInterestRate(
       chain,
+      transaction,
       decodedParams,
       async (contract) => await contract.callStatic.borrowPerSecondInterestRateBase(),
       'BorrowPerYearInterestRateBase',
-      getPlatform(chain),
       thresholds
     )
   },
@@ -145,10 +141,10 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     }
     return getTextForChangeInInterestRate(
       chain,
+      transaction,
       decodedParams,
       async (contract) => await contract.callStatic.borrowPerSecondInterestRateSlopeLow(),
       'BorrowPerYearInterestRateSlopeLow',
-      getPlatform(chain),
       thresholds
     )
   },
@@ -159,10 +155,10 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     }
     return getTextForChangeInInterestRate(
       chain,
+      transaction,
       decodedParams,
       async (contract) => await contract.callStatic.borrowPerSecondInterestRateSlopeHigh(),
       'BorrowPerYearInterestRateSlopeHigh',
-      getPlatform(chain),
       thresholds
     )
   },
@@ -173,10 +169,10 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     }
     return getTextForChangeInInterestRate(
       chain,
+      transaction,
       decodedParams,
       async (contract) => await contract.callStatic.supplyPerSecondInterestRateSlopeLow(),
       'SupplyPerYearInterestRateSlopeLow',
-      getPlatform(chain),
       thresholds
     )
   },
@@ -187,10 +183,10 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     }
     return getTextForChangeInInterestRate(
       chain,
+      transaction,
       decodedParams,
       async (contract) => await contract.callStatic.supplyPerSecondInterestRateSlopeHigh(),
       'SupplyPerYearInterestRateSlopeHigh',
-      getPlatform(chain),
       thresholds
     )
   },
@@ -205,7 +201,6 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       decodedParams,
       async (contract) => await contract.callStatic.baseTrackingBorrowSpeed(),
       'BaseTrackingBorrowSpeed',
-      getPlatform(chain),
       'Borrow',
       thresholds
     )
@@ -221,7 +216,6 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       decodedParams,
       async (contract) => await contract.callStatic.baseTrackingSupplySpeed(),
       'BaseTrackingSupplySpeed',
-      getPlatform(chain),
       'Supply',
       thresholds
     )
@@ -231,34 +225,17 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       warningThreshold: changeThresholds.V3.borrowKinkWarningThreshold,
       criticalThreshold: changeThresholds.V3.borrowKinkCriticalThreshold,
     }
-    return getTextForKinkChange(
-      chain,
-      transaction,
-      decodedParams,
-      async (contract) => await contract.callStatic.borrowKink(),
-      'BorrowKink',
-      getPlatform(chain),
-      thresholds
-    )
+    return getTextForKinkChange(chain, transaction, decodedParams, async (contract) => await contract.callStatic.borrowKink(), 'BorrowKink', thresholds)
   },
   'setSupplyKink(address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const thresholds = {
       warningThreshold: changeThresholds.V3.supplyKinkWarningThreshold,
       criticalThreshold: changeThresholds.V3.supplyKinkCriticalThreshold,
     }
-    return getTextForKinkChange(
-      chain,
-      transaction,
-      decodedParams,
-      async (contract) => await contract.callStatic.supplyKink(),
-      'SupplyKink',
-      getPlatform(chain),
-      thresholds
-    )
+    return getTextForKinkChange(chain, transaction, decodedParams, async (contract) => await contract.callStatic.supplyKink(), 'SupplyKink', thresholds)
   },
   'updateAssetLiquidationFactor(address,address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = getPlatform(chain)
-    const { contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
 
     const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[1])
     const tokenInstance = new Contract(decodedParams[1], abi, customProvider(chain))
@@ -271,11 +248,6 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
 
     const prevLiquidationFactor = percentageFn(defactorFn(assetInfo.liquidationFactor.toString()))
     const newLiquidationFactor = percentageFn(defactorFn(decodedParams[2]))
-    const baseToken = await currentBaseTokenInstance.callStatic.baseToken()
-
-    const { abi: baseTokenAbi } = await getContractNameAndAbiFromFile(chain, baseToken)
-    const baseTokenInstance = new Contract(baseToken, baseTokenAbi, customProvider(chain))
-    const { symbol: baseTokenSymbol } = await getContractSymbolAndDecimalsFromFile(baseToken, baseTokenInstance, chain)
 
     const changeInLiquidationFactor = subtractFn(newLiquidationFactor, prevLiquidationFactor)
 
@@ -285,15 +257,21 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     }
     const sign = getCriticalitySign(changeInLiquidationFactor, thresholds)
 
-    return `${sign} Set liquidation factor for **[${tokenSymbol}](https://${platform}/address/${
-      decodedParams[1]
-    })** on **[${baseTokenSymbol}](https://${platform}/address/${baseToken})** via **[${contractName}](https://${platform}/address/${
-      transaction.target
-    })** from ${prevLiquidationFactor}% to ${newLiquidationFactor}% ${getChangeTextFn(changeInLiquidationFactor, true)}`
+    const tokenInfo = `**[${tokenSymbol}](https://${platform}/address/${decodedParams[1]})**`
+
+    const functionDesc = await functionDescription({
+      sign: sign,
+      chain,
+      functionName: 'LiquidationFactor',
+      targetAddress: transaction.target,
+      cometAddress: decodedParams[0],
+    })
+
+    const functionDescWithToken = `${functionDesc} for token - ${tokenInfo}`
+    return `${functionDescWithToken} from ${prevLiquidationFactor}% to ${newLiquidationFactor}% ${getChangeTextFn(changeInLiquidationFactor, true)}`
   },
   'updateAssetSupplyCap(address,address,uint128)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = getPlatform(chain)
-    const { contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
 
     const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[1])
     const tokenInstance = new Contract(decodedParams[1], abi, customProvider(chain))
@@ -304,11 +282,6 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     const assetInfo = await currentBaseTokenInstance.callStatic.getAssetInfoByAddress(decodedParams[1])
 
     const prevSupplyCap = defactorFn(assetInfo.supplyCap.toString(), `${decimals}`)
-    const baseToken = await currentBaseTokenInstance.callStatic.baseToken()
-
-    const { abi: baseTokenAbi } = await getContractNameAndAbiFromFile(chain, baseToken)
-    const baseTokenInstance = new Contract(baseToken, baseTokenAbi, customProvider(chain))
-    const { symbol: baseTokenSymbol } = await getContractSymbolAndDecimalsFromFile(baseToken, baseTokenInstance, chain)
 
     const newSupplyCap = defactorFn(decodedParams[2], `${decimals}`)
 
@@ -320,22 +293,28 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     }
     const sign = getCriticalitySign(changeInSupplyCap, thresholds)
 
-    return `${sign} Set supply cap for **[${tokenSymbol}](https://${platform}/address/${
-      decodedParams[1]
-    })** on **[${baseTokenSymbol}](https://${platform}/address/${baseToken})** via **[${contractName}](https://${platform}/address/${
-      transaction.target
-    })** from ${addCommas(prevSupplyCap)} to ${addCommas(newSupplyCap)} ${getChangeTextFn(changeInSupplyCap)}`
+    const tokenInfo = `**[${tokenSymbol}](https://${platform}/address/${decodedParams[1]})**`
+
+    const functionDesc = await functionDescription({
+      sign: sign,
+      chain,
+      functionName: 'SupplyCap',
+      targetAddress: transaction.target,
+      cometAddress: decodedParams[0],
+    })
+
+    const functionDescWithToken = `${functionDesc} for token - ${tokenInfo}`
+
+    return `${functionDescWithToken} from ${addCommas(prevSupplyCap)} to ${addCommas(newSupplyCap)} ${getChangeTextFn(changeInSupplyCap)}`
   },
   'setBaseBorrowMin(address,uint104)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    const platform = getPlatform(chain)
-
     const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
     const currentInstance = new Contract(decodedParams[0], abi, customProvider(chain))
 
     const baseToken = await currentInstance.callStatic.baseToken()
     const { abi: baseTokenAbi } = await getContractNameAndAbiFromFile(chain, baseToken)
     const baseTokenInstance = new Contract(baseToken, baseTokenAbi, customProvider(chain))
-    const { symbol, decimals } = await getContractSymbolAndDecimalsFromFile(baseToken, baseTokenInstance, chain)
+    const { decimals } = await getContractSymbolAndDecimalsFromFile(baseToken, baseTokenInstance, chain)
 
     const baseBorrowMin = (await currentInstance.callStatic.baseBorrowMin()).toString()
     const prevBaseBorrowMin = defactorFn(baseBorrowMin, `${decimals}`)
@@ -349,9 +328,14 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     }
     const sign = getCriticalitySign(changeInBaseBorrowMin, thresholds)
 
-    return `${sign} Set BaseBorrowMin of **[${symbol}](https://${platform}/address/${decodedParams[0]})** from ${addCommas(prevBaseBorrowMin)} to ${addCommas(
-      newBaseBorrowMin
-    )} ${getChangeTextFn(changeInBaseBorrowMin)}`
+    const functionDesc = await functionDescription({
+      sign: sign,
+      chain,
+      functionName: 'BaseBorrowMin',
+      targetAddress: transaction.target,
+      cometAddress: decodedParams[0],
+    })
+    return `${functionDesc} from ${addCommas(prevBaseBorrowMin)} to ${addCommas(newBaseBorrowMin)} ${getChangeTextFn(changeInBaseBorrowMin)}`
   },
   'addAsset(address,tuple)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = getPlatform(chain)
@@ -549,4 +533,31 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
 
     return `${sign} Set StoreFrontPriceFactor for ${tokenNameWithLink} from ${priceFactorOld}% to ${priceFactorNew}% ${getChangeTextFn(changeInFactor, true)}`
   },
+}
+
+async function functionDescription({
+  sign,
+  chain,
+  functionName,
+  targetAddress,
+  cometAddress,
+}: {
+  sign: string
+  chain: CometChains
+  functionName: string
+  targetAddress: string
+  cometAddress: string
+}) {
+  const { abi } = await getContractNameAndAbiFromFile(chain, cometAddress)
+  const currentCometInstance = new Contract(cometAddress, abi, customProvider(chain))
+
+  const platform = getPlatform(chain)
+  const baseTokenAddress = await currentCometInstance.callStatic.baseToken()
+  const { abi: baseTokenAbi } = await getContractNameAndAbiFromFile(chain, baseTokenAddress)
+  const baseTokenInstance = new Contract(baseTokenAddress, baseTokenAbi, customProvider(chain))
+  const { symbol: marketSymbol } = await getContractSymbolAndDecimalsFromFile(baseTokenAddress, baseTokenInstance, chain)
+
+  const { contractName: targetName } = await getContractNameAndAbiFromFile(chain, targetAddress)
+
+  return `${sign} Set ${functionName} of **[${marketSymbol}](https://${platform}/address/${baseTokenAddress})** via **[${targetName}](https://${platform}/address/${targetAddress}})**`
 }
