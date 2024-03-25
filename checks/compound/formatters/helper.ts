@@ -259,10 +259,11 @@ export async function pushChecksSummaryToDiscord(reportMarkdown: string, proposa
 }
 
 export async function pushChecksSummaryToDiscordAsEmbeds(checkResult: CheckResult, proposalNo: string) {
+  const s3ReportsFolder = process.env.AWS_BUCKET_BASE_PATH || 'all-proposals'
   await axios.post(DISCORD_WEBHOOK_URL, {
     content: `
     ## Summary of Compound Checks - [${proposalNo}](https://compound.finance/governance/proposals/${proposalNo})
-    [Full Report](https://compound-governance-proposals.s3.amazonaws.com/all-proposals/${proposalNo}.pdf)
+    [Full Report](https://compound-governance-proposals.s3.amazonaws.com/${s3ReportsFolder}/${proposalNo}.pdf)
     `,
     embeds: checkResult.info.map((m) => ({
       description: m,
