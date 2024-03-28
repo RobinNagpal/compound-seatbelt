@@ -1,6 +1,6 @@
 import { getContractNameAndAbiFromFile } from '../abi-utils'
 import { CometChains, ExecuteTransactionInfo, TransactionFormatter } from '../compound-types'
-import { addCommas, getContractSymbolAndDecimalsFromFile, getPlatform } from './helper'
+import { addCommas, addressFormatter, getContractNameWithLink, getContractSymbolAndDecimalsFromFile, getPlatform } from './helper'
 import { customProvider } from './../../../utils/clients/ethers'
 import { defactorFn } from './../../../utils/roundingUtils'
 import { hexStripZeros } from '@ethersproject/bytes'
@@ -8,9 +8,7 @@ import { Contract } from 'ethers'
 
 export const tokenMessengerFormatters: { [functionName: string]: TransactionFormatter } = {
   'depositForBurn(uint256,uint32,bytes32,address)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    const platform = getPlatform(chain)
-
-    const { contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
+    const contractNameWithLink = await getContractNameWithLink(transaction.target, chain)
 
     const burnContractAddress = decodedParams[3]
     const { abi } = await getContractNameAndAbiFromFile(chain, burnContractAddress)
@@ -21,8 +19,9 @@ export const tokenMessengerFormatters: { [functionName: string]: TransactionForm
 
     const amount = defactorFn(decodedParams[0], `${decimals}`)
 
-    return `Set DepositforBurn of ${contractName} for the Burn contract **[${tokenSymbol}](https://${platform}/address/${burnContractAddress})** with amount ${addCommas(
-      amount
-    )}, destination domain ${decodedParams[1]} and the Mint recipient **${normalized}**`
+    const functionDesc = `Set DepositforBurn of ${contractNameWithLink} for the Burn contract **${addressFormatter(burnContractAddress, chain, tokenSymbol)}**`
+    const changeParameters = `with amount ${addCommas(amount)}, destination domain ${decodedParams[1]} and the Mint recipient **${normalized}**`
+
+    return `${functionDesc} ${changeParameters}`
   },
 }
