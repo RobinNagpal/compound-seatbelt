@@ -1,46 +1,42 @@
 import { Contract } from 'ethers'
 import { getContractNameAndAbiFromFile } from '../abi-utils'
 import { CometChains, ExecuteTransactionInfo, TransactionFormatter } from './../compound-types'
-import { addCommas, formatCoinsAndAmounts, getChangeTextFn, getPlatform, getRecipientNameWithLink } from './helper'
+import { addCommas, addressFormatter, getChangeTextFn, getPlatform, getRecipientNameWithLink, tab } from './helper'
 import { customProvider } from '../../../utils/clients/ethers'
 import { defactorFn, subtractFn } from './../../../utils/roundingUtils'
 
 export const governorBravoFormatters: { [functionName: string]: TransactionFormatter } = {
   '_setProposalThreshold(uint256)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    const platform = getPlatform(chain)
-
     const governanceAddress = transaction.target
     const { abi } = await getContractNameAndAbiFromFile(chain, governanceAddress)
     const governanceInstance = new Contract(governanceAddress, abi, customProvider(chain))
 
     const name = await governanceInstance.callStatic.name()
 
-    const prevThreshold = defactorFn((await governanceInstance.callStatic.proposalThreshold()).toString())
-    const newThreshold = defactorFn(decodedParams[0])
+    const prevThresholdRaw = (await governanceInstance.callStatic.proposalThreshold()).toString()
+    const prevThreshold = defactorFn(prevThresholdRaw)
+    const newThresholdRaw = decodedParams[0]
+    const newThreshold = defactorFn(newThresholdRaw)
 
     const changeInThreshold = subtractFn(newThreshold, prevThreshold)
 
-    return `Set proposal threshold of **[${name}](https://${platform}/address/${transaction.target})** from ${addCommas(prevThreshold)} to ${addCommas(
-      newThreshold
-    )} ${getChangeTextFn(changeInThreshold)}`
+    const functionDesc = `Set proposal threshold of **${addressFormatter(transaction.target, chain, name)}**`
+    const normalizedChanges = `Update from ${addCommas(prevThreshold)} to ${addCommas(newThreshold)} ${getChangeTextFn(changeInThreshold)}`
+    const rawChanges = `Update from ${prevThresholdRaw} to ${newThresholdRaw}`
+
+    return `${functionDesc}.\n\n${tab}**Changes:** ${normalizedChanges}\n\n${tab}**Raw Changes:** ${rawChanges}`
   },
   '_setWhitelistGuardian(address)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    const platform = getPlatform(chain)
-
     const governanceAddress = transaction.target
     const { abi } = await getContractNameAndAbiFromFile(chain, governanceAddress)
     const governanceInstance = new Contract(governanceAddress, abi, customProvider(chain))
 
     const name = await governanceInstance.callStatic.name()
+    const guardianLink = addressFormatter(governanceAddress, chain, name)
 
-    return `Set the Whitelist Guardian of **[${name}](https://${platform}/address/${governanceAddress})** to ${await getRecipientNameWithLink(
-      chain,
-      decodedParams[0]
-    )}.`
+    return `Set the Whitelist Guardian of **${guardianLink}** to ${await getRecipientNameWithLink(chain, decodedParams[0])}.`
   },
   '_setVotingDelay(uint256)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    const platform = getPlatform(chain)
-
     const governanceAddress = transaction.target
     const { abi } = await getContractNameAndAbiFromFile(chain, governanceAddress)
     const governanceInstance = new Contract(governanceAddress, abi, customProvider(chain))
@@ -49,15 +45,9 @@ export const governorBravoFormatters: { [functionName: string]: TransactionForma
     const prevVotingDelay = (await governanceInstance.callStatic.votingDelay()).toString()
     const newVotingDelay = decodedParams[0]
 
-    const changeInVotingDelay = subtractFn(newVotingDelay, prevVotingDelay)
-
-    return `Voting Delay (number of Ethereum blocks to wait before voting on a proposal may begin) of **[${name}](https://${platform}/address/${governanceAddress})** is changed from ${addCommas(
-      prevVotingDelay
-    )} blocks to ${addCommas(newVotingDelay)} blocks ${getChangeTextFn(changeInVotingDelay)}`
+    return `${getVotingChangeText('Delay', governanceAddress, chain, name, prevVotingDelay, newVotingDelay)}`
   },
   '_setVotingPeriod(uint256)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    const platform = getPlatform(chain)
-
     const governanceAddress = transaction.target
     const { abi } = await getContractNameAndAbiFromFile(chain, governanceAddress)
     const governanceInstance = new Contract(governanceAddress, abi, customProvider(chain))
@@ -66,10 +56,16 @@ export const governorBravoFormatters: { [functionName: string]: TransactionForma
     const prevVotingPeriod = (await governanceInstance.callStatic.votingPeriod()).toString()
     const newVotingPeriod = decodedParams[0]
 
-    const changeInVotingPeriod = subtractFn(newVotingPeriod, prevVotingPeriod)
-
-    return `The Voting Period (duration of voting on a proposal in terms of Ethereum blocks) of **[${name}](https://${platform}/address/${governanceAddress})** is changed from ${addCommas(
-      prevVotingPeriod
-    )} blocks to ${addCommas(newVotingPeriod)} blocks ${getChangeTextFn(changeInVotingPeriod)}`
+    return `${getVotingChangeText('Period', governanceAddress, chain, name, prevVotingPeriod, newVotingPeriod)}`
   },
+}
+
+function getVotingChangeText(type: string, governanceAddress: string, chain: CometChains, name: string, prevVoting: string, newVoting: string) {
+  const changeInVoting = subtractFn(newVoting, prevVoting)
+
+  const functionDesc = `Set Voting ${type} of **${addressFormatter(governanceAddress, chain, name)}**`
+  const normalizedChanges = `Update from ${addCommas(prevVoting)} blocks to ${addCommas(newVoting)} blocks ${getChangeTextFn(changeInVoting)}`
+  const rawChanges = `Update from ${prevVoting} to ${newVoting}`
+
+  return `${functionDesc}.\n\n${tab}**Changes:** ${normalizedChanges}\n\n${tab}**Raw Changes:** ${rawChanges}`
 }
