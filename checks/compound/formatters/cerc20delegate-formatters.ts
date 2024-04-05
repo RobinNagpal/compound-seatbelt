@@ -29,7 +29,7 @@ export const cerc20DelegateFormatters: { [functionName: string]: TransactionForm
       return `${functionDesc}.\n\n${tab}**Changes:**${normalizedChanges}\n\n${tab}**Raw Changes:**${rawChanges}`
     }
 
-    return `Set reserve factor for ${tokenNameWithLink} to ${newReservePercentage}%`
+    return `Set reserve factor for ${tokenNameWithLink}\n\n${tab}  **Changes:** ${newReservePercentage}%\n\n${tab}  **Raw Changes: ${newReserve}**`
   },
 
   '_reduceReserves(uint256)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
@@ -46,15 +46,17 @@ export const cerc20DelegateFormatters: { [functionName: string]: TransactionForm
     const { symbol: assetSymbol, decimals: assetDecimals } = await getContractSymbolAndDecimalsFromFile(underlyingAssetAddress, assetInstance, chain)
 
     const totalReservesFormatted = defactorFn(totalReserves, `${cTokenDecimals}`)
-    const reduceValue = defactorFn(decodedParams[0], `${assetDecimals}`)
+    const reduceValueRaw = decodedParams[0]
+    const reduceValue = defactorFn(reduceValueRaw, `${assetDecimals}`)
 
     const totalReservesNew = subtractFn(totalReservesFormatted, reduceValue)
 
-    const reducedReserves = `**${addCommas(reduceValue)} ${addressFormatter(underlyingAssetAddress, chain, assetSymbol)}**`
-    const functionDesc = `Reduce reserves of **${addressFormatter(cTokenAddress, chain, cTokenSymbol)}** by ${reducedReserves}`
-    const remainingReserves = `Remaining total reserves would be ${addCommas(totalReservesNew)}`
+    const functionDesc = `Reduce reserves of **${addressFormatter(cTokenAddress, chain, cTokenSymbol)}**`
+    const reducedReserves = `${addCommas(reduceValue)} ${addressFormatter(underlyingAssetAddress, chain, assetSymbol)}`
+    const normalizedChanges = `${reducedReserves}. Remaining total reserves would be ${addCommas(totalReservesNew)}`
+    const rawChanges = `${reduceValueRaw}`
 
-    return `${functionDesc}. ${remainingReserves}.`
+    return `${functionDesc}\n\n${tab}  **Changes:** ${normalizedChanges}\n\n${tab}  **Raw Changes:** ${rawChanges}`
   },
   '_setInterestRateModel(address)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const coinLink = await getFormattedTokenNameWithLink(chain, transaction.target)
@@ -77,9 +79,13 @@ export const cerc20DelegateFormatters: { [functionName: string]: TransactionForm
     const cTokens = defactorFn(decodedParams[0], `${cTokenDecimals}`)
     const underlyingAssetTokens = defactorFn(decodedParams[0], `${assetDecimals}`)
 
-    const functionDesc = `Redeem **${addCommas(cTokens)} ${addressFormatter(transaction.target, chain, cTokenSymbol)}** cTokens`
     const redeemInfo = `**${addCommas(underlyingAssetTokens)} ${addressFormatter(underlyingAssetAddress, chain, assetSymbol)}**`
+    const normalizedChanges = `Redeem **${addCommas(cTokens)} ${addressFormatter(
+      transaction.target,
+      chain,
+      cTokenSymbol
+    )}** cTokens in exchange for ${redeemInfo}`
 
-    return `${functionDesc} in exchange for ${redeemInfo}.`
+    return `Redeem tokens\n\n${tab}**Changes:**${normalizedChanges} \n\n${tab}**Raw Changes:** Redeem ${decodedParams[0]} cTokens`
   },
 }
