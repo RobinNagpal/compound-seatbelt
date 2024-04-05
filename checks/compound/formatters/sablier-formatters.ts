@@ -6,8 +6,8 @@ import {
   formatTimestamp,
   getContractNameWithLink,
   getContractSymbolAndDecimalsFromFile,
-  getPlatform,
   getRecipientNameWithLink,
+  tab,
 } from './helper'
 import { customProvider } from './../../../utils/clients/ethers'
 import { defactorFn } from './../../../utils/roundingUtils'
@@ -22,7 +22,8 @@ export const sablierFormatters: { [functionName: string]: TransactionFormatter }
     const tokenInstance = new Contract(tokenAddress, tokenAbi, customProvider(chain))
     const { symbol: tokenSymbol, decimals: tokenDecimals } = await getContractSymbolAndDecimalsFromFile(tokenAddress, tokenInstance, chain)
 
-    const amount = defactorFn(decodedParams[1], `${tokenDecimals}`)
+    const amountRaw = decodedParams[1]
+    const amount = defactorFn(amountRaw, `${tokenDecimals}`)
 
     const recipientWithLink = await getRecipientNameWithLink(chain, recipientAddress)
 
@@ -30,6 +31,6 @@ export const sablierFormatters: { [functionName: string]: TransactionFormatter }
     const functionDesc = `Create a stream on ${senderContractNameWithLink} to transfer ${tokensWithLink} to ${recipientWithLink}`
     const streamingInfo = `The stream will start at ${formatTimestamp(decodedParams[3])} and end at ${formatTimestamp(decodedParams[4])}.`
 
-    return `🛑 ${functionDesc}. ${streamingInfo}`
+    return `🛑 ${functionDesc}. ${streamingInfo}\n\n${tab}**Raw Changes:** Transfer ${amountRaw} to ${recipientAddress}`
   },
 }
