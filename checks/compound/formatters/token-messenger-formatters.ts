@@ -17,11 +17,13 @@ export const tokenMessengerFormatters: { [functionName: string]: TransactionForm
 
     const normalized = hexStripZeros(decodedParams[2])
 
-    const amount = defactorFn(decodedParams[0], `${decimals}`)
+    const amountRaw = decodedParams[0]
+    const amount = defactorFn(amountRaw, `${decimals}`)
 
     const functionDesc = `Set DepositforBurn of ${contractNameWithLink} for the Burn contract **${addressFormatter(burnContractAddress, chain, tokenSymbol)}**`
     const changeParameters = `with amount ${addCommas(amount)}, destination domain ${decodedParams[1]} and the Mint recipient **${normalized}**`
+    const rawChanges = `with amount ${amountRaw}, destination domain ${decodedParams[1]}, Mint recipient ${decodedParams[2]}`
 
-    return `${functionDesc} ${changeParameters}`
+    return `${functionDesc} ${changeParameters}\n\n**Raw Changes:** ${rawChanges}`
   },
 }
