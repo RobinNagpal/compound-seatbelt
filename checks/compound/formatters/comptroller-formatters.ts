@@ -121,10 +121,10 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
       const normalizedChanges = `${prevValuePercentage}% to ${newValuePercentage}% ${getChangeTextFn(changeInFactor, true)}`
       const rawChanges = `Update from ${prevValueRaw} to ${newValueRaw}`
 
-      return `${sign} Set **${targetTokenLink}** collateral factor\n\n${tab}  Changes: ${normalizedChanges}\n\n${tab}  Raw Changes: ${rawChanges}`
+      return `${sign} Set **${targetTokenLink}** collateral factor\n\n${tab}  **Changes:** ${normalizedChanges}\n\n${tab}  **Raw Changes:** ${rawChanges}`
     }
 
-    return `Set **${targetToken}** collateral factor to ${newValuePercentage}%`
+    return `Set **${targetToken}** collateral factor\n\n${tab}  **Changes:** ${newValuePercentage}%\n\n${tab}  **Raw Changes:** ${newValueRaw}`
   },
   '_setMarketBorrowCaps(address[],uint256[])': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     if (decodedParams.length === 0 || decodedParams.some((param) => param === '')) {
@@ -176,7 +176,7 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
       const normalizedChanges = `Update from ${addCommas(prevValue)} to ${addCommas(newValue)} ${getChangeTextFn(changeInCaps)}`
       const rawChanges = `Update from ${borrowCaps} to ${currentValue}`
 
-      finalText += `${functionDesc}.\n\n${tab}${tab}Changes: ${normalizedChanges}\n\n${tab}${tab}Raw Changes: ${rawChanges}`
+      finalText += `${functionDesc}.\n\n${tab}${tab}**Changes:** ${normalizedChanges}\n\n${tab}${tab}**Raw Changes:** ${rawChanges}`
 
       if (i < addresses.length - 1) {
         finalText += '\n'
@@ -234,7 +234,7 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     const normalizedChanges = `Update from ${addCommas(prevValue)} to ${addCommas(newValue)} ${getChangeTextFn(changeInSpeed)}`
     const rawChanges = `Update from ${prevValueRaw} to ${newValueRaw}`
 
-    return `${functionDesc}\n\n${tab}  Changes: ${normalizedChanges}\n\n${tab}  Raw Changes: ${rawChanges}`
+    return `${functionDesc}\n\n${tab}  **Changes:** ${normalizedChanges}\n\n${tab}  **Raw Changes:** ${rawChanges}`
   },
   '_supportMarket(address)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const marketLink = await getFormattedTokenNameWithLink(chain, decodedParams[0])
