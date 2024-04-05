@@ -60,7 +60,7 @@ async function getTextForChangeInInterestRate(
     cometAddress: decodedParams[0],
   })
   const normalizedChanges = `${addCommas(previousRateInPercent)} to ${addCommas(currentRateInPercent)} ${getChangeTextFn(changeInRate)}`
-  return `${functionDesc}\n\n${tab}  Changes: ${normalizedChanges}\n\n${tab}  Raw Changes: new value - ${decodedParams[1]}`
+  return `${functionDesc}\n\n${tab}  **Changes:** ${normalizedChanges}\n\n${tab}  **Raw Changes:** new value - ${decodedParams[1]}`
 }
 
 async function getTextForKinkChange(
@@ -91,7 +91,7 @@ async function getTextForKinkChange(
 
   const normalizedChange = `Update from ${addCommas(prevValue)}% to ${addCommas(newValue)}% ${getChangeTextFn(changeInValues, true)}`
   const rawChange = `Update from ${prevValue} to ${newValue}`
-  return `${functionDesc}\n\n${tab}  Changes: ${normalizedChange}\n\n${tab}  RawChanges: ${rawChange}`
+  return `${functionDesc}\n\n${tab}  **Changes:** ${normalizedChange}\n\n${tab}  **Raw Changes:** ${rawChange}`
 }
 
 async function getTextForSpeedChange(
@@ -128,7 +128,7 @@ async function getTextForSpeedChange(
     changeInSpeedValues
   )}. Hence changing Daily ${speedName} rewards from ${addCommas(prevRewardValue)} to ${addCommas(newRewardValue)} ${getChangeTextFn(changeInRewardValues)}`
   const rawChanges = `Update from ${prevSpeedValue} to ${newSpeedValue}`
-  return `${functionDesc}\n\n${tab} Changes: ${normalizedChange}\n\n${tab}  Raw Changes: ${rawChanges}`
+  return `${functionDesc}\n\n${tab} **Changes:** ${normalizedChange}\n\n${tab}  **Raw Changes:** ${rawChanges}`
 }
 
 export const configuratorFormatters: { [functionName: string]: TransactionFormatter } = {
@@ -283,7 +283,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     const functionDescWithToken = `${functionDesc} for token - ${tokenInfo}`
     const normalizedChanges = `Update from ${prevLiquidationFactor}% to ${newLiquidationFactor}% ${getChangeTextFn(changeInLiquidationFactor, true)}`
     const rawChanges = `Update from ${prevLiquidationFactorRaw} to ${newLiquidationFactorRaw} for token - ${decodedParams[1]}`
-    return `${functionDescWithToken}\n\n${tab} Changes: ${normalizedChanges}\n\n${tab}  Raw Changes: ${rawChanges}`
+    return `${functionDescWithToken}\n\n${tab} **Changes:** ${normalizedChanges}\n\n${tab}  **Raw Changes:** ${rawChanges}`
   },
   'updateAssetSupplyCap(address,address,uint128)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const tokenAddress = decodedParams[1]
@@ -323,7 +323,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
 
     const normalizedChanges = `Update from ${addCommas(prevSupplyCap)} to ${addCommas(newSupplyCap)} ${getChangeTextFn(changeInSupplyCap)}`
     const rawChanges = `Update from ${previousSupplyCapRaw} to ${newSupplyCapRaw} for token - ${tokenAddress}`
-    return `${functionDescWithToken}\n\n${tab}  Changes: ${normalizedChanges}\n\n${tab}  Raw Changes: ${rawChanges}`
+    return `${functionDescWithToken}\n\n${tab}  **Changes:** ${normalizedChanges}\n\n${tab}  **Raw Changes:** ${rawChanges}`
   },
   'setBaseBorrowMin(address,uint104)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
@@ -355,7 +355,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       cometAddress: decodedParams[0],
     })
     const normalizedChanges = `Update from ${addCommas(prevBaseBorrowMin)} to ${addCommas(newBaseBorrowMin)} ${getChangeTextFn(changeInBaseBorrowMin)}`
-    return `${functionDesc}\n\n${tab}  Changes: ${normalizedChanges}\n\n${tab}  Raw Changes: Update from ${baseBorrowMin} to ${newBaseValueRaw}`
+    return `${functionDesc}\n\n${tab}  **Changes:** ${normalizedChanges}\n\n${tab}  **Raw Changes:** Update from ${baseBorrowMin} to ${newBaseValueRaw}`
   },
   'addAsset(address,tuple)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const [address, tuple] = decodedParams
@@ -562,8 +562,9 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       criticalThreshold: changeThresholds.V3.storeFrontPriceFactorCriticalThreshold,
     }
     const sign = getCriticalitySign(changeInFactor, thresholds)
+    const normalizedChanges = `Update from ${priceFactorOld}% to ${priceFactorNew}% ${getChangeTextFn(changeInFactor, true)}`
 
-    return `${sign} Set StoreFrontPriceFactor for ${tokenNameWithLink} from ${priceFactorOld}% to ${priceFactorNew}% ${getChangeTextFn(changeInFactor, true)}`
+    return `${sign} Set StoreFrontPriceFactor for ${tokenNameWithLink}\n\n${tab}  **Changes:** ${normalizedChanges}\n\n${tab}  **Raw Changes:** new value - ${decodedParams[1]}`
   },
 }
 
