@@ -6,9 +6,11 @@ import { getContractNameAndAbiFromFile } from './../abi-utils'
 import { CometChains, ExecuteTransactionInfo, TransactionFormatter } from './../compound-types'
 import {
   addCommas,
+  addressFormatter,
   fetchAssertIdFromCoinGeckoForSymbol,
   fetchDataForAsset,
   getChangeTextFn,
+  getContractNameWithLink,
   getContractSymbolAndDecimalsFromFile,
   getCriticalitySign,
   getFormattedTokenNameWithLink,
@@ -58,7 +60,7 @@ async function getTextForChangeInInterestRate(
     cometAddress: decodedParams[0],
   })
   const normalizedChanges = `${addCommas(previousRateInPercent)} to ${addCommas(currentRateInPercent)} ${getChangeTextFn(changeInRate)}`
-  return `${functionDesc}\n\n${tab}  Changes: ${normalizedChanges}\n\n${tab}  Raw Changes: new value - ${decodedParams[1]}`
+  return `${functionDesc}\n\n${tab}  **Changes:** ${normalizedChanges}\n\n${tab}  **Raw Changes:** new value - ${decodedParams[1]}`
 }
 
 async function getTextForKinkChange(
@@ -89,7 +91,7 @@ async function getTextForKinkChange(
 
   const normalizedChange = `Update from ${addCommas(prevValue)}% to ${addCommas(newValue)}% ${getChangeTextFn(changeInValues, true)}`
   const rawChange = `Update from ${prevValue} to ${newValue}`
-  return `${functionDesc}\n\n${tab}  Changes: ${normalizedChange}\n\n${tab}  RawChanges: ${rawChange}`
+  return `${functionDesc}\n\n${tab}  **Changes:** ${normalizedChange}\n\n${tab}  **Raw Changes:** ${rawChange}`
 }
 
 async function getTextForSpeedChange(
@@ -126,7 +128,7 @@ async function getTextForSpeedChange(
     changeInSpeedValues
   )}. Hence changing Daily ${speedName} rewards from ${addCommas(prevRewardValue)} to ${addCommas(newRewardValue)} ${getChangeTextFn(changeInRewardValues)}`
   const rawChanges = `Update from ${prevSpeedValue} to ${newSpeedValue}`
-  return `${functionDesc}\n\n${tab} Changes: ${normalizedChange}\n\n${tab}  Raw Changes: ${rawChanges}`
+  return `${functionDesc}\n\n${tab} **Changes:** ${normalizedChange}\n\n${tab}  **Raw Changes:** ${rawChanges}`
 }
 
 export const configuratorFormatters: { [functionName: string]: TransactionFormatter } = {
@@ -245,8 +247,6 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     return getTextForKinkChange(chain, transaction, decodedParams, async (contract) => await contract.callStatic.supplyKink(), 'SupplyKink', thresholds)
   },
   'updateAssetLiquidationFactor(address,address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    const platform = getPlatform(chain)
-
     const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[1])
     const tokenInstance = new Contract(decodedParams[1], abi, customProvider(chain))
     const { symbol: tokenSymbol } = await getContractSymbolAndDecimalsFromFile(decodedParams[1], tokenInstance, chain)
@@ -270,7 +270,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     }
     const sign = getCriticalitySign(changeInLiquidationFactor, thresholds)
 
-    const tokenInfo = `**[${tokenSymbol}](https://${platform}/address/${decodedParams[1]})**`
+    const tokenInfo = `**${addressFormatter(decodedParams[1], chain, tokenSymbol)}**`
 
     const functionDesc = await functionDescription({
       sign: sign,
@@ -283,11 +283,9 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     const functionDescWithToken = `${functionDesc} for token - ${tokenInfo}`
     const normalizedChanges = `Update from ${prevLiquidationFactor}% to ${newLiquidationFactor}% ${getChangeTextFn(changeInLiquidationFactor, true)}`
     const rawChanges = `Update from ${prevLiquidationFactorRaw} to ${newLiquidationFactorRaw} for token - ${decodedParams[1]}`
-    return `${functionDescWithToken}\n\n${tab} Changes: ${normalizedChanges}\n\n${tab}  Raw Changes: ${rawChanges}`
+    return `${functionDescWithToken}\n\n${tab} **Changes:** ${normalizedChanges}\n\n${tab}  **Raw Changes:** ${rawChanges}`
   },
   'updateAssetSupplyCap(address,address,uint128)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    const platform = getPlatform(chain)
-
     const tokenAddress = decodedParams[1]
     const { abi } = await getContractNameAndAbiFromFile(chain, tokenAddress)
     const tokenInstance = new Contract(tokenAddress, abi, customProvider(chain))
@@ -311,7 +309,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     }
     const sign = getCriticalitySign(changeInSupplyCap, thresholds)
 
-    const tokenInfo = `**[${tokenSymbol}](https://${platform}/address/${tokenAddress})**`
+    const tokenInfo = `**${addressFormatter(tokenAddress, chain, tokenSymbol)}**`
 
     const functionDesc = await functionDescription({
       sign: sign,
@@ -325,7 +323,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
 
     const normalizedChanges = `Update from ${addCommas(prevSupplyCap)} to ${addCommas(newSupplyCap)} ${getChangeTextFn(changeInSupplyCap)}`
     const rawChanges = `Update from ${previousSupplyCapRaw} to ${newSupplyCapRaw} for token - ${tokenAddress}`
-    return `${functionDescWithToken}\n\n${tab}  Changes: ${normalizedChanges}\n\n${tab}  Raw Changes: ${rawChanges}`
+    return `${functionDescWithToken}\n\n${tab}  **Changes:** ${normalizedChanges}\n\n${tab}  **Raw Changes:** ${rawChanges}`
   },
   'setBaseBorrowMin(address,uint104)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
@@ -357,11 +355,9 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       cometAddress: decodedParams[0],
     })
     const normalizedChanges = `Update from ${addCommas(prevBaseBorrowMin)} to ${addCommas(newBaseBorrowMin)} ${getChangeTextFn(changeInBaseBorrowMin)}`
-    return `${functionDesc}\n\n${tab}  Changes: ${normalizedChanges}\n\n${tab}  Raw Changes: Update from ${baseBorrowMin} to ${newBaseValueRaw}`
+    return `${functionDesc}\n\n${tab}  **Changes:** ${normalizedChanges}\n\n${tab}  **Raw Changes:** Update from ${baseBorrowMin} to ${newBaseValueRaw}`
   },
   'addAsset(address,tuple)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    const platform = getPlatform(chain)
-
     const [address, tuple] = decodedParams
     const tupleList = tuple.split(',')
     const assetAddress = tupleList[0]
@@ -389,8 +385,8 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     let assetTable = ''
     assetTable += `| Parameter | Value | Raw Value |\n`
     assetTable += `|-----------|-------|---------|\n`
-    assetTable += `| Asset | [${assetSymbol}](https://${platform}/address/${assetAddress}) | ${assetAddress} |\n`
-    assetTable += `| PriceFeed | [PriceFeed](https://${platform}/address/${tupleList[1]}) | ${tupleList[1]} |\n`
+    assetTable += `| Asset | ${addressFormatter(assetAddress, chain, assetSymbol)} | ${assetAddress} |\n`
+    assetTable += `| PriceFeed | ${addressFormatter(tupleList[1], chain, 'PriceFeed')} | ${tupleList[1]} |\n`
     assetTable += `| Decimals | ${assetDecimals} | -- |\n`
     assetTable += `| BorrowCollateralFactor | ${percentageFn(borrowCollateralFactor)}% | ${borrowCollateralFactorRaw} |\n`
     assetTable += `| LiquidateCollateralFactor |  ${percentageFn(liquidateCollateralFactor)}% | ${liquidateCollateralFactorRaw} |\n`
@@ -423,11 +419,13 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       const totalSupplyString = `${tab}* Total supply is ${addCommas(assetTotalSupply)}`
       geckoResponse += `${tab}**Asset Information from CoinGecko:**\n${addressesVerificationString}${marketCapRankString}${currentPriceString}${priceChangeString}${marketCapString}${totalVolumeString}${totalSupplyString}`
     }
-    return `🛑 Add new asset to market **[${symbol}](https://${platform}/address/${baseToken})** with following asset configuration:\n\n${tab}${assetTable}\n${geckoResponse}`
+    return `🛑 Add new asset to market **${addressFormatter(
+      baseToken,
+      chain,
+      symbol
+    )}** with following asset configuration:\n\n${tab}${assetTable}\n${geckoResponse}`
   },
   'setFactory(address,address)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    const platform = getPlatform(chain)
-
     const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
     const currentInstance = new Contract(decodedParams[0], abi, customProvider(chain))
 
@@ -436,13 +434,11 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     const baseTokenInstance = new Contract(baseToken, baseTokenAbi, customProvider(chain))
     const { symbol: tokenSymbol } = await getContractSymbolAndDecimalsFromFile(baseToken, baseTokenInstance, chain)
 
-    const { contractName } = await getContractNameAndAbiFromFile(chain, decodedParams[1])
+    const contractNameWithLink = await getContractNameWithLink(decodedParams[1], chain)
 
-    return `🛑 Set factory of **[${tokenSymbol}](https://${platform}/address/${baseToken})** to **[${contractName}](https://${platform}/address/${decodedParams[1]})**.`
+    return `🛑 Set factory of **${addressFormatter(baseToken, chain, tokenSymbol)}** to ${contractNameWithLink}.`
   },
   'setConfiguration(address,tuple)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    const platform = getPlatform(chain)
-
     const [address, tuple] = decodedParams
     const tupleList = tuple.split(',')
 
@@ -452,8 +448,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     const { abi: contractBaseTokenAbi } = await getContractNameAndAbiFromFile(chain, contractBaseToken)
     const contractBaseTokenInstance = new Contract(contractBaseToken, contractBaseTokenAbi, customProvider(chain))
     const { symbol: contractBaseSymbol } = await getContractSymbolAndDecimalsFromFile(contractBaseToken, contractBaseTokenInstance, chain)
-    const { contractName: governor } = await getContractNameAndAbiFromFile(chain, tupleList[0])
-
+    const governorContractNameWithLink = await getContractNameWithLink(tupleList[0], chain)
     const { abi: baseTokenAbi } = await getContractNameAndAbiFromFile(chain, tupleList[2])
     const baseTokenInstance = new Contract(tupleList[2], baseTokenAbi, customProvider(chain))
     const { symbol: baseSymbol, decimals: baseDecimals } = await getContractSymbolAndDecimalsFromFile(tupleList[2], baseTokenInstance, chain)
@@ -483,9 +478,9 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       const defactorValue = (index: number) => defactorFn(tupleList[i + index], `${tupleList[i + 2]}`)
 
       const assetConfigBlock: AssetConfig = {
-        asset: `**[${assetSymbol}](https://${platform}/address/${tupleList[i]})**`,
+        asset: `**${addressFormatter(tupleList[i], chain, assetSymbol)}**`,
         assetAddress: tupleList[i],
-        priceFeed: `**[PriceFeed](https://${platform}/address/${tupleList[i + 1]})**`,
+        priceFeed: `**${addressFormatter(tupleList[i + 1], chain, 'PriceFeed')}**`,
         priceFeedAddress: tupleList[i + 1],
         decimals: tupleList[i + 2],
         borrowCollateralFactor: percentageFn(defactorFn(tupleList[i + 3])) + `%`,
@@ -522,10 +517,10 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
 
     let mainTable = `| Parameter | Value | Raw Value |\n`
     mainTable += `|-----------|-------|-------| \n`
-    mainTable += `| Governor | **[${governor}](https://${platform}/address/${tupleList[0]})** | ${tupleList[0]} |\n`
+    mainTable += `| Governor | [${governorContractNameWithLink} | ${tupleList[0]} |\n`
     mainTable += `| PauseGuardian | ${await getRecipientNameWithLink(chain, tupleList[1])} |${tupleList[1]} |\n`
-    mainTable += `| BaseToken | **[${baseSymbol}](https://${platform}/address/${tupleList[2]})** |${tupleList[2]} |\n`
-    mainTable += `| BaseToken PriceFeed | **[PriceFeed](https://${platform}/address/${tupleList[3]})** |${tupleList[3]} |\n`
+    mainTable += `| BaseToken | **${addressFormatter(tupleList[2], chain, baseSymbol)}** |${tupleList[2]} |\n`
+    mainTable += `| BaseToken PriceFeed | **${addressFormatter(tupleList[3], chain, 'PriceFeed')}** |${tupleList[3]} |\n`
     mainTable += `| ExtensionDelegate | ${await getRecipientNameWithLink(chain, tupleList[4])} |${tupleList[4]} |\n`
     mainTable += `| SupplyKink | ${percentageFn(supplyKink)}% |${tupleList[5]} |\n`
     mainTable += `| SupplyPerYearInterestRateSlopeLow | ${percentageFn(supplyPerYearInterestRateSlopeLow)}% |${tupleList[6]} |\n`
@@ -543,7 +538,11 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     mainTable += `| BaseBorrowMin | ${addCommas(baseBorrowMin)} |${tupleList[18]} |\n`
     mainTable += `| TargetReserves | ${addCommas(targetReserves)} |${tupleList[19]} |\n`
 
-    return `⚠️ Set configuration for **[${contractBaseSymbol}](https://${platform}/address/${contractBaseToken})** to: \n\n${tab}${mainTable}\n${tab}${assetConfigTables}`
+    return `⚠️ Set configuration for **${addressFormatter(
+      contractBaseToken,
+      chain,
+      contractBaseSymbol
+    )}** to: \n\n${tab}${mainTable}\n${tab}${assetConfigTables}`
   },
   'setStoreFrontPriceFactor(address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
@@ -563,8 +562,9 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       criticalThreshold: changeThresholds.V3.storeFrontPriceFactorCriticalThreshold,
     }
     const sign = getCriticalitySign(changeInFactor, thresholds)
+    const normalizedChanges = `Update from ${priceFactorOld}% to ${priceFactorNew}% ${getChangeTextFn(changeInFactor, true)}`
 
-    return `${sign} Set StoreFrontPriceFactor for ${tokenNameWithLink} from ${priceFactorOld}% to ${priceFactorNew}% ${getChangeTextFn(changeInFactor, true)}`
+    return `${sign} Set StoreFrontPriceFactor for ${tokenNameWithLink}\n\n${tab}  **Changes:** ${normalizedChanges}\n\n${tab}  **Raw Changes:** new value - ${decodedParams[1]}`
   },
 }
 
@@ -584,13 +584,12 @@ async function functionDescription({
   const { abi } = await getContractNameAndAbiFromFile(chain, cometAddress)
   const currentCometInstance = new Contract(cometAddress, abi, customProvider(chain))
 
-  const platform = getPlatform(chain)
   const baseTokenAddress = await currentCometInstance.callStatic.baseToken()
   const { abi: baseTokenAbi } = await getContractNameAndAbiFromFile(chain, baseTokenAddress)
   const baseTokenInstance = new Contract(baseTokenAddress, baseTokenAbi, customProvider(chain))
   const { symbol: marketSymbol } = await getContractSymbolAndDecimalsFromFile(baseTokenAddress, baseTokenInstance, chain)
 
-  const { contractName: targetName } = await getContractNameAndAbiFromFile(chain, targetAddress)
+  const targetContractNameWithLink = await getContractNameWithLink(targetAddress, chain)
 
-  return `${sign} Set ${functionName} of **[${marketSymbol}](https://${platform}/address/${baseTokenAddress})** via **[${targetName}](https://${platform}/address/${targetAddress}})**`
+  return `${sign} Set ${functionName} of **${addressFormatter(baseTokenAddress, chain, marketSymbol)}** via ${targetContractNameWithLink}`
 }

@@ -1,13 +1,12 @@
 import { getContractNameAndAbiFromFile } from '../abi-utils'
 import { CometChains, ExecuteTransactionInfo, TransactionFormatter } from '../compound-types'
-import { addCommas, getContractSymbolAndDecimalsFromFile, getPlatform, getRecipientNameWithLink } from './helper'
+import { addCommas, addressFormatter, getContractSymbolAndDecimalsFromFile, getRecipientNameWithLink, tab } from './helper'
 import { customProvider } from './../../../utils/clients/ethers'
 import { defactorFn, multiplyFn } from './../../../utils/roundingUtils'
 import { Contract } from 'ethers'
 
 export const saiTapFormatters: { [functionName: string]: TransactionFormatter } = {
   'cash(uint256)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    const platform = getPlatform(chain)
     const targetAddress = transaction.target
     const { abi: targetAbi } = await getContractNameAndAbiFromFile(chain, targetAddress)
     const targetInstance = new Contract(targetAddress, targetAbi, customProvider(chain))
@@ -30,8 +29,10 @@ export const saiTapFormatters: { [functionName: string]: TransactionFormatter } 
     const gemInstance = new Contract(gemAddress, gemAbi, customProvider(chain))
     const { symbol: collateralSymbol } = await getContractSymbolAndDecimalsFromFile(gemAddress, gemInstance, chain)
 
-    return `Cash **${addCommas(saiAmount)} [${tokenSymbol}](https://${platform}/address/${saiAddress})** into collateral **${addCommas(
-      collateralAmount
-    )} [${collateralSymbol}](https://${platform}/address/${gemAddress})** and send to ${await getRecipientNameWithLink(chain, targetAddress)}`
+    const cashAmountText = `**${addCommas(saiAmount)} ${addressFormatter(saiAddress, chain, tokenSymbol)}**`
+    const collateralAmountText = `**${addCommas(collateralAmount)} ${addressFormatter(gemAddress, chain, collateralSymbol)}**`
+    const rawChanges = `\n\n${tab}**Raw Changes:**Cash ${decodedParams[0]}`
+
+    return `Cash ${cashAmountText} into collateral ${collateralAmountText} and send to ${await getRecipientNameWithLink(chain, targetAddress)}${rawChanges}`
   },
 }

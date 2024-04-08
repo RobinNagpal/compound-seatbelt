@@ -117,6 +117,16 @@ export async function getRecipientNameWithLink(chain: CometChains, recipient: st
   return `**[${recipientName}](https://${platform}/address/${recipient})**`
 }
 
+export async function getContractNameWithLink(address: string, chain: CometChains) {
+  const { contractName: targetContractName } = await getContractNameAndAbiFromFile(chain, address)
+  return `**${addressFormatter(address, chain, targetContractName)}**`
+}
+
+export function addressFormatter(address: string, chain: CometChains, symbol?: string) {
+  const platform = getPlatform(chain)
+  return `[${symbol ?? address}](https://${platform}/address/${address})`
+}
+
 export function getChangeTextFn(change: string, isPercentage: boolean = false): string {
   const percentageSign = isPercentage ? '%' : ''
   const absoluteChange = change.startsWith('-') ? change.substring(1) : change
@@ -200,7 +210,8 @@ export function addCommas(number: string | number): string {
   return isNegative ? '-' + formattedNumber : formattedNumber
 }
 
-export async function formatCoinsAndAmounts(list: string[], chain: CometChains, platform: string) {
+export async function formatCoinsAndAmounts(list: string[], chain: CometChains) {
+  const platform = getPlatform(chain)
   async function processPair(address: string, amount: string) {
     const { abi } = await getContractNameAndAbiFromFile(chain, address)
     const tokenInstance = new Contract(address, abi, customProvider(chain))

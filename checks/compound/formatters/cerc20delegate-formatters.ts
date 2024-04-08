@@ -1,6 +1,6 @@
 import { getContractNameAndAbiFromFile } from '../abi-utils'
 import { CometChains, ExecuteTransactionInfo, TransactionFormatter } from '../compound-types'
-import { addCommas, getContractSymbolAndDecimalsFromFile, getFormattedTokenNameWithLink, getPlatform } from './helper'
+import { addCommas, addressFormatter, getChangeTextFn, getContractSymbolAndDecimalsFromFile, getFormattedTokenNameWithLink, getPlatform, tab } from './helper'
 import { customProvider } from './../../../utils/clients/ethers'
 import { defactorFn, percentageFn, subtractFn } from './../../../utils/roundingUtils'
 import { Contract } from 'ethers'
@@ -12,20 +12,27 @@ export const cerc20DelegateFormatters: { [functionName: string]: TransactionForm
     const coinInstance = new Contract(tokenAddress, abi, customProvider(chain))
     const prevReserveFactor = await coinInstance.callStatic.reserveFactorMantissa()
 
-    const newReserveFactor = percentageFn(defactorFn(decodedParams[0]))
+    const newReserve = decodedParams[0]
+    const newReservePercentage = percentageFn(defactorFn(newReserve))
 
     const tokenNameWithLink = await getFormattedTokenNameWithLink(chain, tokenAddress)
-    const prevReserve = percentageFn(defactorFn(prevReserveFactor.toString()))
-    if (prevReserveFactor && prevReserve !== newReserveFactor) {
-      return `Set reserve factor for ${tokenNameWithLink} from ${prevReserve}% to ${newReserveFactor}%`
+    const prevReservePercentage = percentageFn(defactorFn(prevReserveFactor.toString()))
+
+    const changeInReserveFactor = subtractFn(newReservePercentage, prevReservePercentage)
+
+    const functionDesc = `Set reserve factor for ${tokenNameWithLink}`
+
+    if (prevReserveFactor && prevReservePercentage !== newReservePercentage) {
+      const rawChanges = `Update from ${prevReserveFactor} to ${newReserve}`
+      const normalizedChanges = `Update from ${prevReservePercentage}% to ${newReservePercentage}% ${getChangeTextFn(changeInReserveFactor, true)}`
+
+      return `${functionDesc}.\n\n${tab}**Changes:**${normalizedChanges}\n\n${tab}**Raw Changes:**${rawChanges}`
     }
 
-    return `Set reserve factor for ${tokenNameWithLink} to ${newReserveFactor}%`
+    return `Set reserve factor for ${tokenNameWithLink}\n\n${tab}  **Changes:** ${newReservePercentage}%\n\n${tab}  **Raw Changes: ${newReserve}**`
   },
 
   '_reduceReserves(uint256)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    const platform = getPlatform(chain)
-
     const cTokenAddress = transaction.target
     const { abi: cTokenAbi } = await getContractNameAndAbiFromFile(chain, cTokenAddress)
     const cTokenInstance = new Contract(cTokenAddress, cTokenAbi, customProvider(chain))
@@ -39,25 +46,25 @@ export const cerc20DelegateFormatters: { [functionName: string]: TransactionForm
     const { symbol: assetSymbol, decimals: assetDecimals } = await getContractSymbolAndDecimalsFromFile(underlyingAssetAddress, assetInstance, chain)
 
     const totalReservesFormatted = defactorFn(totalReserves, `${cTokenDecimals}`)
-    const reduceValue = defactorFn(decodedParams[0], `${assetDecimals}`)
+    const reduceValueRaw = decodedParams[0]
+    const reduceValue = defactorFn(reduceValueRaw, `${assetDecimals}`)
 
     const totalReservesNew = subtractFn(totalReservesFormatted, reduceValue)
 
-    return `Reduce reserves of **[${cTokenSymbol}](https://${platform}/address/${cTokenAddress})** by **${addCommas(
-      reduceValue
-    )} [${assetSymbol}](https://${platform}/address/${underlyingAssetAddress})**. Remaining total reserves would be ${addCommas(totalReservesNew)}`
+    const functionDesc = `Reduce reserves of **${addressFormatter(cTokenAddress, chain, cTokenSymbol)}**`
+    const reducedReserves = `${addCommas(reduceValue)} ${addressFormatter(underlyingAssetAddress, chain, assetSymbol)}`
+    const normalizedChanges = `${reducedReserves}. Remaining total reserves would be ${addCommas(totalReservesNew)}`
+    const rawChanges = `${reduceValueRaw}`
+
+    return `${functionDesc}\n\n${tab}  **Changes:** ${normalizedChanges}\n\n${tab}  **Raw Changes:** ${rawChanges}`
   },
   '_setInterestRateModel(address)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    const platform = getPlatform(chain)
-
     const coinLink = await getFormattedTokenNameWithLink(chain, transaction.target)
 
-    return `Set **[interest rate model](https://${platform}/address/${decodedParams[0]})** for ${coinLink}.`
+    return `Set **${addressFormatter(decodedParams[0], chain, 'interest rate model')}** for ${coinLink}.`
   },
 
   'redeem(uint256)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    const platform = getPlatform(chain)
-
     const cTokenAddress = transaction.target
     const { abi: cTokenAbi } = await getContractNameAndAbiFromFile(chain, cTokenAddress)
     const cTokenInstance = new Contract(cTokenAddress, cTokenAbi, customProvider(chain))
@@ -72,8 +79,13 @@ export const cerc20DelegateFormatters: { [functionName: string]: TransactionForm
     const cTokens = defactorFn(decodedParams[0], `${cTokenDecimals}`)
     const underlyingAssetTokens = defactorFn(decodedParams[0], `${assetDecimals}`)
 
-    return `Redeem **${addCommas(cTokens)} [${cTokenSymbol}](https://${platform}/address/${transaction.target})** cTokens in exchange for **${addCommas(
-      underlyingAssetTokens
-    )} [${assetSymbol}](https://${platform}/address/${underlyingAssetAddress})**`
+    const redeemInfo = `**${addCommas(underlyingAssetTokens)} ${addressFormatter(underlyingAssetAddress, chain, assetSymbol)}**`
+    const normalizedChanges = `Redeem **${addCommas(cTokens)} ${addressFormatter(
+      transaction.target,
+      chain,
+      cTokenSymbol
+    )}** cTokens in exchange for ${redeemInfo}`
+
+    return `Redeem tokens\n\n${tab}**Changes:**${normalizedChanges} \n\n${tab}**Raw Changes:** Redeem ${decodedParams[0]} cTokens`
   },
 }
