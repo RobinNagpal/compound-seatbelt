@@ -31,6 +31,8 @@ export function getPlatform(chain: CometChains) {
       return 'basescan.org'
     case CometChains.scroll:
       return 'scrollscan.com'
+    case CometChains.optimism:
+      return 'optimistic.etherscan.io'
   }
 }
 
@@ -271,16 +273,39 @@ export async function pushChecksSummaryToDiscord(reportMarkdown: string, proposa
 
 export async function pushChecksSummaryToDiscordAsEmbeds(checkResult: CheckResult, proposalNo: string) {
   const s3ReportsFolder = process.env.AWS_BUCKET_BASE_PATH || 'all-proposals'
-  await axios.post(DISCORD_WEBHOOK_URL, {
-    content: `
+  const embeds = checkResult.info.map((m) => ({
+    description: m?.length || 0 > 4000 ? extractTextFromMarkdown(m) : m,
+    color: 1127128,
+  }))
+
+  try {
+    await axios.post(DISCORD_WEBHOOK_URL, {
+      content: `
     ## Summary of Compound Checks - [${proposalNo}](https://compound.finance/governance/proposals/${proposalNo})
     [Full Report](https://compound-governance-proposals.s3.amazonaws.com/${s3ReportsFolder}/${proposalNo}.pdf)
     `,
-    embeds: checkResult.info.map((m) => ({
-      description: m,
-      color: 1127128,
-    })),
-  })
+      embeds: embeds,
+    })
+  } catch (error: any) {
+    if (error?.response) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      console.log(error.response.data)
+      console.log(error.response.status)
+      console.log(error.response.headers)
+    } else if (error?.request) {
+      // The request was made but no response was received
+      // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+      // http.ClientRequest in node.js
+      console.log(error.request)
+    } else {
+      // Something happened in setting up the request that triggered an Error
+      console.log('Error', error?.message)
+    }
+    console.log(error?.config)
+
+    throw error
+  }
 }
 
 export async function postNotificationToDiscord(rawText: string) {

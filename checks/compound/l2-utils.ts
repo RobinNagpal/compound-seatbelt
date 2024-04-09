@@ -8,6 +8,7 @@ export const l2Bridges: { [address: string]: CometChains } = {
   '0xfe5e5d361b2ad62c541bab87c45a0b9b018389a2': CometChains.polygon,
   '0x866e82a600a1414e583f7f13623f1ac5d58b0afa': CometChains.base,
   '0x6774bcbd5cecef1336b5300fb5186a12ddd8b367': CometChains.scroll,
+  '0x25ace71c97b33cc4729cf772ae268934f7ab5fa1': CometChains.optimism,
 }
 
 export async function getDecodedBytesForChain(
@@ -24,10 +25,13 @@ export async function getDecodedBytesForChain(
       return getDecodedBytesForPolygon(proposalId, transactionInfo)
     case CometChains.scroll:
       return getDecodedBytesForScroll(proposalId, transactionInfo)
+    case CometChains.optimism:
+      return getDecodedBytesForOptimism(proposalId, transactionInfo)
     default:
       throw new Error(`Chain ${chain} is not supported`)
   }
 }
+
 export async function getDecodedBytesForArbitrum(proposalId: number, transactionInfo: ExecuteTransactionInfo): Promise<ExecuteTransactionsInfo> {
   const sentMessageSignature = 'createRetryableTicket(address,uint256,uint256,address,address,uint256,uint256,bytes)'
   const decodedCalldata = await getDecodedCallDataSentToBridge(proposalId, sentMessageSignature, transactionInfo)
@@ -35,12 +39,18 @@ export async function getDecodedBytesForArbitrum(proposalId: number, transaction
   return extractTransactionsFromBridgedData(parsedDataToBridge)
 }
 
+export async function getDecodedBytesForOptimism(proposalId: number, transactionInfo: ExecuteTransactionInfo): Promise<ExecuteTransactionsInfo> {
+  const sentMessageSignature = 'sendMessage(address,bytes,uint32)'
+  const decodedCalldata = await getDecodedCallDataSentToBridge(proposalId, sentMessageSignature, transactionInfo)
+  const parsedDataToBridge = decodedCalldata.at(1)
+  return extractTransactionsFromBridgedData(parsedDataToBridge)
+}
+
 export async function getDecodedBytesForBase(proposalId: number, transactionInfo: ExecuteTransactionInfo): Promise<ExecuteTransactionsInfo> {
   const sentMessageSignature = 'sendMessage(address,bytes,uint32)'
   const decodedCalldata = await getDecodedCallDataSentToBridge(proposalId, sentMessageSignature, transactionInfo)
   const parsedDataToBridge = decodedCalldata.at(1)
-  const transactionsFromBridgedData = extractTransactionsFromBridgedData(parsedDataToBridge)
-  return transactionsFromBridgedData
+  return extractTransactionsFromBridgedData(parsedDataToBridge)
 }
 
 export async function getDecodedBytesForPolygon(proposalId: number, transactionInfo: ExecuteTransactionInfo): Promise<ExecuteTransactionsInfo> {
@@ -54,8 +64,7 @@ export async function getDecodedBytesForScroll(proposalId: number, transactionIn
   const sentMessageSignature = 'sendMessage(address,uint256,bytes,uint256)'
   const decodedCalldata = await getDecodedCallDataSentToBridge(proposalId, sentMessageSignature, transactionInfo)
   const parsedDataToBridge = decodedCalldata.at(2)
-  const transactionsFromBridgedData = extractTransactionsFromBridgedData(parsedDataToBridge)
-  return transactionsFromBridgedData
+  return extractTransactionsFromBridgedData(parsedDataToBridge)
 }
 
 function extractTransactionsFromBridgedData(parsedDataToBridge: any) {

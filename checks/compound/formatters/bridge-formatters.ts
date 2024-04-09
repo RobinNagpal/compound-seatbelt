@@ -22,15 +22,19 @@ export const bridgeFormatters: { [functionName: string]: TransactionFormatter } 
   },
 
   'depositERC20To(address,address,address,uint256,uint32,bytes)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    if (transaction.target === '0x3154cf16ccdb4c6d922629664174b904d80f2c35') {
-      const [localToken, remoteToken, toAddress, amount] = decodedParams
+    const [localToken, remoteToken, toAddress, amount] = decodedParams
 
-      const { abi: compAddressAbi } = await getContractNameAndAbiFromFile(chain, localToken)
-      const compInstance = new Contract(localToken, compAddressAbi, customProvider(chain))
-      const { symbol, decimals } = await getContractSymbolAndDecimalsFromFile(localToken, compInstance, chain)
-      const defactoredAmount = defactorFn(amount, `${decimals}`)
+    const { abi: compAddressAbi } = await getContractNameAndAbiFromFile(chain, localToken)
+    const compInstance = new Contract(localToken, compAddressAbi, customProvider(chain))
+    const { symbol, decimals } = await getContractSymbolAndDecimalsFromFile(localToken, compInstance, chain)
+    const defactoredAmount = defactorFn(amount, `${decimals}`)
+
+    if (transaction.target === '0x3154cf16ccdb4c6d922629664174b904d80f2c35') {
       const recipientWithLink = await getRecipientNameWithLink(CometChains.base, toAddress)
       return `🛑 Bridge **${addCommas(defactoredAmount)} ${addressFormatter(localToken, chain, symbol)}** tokens over Base to ${recipientWithLink}.`
+    } else if (transaction.target === '0x99c9fc46f92e8a1c0dec1b1747d010903e884be1') {
+      const recipientWithLink = await getRecipientNameWithLink(CometChains.optimism, toAddress)
+      return `🛑 Bridge **${addCommas(defactoredAmount)} ${addressFormatter(localToken, chain, symbol)}** tokens over Optimism to ${recipientWithLink}.`
     }
 
     throw new Error('Unknown bridge contract')
