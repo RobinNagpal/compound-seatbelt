@@ -71,11 +71,13 @@ jobs:
           POLYGONSCAN_API_KEY: ${{ secrets.POLYGONSCAN_API_KEY }}
           ARBITRUMSCAN_API_KEY: ${{ secrets.ARBITRUMSCAN_API_KEY }}
           SCROLL_API_KEY: ${{ secrets.SCROLL_API_KEY }}
+          OPTIMISM_API_KEY: ${{ secrets.OPTIMISM_API_KEY }}
           RPC_URL_MAINNET: ${{ secrets.RPC_URL_MAINNET }}
           RPC_URL_POLYGON: ${{ secrets.RPC_URL_POLYGON }}
           RPC_URL_BASE: ${{ secrets.RPC_URL_BASE }}
           RPC_URL_ARBITRUM: ${{ secrets.RPC_URL_ARBITRUM }}
           RPC_URL_SCROLL: ${{ secrets.RPC_URL_SCROLL }}
+          RPC_URL_OPTIMISM: ${{ secrets.RPC_URL_OPTIMISM }}
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
