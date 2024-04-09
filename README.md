@@ -82,3 +82,5 @@ The `reports/` folder is gitignored, so when searching for reports in this direc
 `CHECKS_ENABLED=checkCompoundProposalDetails`
 
 You can run specific checks by setting the `CHECKS_ENABLED` environment variable to a comma-separated list of checks to run.
+
+
