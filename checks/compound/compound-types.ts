@@ -55,6 +55,7 @@ export enum CometChains {
   mainnet = 'mainnet',
   base = 'base',
   scroll = 'scroll',
+  optimism = 'optimism',
 }
 
 export type TransactionFormatter = (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => Promise<string>
