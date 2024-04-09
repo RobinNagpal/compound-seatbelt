@@ -25,5 +25,7 @@ export function customProvider(chain: CometChains) {
       return new providers.JsonRpcProvider(RPC_URL_SCROLL)
     case CometChains.optimism:
       return new providers.JsonRpcProvider(RPC_URL_OPTIMISM)
+    default:
+      throw new Error('Unknown chain: ' + chain)
   }
 }
