@@ -24,6 +24,7 @@ export function customProvider(chain: CometChains) {
     case CometChains.scroll:
       return new providers.JsonRpcProvider(RPC_URL_SCROLL)
     case CometChains.optimism:
+      console.log('RPC_URL_SCROLL', RPC_URL_SCROLL)
       console.log('RPC_URL_OPTIMISM', RPC_URL_OPTIMISM)
       return new providers.JsonRpcProvider(RPC_URL_OPTIMISM)
     default:
