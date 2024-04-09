@@ -1,0 +1,22 @@
+{
+  "0x0b2c639c533813f4aa9d7837caf62653d097ff85": {
+    "symbol": "USDC",
+    "decimals": "6"
+  },
+  "0x4200000000000000000000000000000000000042": {
+    "symbol": "OP",
+    "decimals": "18"
+  },
+  "0x4200000000000000000000000000000000000006": {
+    "symbol": "WETH",
+    "decimals": "18"
+  },
+  "0x68f180fcce6836688e9084f035309e29bf0a2095": {
+    "symbol": "WBTC",
+    "decimals": "8"
+  },
+  "0x7e7d4467112689329f7e06571ed0e8cbad4910ee": {
+    "symbol": "COMP",
+    "decimals": "18"
+  }
+}
