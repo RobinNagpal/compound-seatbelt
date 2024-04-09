@@ -31,6 +31,8 @@ export function getPlatform(chain: CometChains) {
       return 'basescan.org'
     case CometChains.scroll:
       return 'scrollscan.com'
+    case CometChains.optimism:
+      return 'optimistic.etherscan.io'
   }
 }
 
