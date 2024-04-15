@@ -1,6 +1,6 @@
 import { getContractNameAndAbiFromFile } from '../abi-utils'
 import { CometChains, ExecuteTransactionInfo, TransactionFormatter } from '../compound-types'
-import { addCommas, addressFormatter, getContractNameWithLink, getContractSymbolAndDecimalsFromFile, getPlatform } from './helper'
+import { addCommas, addressFormatter, getContractNameWithLink, getContractSymbolAndDecimalsFromFile, getPlatform, tab } from './helper'
 import { customProvider } from './../../../utils/clients/ethers'
 import { defactorFn } from './../../../utils/roundingUtils'
 import { hexStripZeros } from '@ethersproject/bytes'
@@ -22,8 +22,8 @@ export const tokenMessengerFormatters: { [functionName: string]: TransactionForm
 
     const functionDesc = `Set DepositforBurn of ${contractNameWithLink} for the Burn contract **${addressFormatter(burnContractAddress, chain, tokenSymbol)}**`
     const changeParameters = `with amount ${addCommas(amount)}, destination domain ${decodedParams[1]} and the Mint recipient **${normalized}**`
-    const rawChanges = `with amount ${amountRaw}, destination domain ${decodedParams[1]}, Mint recipient ${decodedParams[2]}`
+    const rawChanges = `amount ${amountRaw}, destination domain ${decodedParams[1]}, Mint recipient ${decodedParams[2]}`
 
-    return `${functionDesc} ${changeParameters}\n\n**Raw Changes:** ${rawChanges}`
+    return `${functionDesc} ${changeParameters}\n\n${tab}**Raw Changes:** ${rawChanges}`
   },
 }
