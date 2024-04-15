@@ -51,16 +51,17 @@ async function getTextForChangeInInterestRate(
   const currentRateInPercent = defactorFn(decodedParams[1])
 
   const changeInRate = subtractFn(currentRateInPercent, previousRateInPercent)
+  const sign = getCriticalitySign(changeInRate, thresholds)
 
   const functionDesc = await functionDescription({
-    sign: '',
+    sign: sign,
     chain,
     functionName: interestRateName,
     targetAddress: transaction.target,
     cometAddress: decodedParams[0],
   })
   const normalizedChanges = `${addCommas(previousRateInPercent)} to ${addCommas(currentRateInPercent)} ${getChangeTextFn(changeInRate)}`
-  return `${functionDesc}\n\n${tab}  **Changes:** ${normalizedChanges}\n\n${tab}  **Raw Changes:** new value - ${decodedParams[1]}`
+  return `${functionDesc}\n\n${tab}  **Changes:** ${normalizedChanges}\n\n${tab}  **Raw Changes:** new value is ${decodedParams[1]}`
 }
 
 async function getTextForKinkChange(
@@ -74,8 +75,10 @@ async function getTextForKinkChange(
   const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
   const currentCometInstance = new Contract(decodedParams[0], abi, customProvider(chain))
 
-  const prevValue = percentageFn(defactorFn((await getPreviousValue(currentCometInstance)).toString()))
-  const newValue = percentageFn(defactorFn(decodedParams[1]))
+  const prevValueRaw = (await getPreviousValue(currentCometInstance)).toString()
+  const prevValue = defactorFn(prevValueRaw)
+  const newValueRaw = decodedParams[1]
+  const newValue = defactorFn(decodedParams[1])
 
   const changeInValues = subtractFn(newValue, prevValue)
 
@@ -89,8 +92,8 @@ async function getTextForKinkChange(
     cometAddress: decodedParams[0],
   })
 
-  const normalizedChange = `Update from ${addCommas(prevValue)}% to ${addCommas(newValue)}% ${getChangeTextFn(changeInValues, true)}`
-  const rawChange = `Update from ${prevValue} to ${newValue}`
+  const normalizedChange = `Update from ${prevValue} to ${newValue} ${getChangeTextFn(changeInValues)}`
+  const rawChange = `new value is ${newValueRaw}`
   return `${functionDesc}\n\n${tab}  **Changes:** ${normalizedChange}\n\n${tab}  **Raw Changes:** ${rawChange}`
 }
 
@@ -124,10 +127,10 @@ async function getTextForSpeedChange(
     cometAddress: decodedParams[0],
   })
 
-  const normalizedChange = `${addCommas(prevSpeedValue)} to ${addCommas(newSpeedValue)} ${getChangeTextFn(
+  const normalizedChange = `Update from ${addCommas(prevSpeedValue)} to ${addCommas(newSpeedValue)} ${getChangeTextFn(
     changeInSpeedValues
   )}. Hence changing Daily ${speedName} rewards from ${addCommas(prevRewardValue)} to ${addCommas(newRewardValue)} ${getChangeTextFn(changeInRewardValues)}`
-  const rawChanges = `Update from ${prevSpeedValue} to ${newSpeedValue}`
+  const rawChanges = `new value is ${newSpeedValue}`
   return `${functionDesc}\n\n${tab} **Changes:** ${normalizedChange}\n\n${tab}  **Raw Changes:** ${rawChanges}`
 }
 
