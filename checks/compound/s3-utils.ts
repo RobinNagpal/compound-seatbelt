@@ -1,4 +1,4 @@
-import { ListObjectsV2Command, ListObjectsV2CommandInput, S3, S3Client, PutObjectCommand, PutObjectCommandInput } from '@aws-sdk/client-s3'
+import { ListObjectsV2Command, ListObjectsV2CommandInput, S3, S3Client, PutObjectCommandInput } from '@aws-sdk/client-s3'
 import { Upload } from '@aws-sdk/lib-storage'
 import * as fs from 'fs'
 
