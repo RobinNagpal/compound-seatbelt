@@ -1,4 +1,4 @@
-import { ListObjectsV2Command, ListObjectsV2CommandInput, S3, S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
+import { ListObjectsV2Command, ListObjectsV2CommandInput, S3, S3Client, PutObjectCommand, PutObjectCommandInput } from '@aws-sdk/client-s3'
 import { Upload } from '@aws-sdk/lib-storage'
 import * as fs from 'fs'
 
@@ -47,13 +47,24 @@ export async function uploadFileToS3(key: string, filePath: string): Promise<voi
   try {
     const fileStream = fs.createReadStream(filePath)
 
+    const params: PutObjectCommandInput = {
+      Bucket: bucketName,
+      Key: key,
+      Body: fileStream,
+    }
+    if (filePath.endsWith('.pdf')) {
+      params.ContentType = 'application/pdf'
+      params.ContentDisposition = 'inline'
+    } else if (filePath.endsWith('.html')) {
+      params.ContentType = 'text/html'
+      params.ContentDisposition = 'inline'
+    } else if (filePath.endsWith('.md')) {
+      params.ContentType = 'text/markdown'
+      params.ContentDisposition = 'inline'
+    }
     const upload = new Upload({
       client: s3Client,
-      params: {
-        Bucket: bucketName,
-        Key: key,
-        Body: fileStream,
-      },
+      params: params,
     })
 
     upload.on('httpUploadProgress', (progress) => {
