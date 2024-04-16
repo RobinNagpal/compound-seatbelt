@@ -1,9 +1,7 @@
 import util from 'util'
 import { exec as execCallback } from 'child_process'
 import { getAddress } from '@ethersproject/address'
-import { getContractName } from '../utils/clients/tenderly'
 import { ETHERSCAN_API_KEY } from '../utils/constants'
-import { codeBlock } from '../presentation/report'
 import { getImplementation } from '../utils/contracts/governor'
 import { ProposalCheck } from '../types'
 
@@ -59,13 +57,6 @@ export const checkSlither: ProposalCheck = {
         warnings.push(`Slither execution failed for \`${contract.contract_name}\` at \`${addr}\``)
         continue
       }
-
-      // Append results to report info.
-      // Note that slither supports a `--json` flag  we could use, but directly printing the formatted
-      // results in a code block is simpler and sufficient for now.
-      const contractName = getContractName(contract)
-      info.push(`Slither report for ${contractName}`)
-      info.push(codeBlock(slitherOutput.stderr.trim()))
     }
 
     return { info, warnings, errors: [] }
