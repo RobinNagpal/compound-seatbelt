@@ -3,6 +3,7 @@ import { CometChains, ExecuteTransactionInfo, TransactionFormatter } from '../co
 import { Contract } from 'ethers'
 import { customProvider } from './../../../utils/clients/ethers'
 import { diffString } from 'json-diff'
+import { codeBlock } from '../../../presentation/report'
 
 export const publicResolverFormatter: { [functionName: string]: TransactionFormatter } = {
   'setText(bytes32,string,string)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
@@ -22,8 +23,6 @@ export const publicResolverFormatter: { [functionName: string]: TransactionForma
     const newJson = JSON.parse(newJsonStr)
     const changes = diffString(oldJson, newJson, { color: false, verbose: true })
 
-    const jsonDiffChangeStr = `\n \`\`\`json\n${changes}\n\`\`\``
-
-    return `Set ENS text for ${ENSSubdomain} with key: ${decodedParams[1]} and updates -  \n\n${jsonDiffChangeStr}`
+    return `Set ENS text for ${ENSSubdomain} with key: ${decodedParams[1]} and updates:  \n\n${codeBlock(changes)}`
   },
 }
