@@ -1,4 +1,9 @@
+import { getContractNameAndAbiFromFile } from '../abi-utils'
 import { CometChains, ExecuteTransactionInfo, TransactionFormatter } from '../compound-types'
+import { Contract } from 'ethers'
+import { customProvider } from './../../../utils/clients/ethers'
+import { diffString } from 'json-diff'
+import { codeBlock } from '../../../presentation/report'
 
 export const publicResolverFormatter: { [functionName: string]: TransactionFormatter } = {
   'setText(bytes32,string,string)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
@@ -7,9 +12,17 @@ export const publicResolverFormatter: { [functionName: string]: TransactionForma
         ? 'v3-additional-grants.compound-community-licenses.eth'
         : 'Unknown ENS Name'
 
-    const jsonValue = JSON.parse(decodedParams[2])
-    const formattedJsonValue = JSON.stringify(jsonValue, null, 2)
+    const { abi: targetAbi } = await getContractNameAndAbiFromFile(chain, transaction.target)
+    const targetInstance = new Contract(transaction.target, targetAbi, customProvider(chain))
 
-    return `Set ENS text for ${ENSSubdomain} with key: ${decodedParams[1]} and value:\n\`\`\`json\n${formattedJsonValue}\n\`\`\``
+    const prevtext = await targetInstance.callStatic.text(decodedParams[0], decodedParams[1])
+    const oldJsonStr = prevtext
+    const newJsonStr = decodedParams[2]
+
+    const oldJson = JSON.parse(oldJsonStr)
+    const newJson = JSON.parse(newJsonStr)
+    const changes = diffString(oldJson, newJson, { color: false, verbose: true })
+
+    return `Set ENS text for ${ENSSubdomain} with key: ${decodedParams[1]} and updates:  \n\n${codeBlock(changes)}`
   },
 }
