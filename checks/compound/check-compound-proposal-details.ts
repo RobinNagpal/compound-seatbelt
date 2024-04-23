@@ -61,9 +61,6 @@ async function getCompoundCheckResults(chain: CometChains, proposalId: number, t
     const messageInfo = `${messagePrefix}${message.info}`
     pushMessageToCheckResults(checkResults, { info: messageInfo })
   }
-
-  // fs.writeFileSync(targetLookupFilePath, JSON.stringify(lookupData, null, 2), 'utf-8')
-
   return checkResults
 }
 
