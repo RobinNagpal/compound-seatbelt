@@ -213,6 +213,12 @@ export const changeThresholds = {
     liquidationFactorWarningThreshold: 5,
     liquidationFactorCriticalThreshold: 8,
 
+    liquidationCollateralFactorWarningThreshold: 5,
+    liquidationCollateralFactorCriticalThreshold: 8,
+
+    borrowCollateralFactorWarningThreshold: 5,
+    borrowCollateralFactorCriticalThreshold: 8,
+
     // Add example of values we get in the proposal
     // Proposal No. 176
     // Increase storefront price factor from 50% to 100%

@@ -124,6 +124,12 @@
       "updateAssetLiquidationFactor(address,address,uint64)": {
         "transactionFormatter": "Configurator.updateAssetLiquidationFactor(address,address,uint64)"
       },
+      "updateAssetBorrowCollateralFactor(address,address,uint64)": {
+        "transactionFormatter": "Configurator.updateAssetBorrowCollateralFactor(address,address,uint64)"
+      },
+      "updateAssetLiquidateCollateralFactor(address,address,uint64)": {
+        "transactionFormatter": "Configurator.updateAssetLiquidateCollateralFactor(address,address,uint64)"
+      },
       "setConfiguration(address,tuple)": {
         "transactionFormatter": "Configurator.setConfiguration(address,tuple)"
       },
