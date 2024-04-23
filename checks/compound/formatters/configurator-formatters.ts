@@ -134,6 +134,51 @@ async function getTextForSpeedChange(
   return `${functionDesc}\n\n${tab} **Changes:** ${normalizedChange}\n\n${tab}  **Raw Changes:** ${rawChanges}`
 }
 
+async function getTextForFactorChange(
+  chain: CometChains,
+  transaction: ExecuteTransactionInfo,
+  decodedParams: string[],
+  functionName: string,
+  threshold: { warningThreshold: number; criticalThreshold: number },
+  usePercentageConversion: boolean = true
+) {
+  const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[1])
+  const tokenInstance = new Contract(decodedParams[1], abi, customProvider(chain))
+  const { symbol: tokenSymbol, decimals } = await getContractSymbolAndDecimalsFromFile(decodedParams[1], tokenInstance, chain)
+
+  const { abi: baseAbi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
+  const currentBaseTokenInstance = new Contract(decodedParams[0], baseAbi, customProvider(chain))
+
+  const assetInfo = await currentBaseTokenInstance.callStatic.getAssetInfoByAddress(decodedParams[1])
+  const assetInfoPropertyName = functionName.charAt(0).toLowerCase() + functionName.slice(1)
+  const factorRaw = assetInfo[assetInfoPropertyName].toString()
+  const newFactorRaw = decodedParams[2]
+
+  const prevFactor = usePercentageConversion ? percentageFn(defactorFn(factorRaw)) : defactorFn(factorRaw, decimals)
+  const newFactor = usePercentageConversion ? percentageFn(defactorFn(newFactorRaw)) : defactorFn(newFactorRaw, decimals)
+
+  const changeInFactor = subtractFn(newFactor, prevFactor)
+  const sign = getCriticalitySign(changeInFactor, threshold)
+
+  const tokenInfo = `**${addressFormatter(decodedParams[1], chain, tokenSymbol)}**`
+
+  const functionDesc = await functionDescription({
+    sign,
+    chain,
+    functionName: functionName,
+    targetAddress: transaction.target,
+    cometAddress: decodedParams[0],
+  })
+  const percentageSuffix = usePercentageConversion ? '%' : ''
+  const functionDescWithToken = `${functionDesc} for token - ${tokenInfo}`
+  const normalizedChanges = `Update from ${prevFactor}${percentageSuffix} to ${newFactor}${percentageSuffix} ${getChangeTextFn(
+    changeInFactor,
+    usePercentageConversion
+  )}`
+  const rawChanges = `Update from ${factorRaw} to ${newFactorRaw} for token - ${decodedParams[1]}`
+  return `${functionDescWithToken}\n\n${tab} **Changes:** ${normalizedChanges}\n\n${tab}  **Raw Changes:** ${rawChanges}`
+}
+
 export const configuratorFormatters: { [functionName: string]: TransactionFormatter } = {
   'setBorrowPerYearInterestRateBase(address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const thresholds = {
@@ -250,83 +295,32 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     return getTextForKinkChange(chain, transaction, decodedParams, async (contract) => await contract.callStatic.supplyKink(), 'SupplyKink', thresholds)
   },
   'updateAssetLiquidationFactor(address,address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[1])
-    const tokenInstance = new Contract(decodedParams[1], abi, customProvider(chain))
-    const { symbol: tokenSymbol } = await getContractSymbolAndDecimalsFromFile(decodedParams[1], tokenInstance, chain)
-
-    const { abi: baseAbi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
-    const currentBaseTokenInstance = new Contract(decodedParams[0], baseAbi, customProvider(chain))
-
-    const assetInfo = await currentBaseTokenInstance.callStatic.getAssetInfoByAddress(decodedParams[1])
-
-    const prevLiquidationFactorRaw = assetInfo.liquidationFactor.toString()
-    const newLiquidationFactorRaw = decodedParams[2]
-
-    const prevLiquidationFactor = percentageFn(defactorFn(prevLiquidationFactorRaw))
-    const newLiquidationFactor = percentageFn(defactorFn(newLiquidationFactorRaw))
-
-    const changeInLiquidationFactor = subtractFn(newLiquidationFactor, prevLiquidationFactor)
-
     const thresholds = {
       warningThreshold: changeThresholds.V3.liquidationFactorWarningThreshold,
       criticalThreshold: changeThresholds.V3.liquidationFactorCriticalThreshold,
     }
-    const sign = getCriticalitySign(changeInLiquidationFactor, thresholds)
-
-    const tokenInfo = `**${addressFormatter(decodedParams[1], chain, tokenSymbol)}**`
-
-    const functionDesc = await functionDescription({
-      sign: sign,
-      chain,
-      functionName: 'LiquidationFactor',
-      targetAddress: transaction.target,
-      cometAddress: decodedParams[0],
-    })
-
-    const functionDescWithToken = `${functionDesc} for token - ${tokenInfo}`
-    const normalizedChanges = `Update from ${prevLiquidationFactor}% to ${newLiquidationFactor}% ${getChangeTextFn(changeInLiquidationFactor, true)}`
-    const rawChanges = `Update from ${prevLiquidationFactorRaw} to ${newLiquidationFactorRaw} for token - ${decodedParams[1]}`
-    return `${functionDescWithToken}\n\n${tab} **Changes:** ${normalizedChanges}\n\n${tab}  **Raw Changes:** ${rawChanges}`
+    return getTextForFactorChange(chain, transaction, decodedParams, 'LiquidationFactor', thresholds)
+  },
+  'updateAssetBorrowCollateralFactor(address,address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
+    const thresholds = {
+      warningThreshold: changeThresholds.V3.borrowCollateralFactorWarningThreshold,
+      criticalThreshold: changeThresholds.V3.borrowCollateralFactorCriticalThreshold,
+    }
+    return getTextForFactorChange(chain, transaction, decodedParams, 'BorrowCollateralFactor', thresholds)
+  },
+  'updateAssetLiquidateCollateralFactor(address,address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
+    const thresholds = {
+      warningThreshold: changeThresholds.V3.liquidationCollateralFactorWarningThreshold,
+      criticalThreshold: changeThresholds.V3.liquidationCollateralFactorCriticalThreshold,
+    }
+    return getTextForFactorChange(chain, transaction, decodedParams, 'LiquidateCollateralFactor', thresholds)
   },
   'updateAssetSupplyCap(address,address,uint128)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    const tokenAddress = decodedParams[1]
-    const { abi } = await getContractNameAndAbiFromFile(chain, tokenAddress)
-    const tokenInstance = new Contract(tokenAddress, abi, customProvider(chain))
-    const { symbol: tokenSymbol, decimals } = await getContractSymbolAndDecimalsFromFile(tokenAddress, tokenInstance, chain)
-
-    const { abi: baseAbi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
-    const currentBaseTokenInstance = new Contract(decodedParams[0], baseAbi, customProvider(chain))
-    const assetInfo = await currentBaseTokenInstance.callStatic.getAssetInfoByAddress(tokenAddress)
-
-    const previousSupplyCapRaw = assetInfo.supplyCap.toString()
-    const prevSupplyCap = defactorFn(previousSupplyCapRaw, `${decimals}`)
-
-    const newSupplyCapRaw = decodedParams[2]
-    const newSupplyCap = defactorFn(newSupplyCapRaw, `${decimals}`)
-
-    const changeInSupplyCap = subtractFn(newSupplyCap, prevSupplyCap)
-
     const thresholds = {
       warningThreshold: changeThresholds.V3.supplyCapWarningThreshold,
       criticalThreshold: changeThresholds.V3.supplyCapCriticalThreshold,
     }
-    const sign = getCriticalitySign(changeInSupplyCap, thresholds)
-
-    const tokenInfo = `**${addressFormatter(tokenAddress, chain, tokenSymbol)}**`
-
-    const functionDesc = await functionDescription({
-      sign: sign,
-      chain,
-      functionName: 'SupplyCap',
-      targetAddress: transaction.target,
-      cometAddress: decodedParams[0],
-    })
-
-    const functionDescWithToken = `${functionDesc} for token - ${tokenInfo}`
-
-    const normalizedChanges = `Update from ${addCommas(prevSupplyCap)} to ${addCommas(newSupplyCap)} ${getChangeTextFn(changeInSupplyCap)}`
-    const rawChanges = `Update from ${previousSupplyCapRaw} to ${newSupplyCapRaw} for token - ${tokenAddress}`
-    return `${functionDescWithToken}\n\n${tab}  **Changes:** ${normalizedChanges}\n\n${tab}  **Raw Changes:** ${rawChanges}`
+    return getTextForFactorChange(chain, transaction, decodedParams, 'SupplyCap', thresholds, false)
   },
   'setBaseBorrowMin(address,uint104)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
@@ -526,13 +520,13 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     mainTable += `| BaseToken PriceFeed | **${addressFormatter(tupleList[3], chain, 'PriceFeed')}** |${tupleList[3]} |\n`
     mainTable += `| ExtensionDelegate | ${await getRecipientNameWithLink(chain, tupleList[4])} |${tupleList[4]} |\n`
     mainTable += `| SupplyKink | ${percentageFn(supplyKink)}% |${tupleList[5]} |\n`
-    mainTable += `| SupplyPerYearInterestRateSlopeLow | ${percentageFn(supplyPerYearInterestRateSlopeLow)}% |${tupleList[6]} |\n`
-    mainTable += `| SupplyPerYearInterestRateSlopeHigh | ${percentageFn(supplyPerYearInterestRateSlopeHigh)}% |${tupleList[7]} |\n`
-    mainTable += `| SupplyPerYearInterestRateBase | ${percentageFn(supplyPerYearInterestRateBase)}% |${tupleList[8]} |\n`
+    mainTable += `| SupplyPerYearInterestRateSlopeLow | ${supplyPerYearInterestRateSlopeLow}% |${tupleList[6]} |\n`
+    mainTable += `| SupplyPerYearInterestRateSlopeHigh | ${supplyPerYearInterestRateSlopeHigh}% |${tupleList[7]} |\n`
+    mainTable += `| SupplyPerYearInterestRateBase | ${supplyPerYearInterestRateBase}% |${tupleList[8]} |\n`
     mainTable += `| BorrowKink | ${percentageFn(borrowKink)}% |${tupleList[9]} |\n`
-    mainTable += `| BorrowPerYearInterestRateSlopeLow | ${percentageFn(borrowPerYearInterestRateSlopeLow)}% |${tupleList[10]} |\n`
-    mainTable += `| BorrowPerYearInterestRateSlopeHigh | ${percentageFn(borrowPerYearInterestRateSlopeHigh)}% |${tupleList[11]} |\n`
-    mainTable += `| BorrowPerYearInterestRateBase | ${percentageFn(borrowPerYearInterestRateBase)}% |${tupleList[12]} |\n`
+    mainTable += `| BorrowPerYearInterestRateSlopeLow | ${borrowPerYearInterestRateSlopeLow}% |${tupleList[10]} |\n`
+    mainTable += `| BorrowPerYearInterestRateSlopeHigh | ${borrowPerYearInterestRateSlopeHigh}% |${tupleList[11]} |\n`
+    mainTable += `| BorrowPerYearInterestRateBase | ${borrowPerYearInterestRateBase}% |${tupleList[12]} |\n`
     mainTable += `| StoreFrontPriceFactor | ${percentageFn(storeFrontPriceFactor)}% |${tupleList[13]} |\n`
     mainTable += `| TrackingIndexScale | ${addCommas(trackingIndexScale)} |${tupleList[14]} |\n`
     mainTable += `| BaseTrackingSupplySpeed | ${addCommas(baseTrackingSupplySpeed)} |${tupleList[15]} |\n`
