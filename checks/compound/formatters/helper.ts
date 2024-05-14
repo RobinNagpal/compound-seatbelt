@@ -7,11 +7,12 @@ import FormData from 'form-data'
 import fs from 'fs'
 import mftch from 'micro-ftch'
 import { CometChains, SymbolAndDecimalsLookupData } from '../compound-types'
-import { CheckResult } from './../../../types'
+import { AllCheckResults, CheckResult } from './../../../types'
 import { customProvider } from './../../../utils/clients/ethers'
 import { DISCORD_WEBHOOK_URL } from './../../../utils/constants'
 import { defactorFn } from './../../../utils/roundingUtils'
 import { getContractNameAndAbiFromFile } from './../abi-utils'
+import { bold } from '../../../presentation/report'
 
 // @ts-ignore
 const fetchUrl = mftch.default
@@ -335,5 +336,17 @@ export async function postNotificationToDiscord(rawText: string) {
     } catch (error) {
       console.error('Error sending file to Discord:', error)
     }
+  }
+}
+
+export async function pushFailedChecksToDiscord(checks: AllCheckResults, proposalID: string) {
+  const failedChecks = Object.entries(checks)
+    .filter(([_, { result }]) => result.errors.length > 0)
+    .map(([_, { name, result }]) => `- ${bold(`${name} ❌ Failed`)} \n${result.errors.map((error) => `${tab}- ${error}`).join('\n')}`)
+
+  if (failedChecks.length > 0) {
+    await postNotificationToDiscord(
+      `## Failed checks in the proposal: [${proposalID}](https://compound.finance/governance/proposals/${proposalID})\n\n${failedChecks.join('\n\n')}`
+    )
   }
 }

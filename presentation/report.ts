@@ -15,8 +15,11 @@ import { formatProposalId } from '../utils/contracts/governor'
 import { AllCheckResults, GovernorType, ProposalEvent } from '../types'
 import {
   checkforumPost,
+  postNotificationToDiscord,
   pushChecksSummaryToDiscord,
   pushChecksSummaryToDiscordAsEmbeds,
+  pushFailedChecksToDiscord,
+  tab,
 } from '../checks/compound/formatters/helper'
 
 // --- Markdown helpers ---
@@ -193,6 +196,9 @@ async function toMarkdownProposalReport(
 ): Promise<string> {
   const { id, proposer, targets, endBlock, startBlock, description } = proposal
   const proposalID = formatProposalId(governorType, id!)
+
+  pushFailedChecksToDiscord(checks, proposalID)
+
   // Generate the report. We insert an empty table of contents header which is populated later using remark-toc.
   const report = `
 # ${getProposalTitle(description.trim())}
