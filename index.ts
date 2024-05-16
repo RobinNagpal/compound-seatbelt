@@ -6,7 +6,7 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 import { listFilesInFolder, uploadFileToS3 } from './checks/compound/s3-utils'
-import { BigNumber, constants, Contract } from 'ethers'
+import { BigNumber, Contract } from 'ethers'
 import { DAO_NAME, GOVERNOR_ADDRESS, SIM_NAME } from './utils/constants'
 import { provider } from './utils/clients/ethers'
 import { simulate } from './utils/clients/tenderly'

@@ -7,11 +7,12 @@ import FormData from 'form-data'
 import fs from 'fs'
 import mftch from 'micro-ftch'
 import { CometChains, SymbolAndDecimalsLookupData } from '../compound-types'
-import { CheckResult } from './../../../types'
+import { AllCheckResults, CheckResult } from './../../../types'
 import { customProvider } from './../../../utils/clients/ethers'
 import { DISCORD_WEBHOOK_URL } from './../../../utils/constants'
 import { defactorFn } from './../../../utils/roundingUtils'
 import { getContractNameAndAbiFromFile } from './../abi-utils'
+import { bold } from '../../../presentation/report'
 
 // @ts-ignore
 const fetchUrl = mftch.default
@@ -271,9 +272,14 @@ export async function pushChecksSummaryToDiscord(reportMarkdown: string, proposa
   await postNotificationToDiscord(`${header} ${discordPayload} ${appendix}`)
 }
 
-export async function pushChecksSummaryToDiscordAsEmbeds(checkResult: CheckResult, proposalNo: string) {
+export async function pushChecksSummaryToDiscordAsEmbeds(failedChecks: string[], checkResult: CheckResult, proposalNo: string) {
   const s3ReportsFolder = process.env.AWS_BUCKET_BASE_PATH || 'all-proposals'
-  const embeds = checkResult.info.map((m) => ({
+  const failedEmbeds = (failedChecks || []).map((m) => ({
+    description: m,
+    color: 16711680,
+  }))
+
+  const compoundEmbeds = checkResult.info.map((m) => ({
     description: m?.length || 0 > 4000 ? extractTextFromMarkdown(m) : m,
     color: 1127128,
   }))
@@ -284,7 +290,7 @@ export async function pushChecksSummaryToDiscordAsEmbeds(checkResult: CheckResul
     ## Summary of Compound Checks - [${proposalNo}](https://compound.finance/governance/proposals/${proposalNo})
     [Full Report](https://compound-governance-proposals.s3.amazonaws.com/${s3ReportsFolder}/${proposalNo}.pdf)
     `,
-      embeds: embeds,
+      embeds: [...failedEmbeds, ...compoundEmbeds],
     })
   } catch (error: any) {
     if (error?.response) {
