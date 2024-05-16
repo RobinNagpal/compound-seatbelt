@@ -272,9 +272,14 @@ export async function pushChecksSummaryToDiscord(reportMarkdown: string, proposa
   await postNotificationToDiscord(`${header} ${discordPayload} ${appendix}`)
 }
 
-export async function pushChecksSummaryToDiscordAsEmbeds(checkResult: CheckResult, proposalNo: string) {
+export async function pushChecksSummaryToDiscordAsEmbeds(failedChecks: string[], checkResult: CheckResult, proposalNo: string) {
   const s3ReportsFolder = process.env.AWS_BUCKET_BASE_PATH || 'all-proposals'
-  const embeds = checkResult.info.map((m) => ({
+  const failedEmbeds = (failedChecks || []).map((m) => ({
+    description: m,
+    color: 16711680,
+  }))
+
+  const compoundEmbeds = checkResult.info.map((m) => ({
     description: m?.length || 0 > 4000 ? extractTextFromMarkdown(m) : m,
     color: 1127128,
   }))
@@ -285,7 +290,7 @@ export async function pushChecksSummaryToDiscordAsEmbeds(checkResult: CheckResul
     ## Summary of Compound Checks - [${proposalNo}](https://compound.finance/governance/proposals/${proposalNo})
     [Full Report](https://compound-governance-proposals.s3.amazonaws.com/${s3ReportsFolder}/${proposalNo}.pdf)
     `,
-      embeds: embeds,
+      embeds: [...failedEmbeds, ...compoundEmbeds],
     })
   } catch (error: any) {
     if (error?.response) {
@@ -336,17 +341,5 @@ export async function postNotificationToDiscord(rawText: string) {
     } catch (error) {
       console.error('Error sending file to Discord:', error)
     }
-  }
-}
-
-export async function pushFailedChecksToDiscord(checks: AllCheckResults, proposalID: string) {
-  const failedChecks = Object.entries(checks)
-    .filter(([_, { result }]) => result.errors.length > 0)
-    .map(([_, { name, result }]) => `- ${bold(`${name} ❌ Failed`)} \n${result.errors.map((error) => `${tab}- ${error}`).join('\n')}`)
-
-  if (failedChecks.length > 0) {
-    await postNotificationToDiscord(
-      `## Failed checks in the proposal: [${proposalID}](https://compound.finance/governance/proposals/${proposalID})\n\n${failedChecks.join('\n\n')}`
-    )
   }
 }

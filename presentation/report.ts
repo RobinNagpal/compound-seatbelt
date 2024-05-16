@@ -15,10 +15,8 @@ import { formatProposalId } from '../utils/contracts/governor'
 import { AllCheckResults, GovernorType, ProposalEvent } from '../types'
 import {
   checkforumPost,
-  postNotificationToDiscord,
   pushChecksSummaryToDiscord,
   pushChecksSummaryToDiscordAsEmbeds,
-  pushFailedChecksToDiscord,
   tab,
 } from '../checks/compound/formatters/helper'
 
@@ -172,8 +170,15 @@ export async function pushCompoundChecksToDiscord(
     checkCompoundProposalDetails: compoundChecks,
   })
 
+  const failedChecks = Object.entries(checks)
+    .filter(([_, { result }]) => result.errors.length > 0)
+    .map(
+      ([_, { name, result }]) =>
+        `- ${bold(`${name} ❌ Failed`)} \n${result.errors.map((error) => `${tab}- ${error}`).join('\n')}`
+    )
+
   if (compoundChecks.result.info.length < 10) {
-    await pushChecksSummaryToDiscordAsEmbeds(compoundChecks.result, proposal.id!.toString())
+    await pushChecksSummaryToDiscordAsEmbeds(failedChecks, compoundChecks.result, proposal.id!.toString())
   } else {
     const markdownReport = String(await remark().use(remarkFixEmojiLinks).process(baseReport))
     const id = formatProposalId(governorType, proposal.id!)
@@ -196,8 +201,6 @@ async function toMarkdownProposalReport(
 ): Promise<string> {
   const { id, proposer, targets, endBlock, startBlock, description } = proposal
   const proposalID = formatProposalId(governorType, id!)
-
-  pushFailedChecksToDiscord(checks, proposalID)
 
   // Generate the report. We insert an empty table of contents header which is populated later using remark-toc.
   const report = `

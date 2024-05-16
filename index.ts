@@ -6,7 +6,7 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 import { listFilesInFolder, uploadFileToS3 } from './checks/compound/s3-utils'
-import { BigNumber, constants, Contract } from 'ethers'
+import { BigNumber, Contract } from 'ethers'
 import { DAO_NAME, GOVERNOR_ADDRESS, SIM_NAME } from './utils/constants'
 import { provider } from './utils/clients/ethers'
 import { simulate } from './utils/clients/tenderly'
@@ -58,7 +58,7 @@ async function main() {
     const files = await listFilesInFolder(s3ReportsFolder)
     console.log('files', files)
     const proposalIdsArr = allProposalIds.filter((id) => id.toNumber() > 228)
-    const proposalIds = proposalIdsArr.map((id) => BigNumber.from(id))
+    const proposalIds = [245, 246, 247, 248, 249, 250].map(BigNumber.from) // proposalIdsArr.map((id) => BigNumber.from(id))
 
     governor = getGovernor(governorType, GOVERNOR_ADDRESS)
 
@@ -98,7 +98,7 @@ async function main() {
 
       const pdfExists = files.includes(`${s3ReportsFolder}/${simProposal.id.toString()}.pdf`)
 
-      if (pdfExists) {
+      if (pdfExists && false) {
         console.log(`Skipping simulation for proposal ${simProposal.id}  as PDF already exisis in S3...`)
         continue
       }
