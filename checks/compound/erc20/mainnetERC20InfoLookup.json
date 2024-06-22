@@ -166,5 +166,9 @@
   "0x041171993284df560249b57358f931d9eb7b925d": {
     "symbol": "cUSDP",
     "decimals": "8"
+  },
+  "0xa1290d69c65a6fe4df752f95823fae25cb99e5a7": {
+    "symbol": "rsETH",
+    "decimals": "18"
   }
 }
