@@ -22,5 +22,13 @@
   "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270": {
     "symbol": "WMATIC",
     "decimals": "18"
+  },
+  "0xc2132d05d31c914a87c6611c10748aeb04b58e8f": {
+    "symbol": "USDT",
+    "decimals": "6"
+  },
+  "0x8505b9d2254a7ae468c0e9dd10ccea3a837aef5c": {
+    "symbol": "COMP",
+    "decimals": "18"
   }
 }
