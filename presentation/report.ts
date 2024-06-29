@@ -177,7 +177,7 @@ export async function pushCompoundChecksToDiscord(
         `- ${bold(`${name} ❌ Failed`)} \n${result.errors.map((error) => `${tab}- ${error}`).join('\n')}`
     )
 
-  if (compoundChecks.result.info.length < 10) {
+  if (compoundChecks.result.info.length < 6) {
     await pushChecksSummaryToDiscordAsEmbeds(failedChecks, compoundChecks.result, proposal.id!.toString())
   } else {
     const markdownReport = String(await remark().use(remarkFixEmojiLinks).process(baseReport))
