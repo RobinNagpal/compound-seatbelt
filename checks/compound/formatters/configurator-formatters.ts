@@ -404,7 +404,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       const assetTotalSupply = assetData.market_data.total_supply
 
       const addressesVerificationString =
-        assetAddressOnGecko.toLowerCase() === assetAddress.toLowerCase()
+        assetAddressOnGecko?.toLowerCase() === assetAddress.toLowerCase()
           ? `${tab}* 🟢 Asset address is verified on CoinGecko.\n`
           : `${tab}* 🔴 Asset address is not verified on CoinGecko.\n`
 
@@ -562,6 +562,23 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     const normalizedChanges = `Update from ${priceFactorOld}% to ${priceFactorNew}% ${getChangeTextFn(changeInFactor, true)}`
 
     return `${sign} Set StoreFrontPriceFactor for ${tokenNameWithLink}\n\n${tab}  **Changes:** ${normalizedChanges}\n\n${tab}  **Raw Changes:** new value - ${decodedParams[1]}`
+  },
+  'updateAssetPriceFeed(address,address,address)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
+    const [cometProxy, asset, newPriceFeed] = decodedParams
+
+    const { abi: contractAbi } = await getContractNameAndAbiFromFile(chain, cometProxy)
+    const contractInstance = new Contract(cometProxy, contractAbi, customProvider(chain))
+    const contractBaseToken = await contractInstance.callStatic.baseToken()
+
+    const { abi: baseTokenAbi } = await getContractNameAndAbiFromFile(chain, contractBaseToken)
+    const baseTokenInstance = new Contract(contractBaseToken, baseTokenAbi, customProvider(chain))
+    const { symbol: contractBaseSymbol } = await getContractSymbolAndDecimalsFromFile(contractBaseToken, baseTokenInstance, chain)
+
+    const { abi: tokenAbi } = await getContractNameAndAbiFromFile(chain, asset)
+    const tokenInstance = new Contract(asset, tokenAbi, customProvider(chain))
+    const { symbol: tokenSymbol } = await getContractSymbolAndDecimalsFromFile(asset, tokenInstance, chain)
+
+    return `🔄 Update price feed for **${addressFormatter(contractBaseToken, chain, contractBaseSymbol)}** market **${tokenSymbol}** to ${newPriceFeed}`
   },
 }
 
