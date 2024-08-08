@@ -2,6 +2,7 @@ import { TransactionFormatter } from './compound-types'
 import { aeraVaultFormatters } from './formatters/aera-vault-formatters'
 import { bridgeFormatters } from './formatters/bridge-formatters'
 import { cerc20DelegateFormatters } from './formatters/cerc20delegate-formatters'
+import { cometFormatters } from './formatters/comet-formatters'
 import { cometProxyAdminFormatters } from './formatters/comet-proxy-admin-formatters'
 import { cometRewardsFormatters } from './formatters/comet-rewards-formatters'
 import { comptrollerFormatters } from './formatters/comptroller-formatters'
@@ -23,6 +24,7 @@ export const formattersLookup: {
   }
 } = {
   Configurator: configuratorFormatters,
+  Comet: cometFormatters,
   Comptroller: comptrollerFormatters,
   ERC20: ERC20Formatters,
   BridgeFormatters: bridgeFormatters,

@@ -172,6 +172,13 @@
       }
     }
   },
+  "Comet": {
+    "functions": {
+      "withdrawReserves(address,uint256)": {
+        "transactionFormatter": "Comet.withdrawReserves(address,uint256)"
+      }
+    }
+  },
   "SaiTap": {
     "contractName": "SaiTap",
     "functions": {
