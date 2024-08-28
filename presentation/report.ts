@@ -1,3 +1,7 @@
+import {
+  pushChecksSummaryToDiscord,
+  pushChecksSummaryToDiscordAsEmbeds,
+} from '../checks/compound/formatters/push-to-discord'
 import fs, { promises as fsp } from 'fs'
 import { Block } from '@ethersproject/abstract-provider'
 import { BigNumber } from 'ethers'
@@ -13,12 +17,7 @@ import { unified } from 'unified'
 import { mdToPdf } from 'md-to-pdf'
 import { formatProposalId } from '../utils/contracts/governor'
 import { AllCheckResults, GovernorType, ProposalEvent } from '../types'
-import {
-  checkforumPost,
-  pushChecksSummaryToDiscord,
-  pushChecksSummaryToDiscordAsEmbeds,
-  tab,
-} from '../checks/compound/formatters/helper'
+import { checkforumPost, tab } from '../checks/compound/formatters/helper'
 
 // --- Markdown helpers ---
 

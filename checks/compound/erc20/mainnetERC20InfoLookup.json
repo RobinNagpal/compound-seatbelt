@@ -174,5 +174,9 @@
   "0xcd5fe23c85820f7b72d0926fc9b05b43e359b7ee": {
     "symbol": "weETH",
     "decimals": "18"
+  },
+  "0xbf5495efe5db9ce00f80364c8b423567e58d2110": {
+    "symbol": "ezETH",
+    "decimals": "18"
   }
 }
