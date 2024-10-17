@@ -44,7 +44,7 @@ export const checkLogs: ProposalCheck = {
       logs.forEach((log) => {
         if (Boolean(log.name)) {
           // Log is decoded, format data as: VotingDelaySet(oldVotingDelay: value, newVotingDelay: value)
-          const parsedInputs = log.inputs.map((i) => `${i.soltype!.name}: ${i.value}`).join(', ')
+          const parsedInputs = log.inputs?.map((i) => `${i.soltype!.name}: ${i.value}`).join(', ')
           info.push(bullet(`\`${log.name}(${parsedInputs})\``, 1))
         } else {
           // Log is not decoded, report the raw data

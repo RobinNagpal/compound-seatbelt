@@ -178,5 +178,17 @@
   "0xbf5495efe5db9ce00f80364c8b423567e58d2110": {
     "symbol": "ezETH",
     "decimals": "18"
+  },
+  "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": {
+    "symbol": "cbBTC",
+    "decimals": "8"
+  },
+  "0xfae103dc9cf190ed75350761e95403b7b8afa6c0": {
+    "symbol": "rswETH",
+    "decimals": "18"
+  },
+  "0x18084fba666a33d37592fa2633fd49a74dd93a88": {
+    "symbol": "tBTC",
+    "decimals": "18"
   }
 }
