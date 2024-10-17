@@ -59,52 +59,84 @@ function adjustMessageLength(messages: Embed[]): Embed[] {
   return shortenedMessages
 }
 
-export async function pushChecksSummaryToDiscordAsEmbeds(failedChecks: string[], checkResult: CheckResult, proposalNo: string) {
+export async function pushChecksSummaryToDiscordAsEmbeds(failedChecks: string[], warningChecks: string[], checkResult: CheckResult, proposalNo: string) {
   const s3ReportsFolder = process.env.AWS_BUCKET_BASE_PATH || 'all-proposals'
+
   const failedEmbeds = (failedChecks || []).map((m) => ({
     description: m,
-    color: 16711680,
+    color: 16711680, // Red color for failed checks
+  }))
+
+  const warningEmbeds = (failedChecks || []).map((m) => ({
+    description: m,
+    color: 16776960, // Yellow color for warning checks
   }))
 
   const compoundEmbeds = checkResult.info.map((m) => {
     const embedMessage = getEmbedMessage(m)
     return {
       description: embedMessage,
-      color: 1127128,
+      color: 1127128, // Blue color for info messages
     }
   })
 
-  console.log('before', compoundEmbeds)
-  const adjustedCompoundEmbeds = adjustMessageLength(compoundEmbeds)
-  console.log('adjustedCompoundEmbeds', adjustedCompoundEmbeds)
+  // Combine failedEmbeds and compoundEmbeds
+  const allEmbeds = [...failedEmbeds, ...warningEmbeds, ...compoundEmbeds]
 
-  try {
-    await axios.post(DISCORD_WEBHOOK_URL, {
-      content: `
-    ## Summary of Compound Checks - [${proposalNo}](https://compound.finance/governance/proposals/${proposalNo})
-    [Full Report](https://compound-governance-proposals.s3.amazonaws.com/${s3ReportsFolder}/${proposalNo}.pdf)
-    `,
-      embeds: [...failedEmbeds, ...adjustedCompoundEmbeds],
-    })
-  } catch (error: any) {
-    if (error?.response) {
-      // The request was made and the server responded with a status code
-      // that falls out of the range of 2xx
-      console.log(error.response.data)
-      console.log(error.response.status)
-      console.log(error.response.headers)
-    } else if (error?.request) {
-      // The request was made but no response was received
-      // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
-      // http.ClientRequest in node.js
-      console.log(error.request)
-    } else {
-      // Something happened in setting up the request that triggered an Error
-      console.log('Error', error?.message)
+  // Discord limits
+  const MAX_EMBEDS_PER_MESSAGE = 6
+  const MAX_CONTENT_LENGTH = 2000 // Max length for content field
+  const MAX_EMBED_TOTAL_LENGTH = 6000 // Max total length of all embeds per message
+
+  // Split embeds into chunks
+  const embedChunks = []
+  for (let i = 0; i < allEmbeds.length; i += MAX_EMBEDS_PER_MESSAGE) {
+    embedChunks.push(allEmbeds.slice(i, i + MAX_EMBEDS_PER_MESSAGE))
+  }
+
+  // Send each chunk as a separate message
+  for (let idx = 0; idx < embedChunks.length; idx++) {
+    const embedsChunk = embedChunks[idx]
+
+    // Adjust embed descriptions if total length exceeds limit
+    let totalEmbedLength = embedsChunk.reduce((sum, embed) => sum + embed.description.length, 0)
+    if (totalEmbedLength > MAX_EMBED_TOTAL_LENGTH) {
+      for (let embed of embedsChunk) {
+        if (embed.description.length > 500) {
+          embed.description = embed.description.slice(0, 500) + '...'
+        }
+      }
     }
-    console.log(error?.config)
 
-    throw error
+    let content = ''
+    if (idx === 0) {
+      content = `
+## Summary of Compound Checks - [${proposalNo}](https://compound.finance/governance/proposals/${proposalNo})
+[Full Report](https://compound-governance-proposals.s3.amazonaws.com/${s3ReportsFolder}/${proposalNo}.pdf)
+      `.trim()
+    } else {
+      content = '' // Empty content for subsequent messages
+    }
+
+    try {
+      await axios.post(DISCORD_WEBHOOK_URL, {
+        content: content,
+        embeds: embedsChunk,
+      })
+    } catch (error: any) {
+      // Handle error
+      if (error?.response) {
+        console.log(error.response.data)
+        console.log(error.response.status)
+        console.log(error.response.headers)
+      } else if (error?.request) {
+        console.log(error.request)
+      } else {
+        console.log('Error', error?.message)
+      }
+      console.log(error?.config)
+      throw error
+    }
   }
 }
 

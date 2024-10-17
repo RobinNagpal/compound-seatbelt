@@ -164,10 +164,6 @@ export async function pushCompoundChecksToDiscord(
   checks: AllCheckResults
 ) {
   const compoundChecks = checks['checkCompoundProposalDetails']
-  // Generate the base markdown proposal report. This is the markdown report which is translated into other file types.
-  const baseReport = await toMarkdownProposalReport(governorType, blocks, proposal, {
-    checkCompoundProposalDetails: compoundChecks,
-  })
 
   const failedChecks = Object.entries(checks)
     .filter(([_, { result }]) => result.errors.length > 0)
@@ -176,14 +172,16 @@ export async function pushCompoundChecksToDiscord(
         `- ${bold(`${name} ❌ Failed`)} \n${result.errors.map((error) => `${tab}- ${error}`).join('\n')}`
     )
 
-  if (compoundChecks.result.info.length < 6) {
-    await pushChecksSummaryToDiscordAsEmbeds(failedChecks, compoundChecks.result, proposal.id!.toString())
-  } else {
-    const markdownReport = String(await remark().use(remarkFixEmojiLinks).process(baseReport))
-    const id = formatProposalId(governorType, proposal.id!)
+  const warningChecks = Object.entries(checks)
+    .filter(([_, { result }]) => result.warnings.length > 0)
+    .map(
+      ([_, { name, result }]) =>
+        `- ${bold(`${name} ❗❗ Passed with warnings`)} \n${result.warnings
+          .map((warning) => `${tab}- ${warning}`)
+          .join('\n')}`
+    )
 
-    await pushChecksSummaryToDiscord(markdownReport, id)
-  }
+  await pushChecksSummaryToDiscordAsEmbeds(failedChecks, warningChecks, compoundChecks.result, proposal.id!.toString())
 }
 
 /**
