@@ -41,6 +41,7 @@
     "json-diff": "^1.0.6",
     "md-to-pdf": "^5.1.0",
     "micro-ftch": "^0.3.1",
+    "openai": "^4.76.1",
     "rehype-sanitize": "^5.0.1",
     "rehype-slug": "^5.0.1",
     "rehype-stringify": "^9.0.3",

@@ -73,7 +73,7 @@ function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-function getExplorerApiUrl(chain: CometChains, address: string) {
+export function getExplorerApiUrl(chain: CometChains, address: string) {
   if (chain === CometChains.mainnet) {
     return `https://api.etherscan.io/api?module=contract&action=getsourcecode&address=${address}&apikey=${process.env.ETHERSCAN_API_KEY}`
   } else if (chain === CometChains.polygon) {
@@ -86,6 +86,24 @@ function getExplorerApiUrl(chain: CometChains, address: string) {
     return `https://api.scrollscan.com/api?module=contract&action=getsourcecode&address=${address}&apikey=${process.env.SCROLL_API_KEY}`
   } else if (chain === CometChains.optimism) {
     return `https://api-optimistic.etherscan.io/api?module=contract&action=getsourcecode&address=${address}&apikey=${process.env.OPTIMISM_API_KEY}`
+  } else {
+    throw new Error('Unknown chain: ' + chain)
+  }
+}
+
+export function getExplorerBaseUrl(chain: CometChains) {
+  if (chain === CometChains.mainnet) {
+    return `https://etherscan.io/address/`
+  } else if (chain === CometChains.polygon) {
+    return `https://polygonscan.com/address/`
+  } else if (chain === CometChains.arbitrum) {
+    return `https://arbiscan.io/address/`
+  } else if (chain === CometChains.base) {
+    return `https://basescan.org/address/`
+  } else if (chain === CometChains.scroll) {
+    return `https://scrollscan.com/address/`
+  } else if (chain === CometChains.optimism) {
+    return `https://optimistic.etherscan.io/address/`
   } else {
     throw new Error('Unknown chain: ' + chain)
   }

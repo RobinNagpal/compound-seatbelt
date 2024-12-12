@@ -14,6 +14,7 @@ import {
 import { getPlatform, getRecipientNameWithLink, tab } from './formatters/helper'
 import { getDecodedBytesForChain, l2Bridges } from './l2-utils'
 import { formattersLookup } from './transaction-formatter'
+import { generateAISummary } from './aiSummary'
 
 /**
  * Decodes proposal target calldata into a human-readable format
@@ -144,29 +145,27 @@ async function getTransactionMessages(chain: CometChains, proposalId: number, tr
       console.error(
         `No functions found for ContractName - ${contractNameAndAbi.contractName}. FunctionSignature - ${functionSignature}. TransactionFormatter - ${transactionFormatter}. FunctionMapping - ${functionMapping}`
       )
-      return { info: `**${target}.${functionSignature} called with :** (${decodedCalldata.join(',')})` }
+      const aiSummary = await generateAISummary(chain, target, functionSignature, decodedCalldata)
+      return { info: aiSummary }
     }
 
-    if (!transactionFormatter) {
-      return { info: `**${target} - ${functionSignature} called with :** (${decodedCalldata.join(',')})` }
-    } else {
-      const [contractName, formatterName] = transactionFormatter.split('.')
-      console.log(`GetFormatter: ContractName - ${contractName} and FormatterName - ${formatterName}`)
-      const formattersLookupElement = formattersLookup[contractName]?.[formatterName]
-
-      const message = !formattersLookupElement
-        ? `${target}.${functionSignature} - called with ${decodedCalldata}`
-        : await formattersLookupElement(
-            chain,
-            transactionInfo,
-            decodedCalldata.map((data) => data.toString())
-          )
-      return { info: message }
-    }
+    const [contractName, formatterName] = transactionFormatter.split('.')
+    console.log(`GetFormatter: ContractName - ${contractName} and FormatterName - ${formatterName}`)
+    const formattersLookupElement = formattersLookup[contractName]?.[formatterName]
+    
+    const message = !formattersLookupElement
+      ? `${target}.${functionSignature} - called with ${decodedCalldata}`
+      : await formattersLookupElement(
+          chain,
+          transactionInfo,
+          decodedCalldata.map((data) => data.toString())
+        )
+    return { info: message }
+    
   } catch (error) {
     console.error(`Error in decoding transaction ${JSON.stringify(transactionInfo)}`)
     console.error(error)
-    return { info: `Error in decoding transaction ${transactionInfo.target} - ${transactionInfo.signature} called with ${transactionInfo.calldata}` }
+    return { info: `Error in decoding transaction: **${transactionInfo.target}.${transactionInfo.signature} called with:** (${transactionInfo.calldata})` }
   }
 }
 
