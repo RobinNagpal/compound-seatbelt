@@ -160,7 +160,7 @@ async function getTransactionMessages(chain: CometChains, proposalId: number, tr
         info: await formattersLookupElement(
           chain,
           transactionInfo,
-          decodedCalldata.map((data) => data.toString())
+          decodedCalldata.map((data: any) => data.toString())
         ),
       };
     }
