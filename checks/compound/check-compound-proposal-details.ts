@@ -153,14 +153,17 @@ async function getTransactionMessages(chain: CometChains, proposalId: number, tr
     console.log(`GetFormatter: ContractName - ${contractName} and FormatterName - ${formatterName}`)
     const formattersLookupElement = formattersLookup[contractName]?.[formatterName]
     
-    const message = !formattersLookupElement
-      ? `${target}.${functionSignature} - called with ${decodedCalldata}`
-      : await formattersLookupElement(
+    if (!formattersLookupElement) {
+      return { info: `${target}.${functionSignature} - called with ${decodedCalldata}` };
+    } else {
+      return {
+        info: await formattersLookupElement(
           chain,
           transactionInfo,
-          decodedCalldata.map((data) => data.toString())
-        )
-    return { info: message }
+          decodedCalldata.map((data: any) => data.toString())
+        ),
+      };
+    }
     
   } catch (error) {
     console.error(`Error in decoding transaction ${JSON.stringify(transactionInfo)}`)
