@@ -1,28 +1,28 @@
-import OpenAI from "openai";
-import axios from "axios";
-import { getContractNameAndAbiFromFile, getExplorerApiUrl, getExplorerBaseUrl } from "./abi-utils";
-import { CometChains } from "./compound-types";
-import { Result } from "ethers/lib/utils";
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import OpenAI from 'openai'
+import axios from 'axios'
+import { getContractNameAndAbiFromFile, getExplorerApiUrl, getExplorerBaseUrl } from './abi-utils'
+import { CometChains } from './compound-types'
+import { Result } from 'ethers/lib/utils'
 
 export async function generateAISummary(chain: CometChains, target: string, signature: string, decodedCalldata: Result) {
-  let sourceCode: any = {};
-  let argumentAddresses: string[] = [];
-  let contracts: Record<string, string> = {};
+  const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  })
+
+  let sourceCode: any = {}
+  let argumentAddresses: string[] = []
+  let contracts: Record<string, string> = {}
 
   try {
-    const baseExplorerUrl = getExplorerBaseUrl(chain);
+    const baseExplorerUrl = getExplorerBaseUrl(chain)
 
-    sourceCode = await getSourceCode(chain, target);
-    argumentAddresses = getAddressArgumentsFromCalldata(signature, decodedCalldata);
-    contracts = await getContractNamesList(chain, target, argumentAddresses);
+    sourceCode = await getSourceCode(chain, target)
+    argumentAddresses = getAddressArgumentsFromCalldata(signature, decodedCalldata)
+    contracts = await getContractNamesList(chain, target, argumentAddresses)
 
     const contractList = Object.entries(contracts)
       .map(([name, address]) => `${name}: ${address}`)
-      .join("\n");
+      .join('\n')
 
     const prompt = `
 I want to write a one-line non-technical summary of the action performed by the following function call. I will also provide the source of the contract with its dependencies. Please give me the summary in this format:
@@ -42,108 +42,110 @@ ${contractList}
 
 Here is the source code of the target contract:
 ${sourceCode}
-`;
+`
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: 'gpt-4o',
       messages: [
         {
-          role: "system",
-          content: "You are a helpful assistant generating summaries for Smart contract calls.",
+          role: 'system',
+          content: 'You are a helpful assistant generating summaries for Smart contract calls.',
         },
         {
-          role: "user",
+          role: 'user',
           content: prompt,
         },
       ],
       temperature: 0.7,
-    });
+    })
 
-    const message = response?.choices?.[0]?.message?.content;
+    const message = response?.choices?.[0]?.message?.content
     if (!message) {
-      console.error("Response from AI is empty, falling back to default formatter.");
-      return await defaultFormatter(chain, target, signature, decodedCalldata);
+      console.error('Response from AI is empty, falling back to default formatter.')
+      return await defaultFormatter(chain, target, signature, decodedCalldata)
     }
 
-    return formatAISummary(message.trim());
+    return formatAISummary(message.trim())
   } catch (error) {
-    console.error("Error generating AI summary:", error);
-    return await defaultFormatter(chain, target, signature, decodedCalldata);
+    console.error('Error generating AI summary:', error)
+    return await defaultFormatter(chain, target, signature, decodedCalldata)
   }
 }
 
 async function getSourceCode(chain: CometChains, address: string) {
-  const sourceCodeUrl = getExplorerApiUrl(chain, address);
+  const sourceCodeUrl = getExplorerApiUrl(chain, address)
   try {
-    const response = await axios.get(sourceCodeUrl);
+    const response = await axios.get(sourceCodeUrl)
     if (response.data && response.data.result && response.data.result.length > 0) {
-      return response.data.result[0];
+      return response.data.result[0]
     } else {
-      console.error(`No source code found for this contract: ${address}`);
-      return {};
+      console.error(`No source code found for this contract: ${address}`)
+      return {}
     }
   } catch (error) {
-    console.error(`Error fetching contract source code for ${address}: `, error);
-    return {};
+    console.error(`Error fetching contract source code for ${address}: `, error)
+    return {}
   }
 }
 
 function getAddressArgumentsFromCalldata(signature: string, decodedCalldata: Result): string[] {
   try {
-    const argsMatch = /\((.*)\)/.exec(signature);
+    const argsMatch = /\((.*)\)/.exec(signature)
     if (!argsMatch || !argsMatch[1]) {
-      console.error(`Invalid function signature: ${signature}`);
-      return [];
+      console.error(`Invalid function signature: ${signature}`)
+      return []
     }
 
-    const argTypes = argsMatch[1].split(',').map((arg) => arg.trim());
+    const argTypes = argsMatch[1].split(',').map((arg) => arg.trim())
     const addressPositions = argTypes.reduce<number[]>((positions, type, index) => {
       if (type === 'address') {
-        positions.push(index);
+        positions.push(index)
       }
-      return positions;
-    }, []);
+      return positions
+    }, [])
 
-    const addressValues = addressPositions.map((pos) => decodedCalldata[pos]?.toString());
-    return addressValues;
+    const addressValues = addressPositions.map((pos) => decodedCalldata[pos]?.toString())
+    return addressValues
   } catch (error) {
-    console.error(`Error getting address arguments from calldata for signature ${signature}:`, error);
-    return [];
+    console.error(`Error getting address arguments from calldata for signature ${signature}:`, error)
+    return []
   }
 }
 
 async function getContractNamesList(chain: CometChains, target: string, argumentAddresses: string[]): Promise<Record<string, string>> {
-  const contractNamesList: Record<string, string> = {};
+  const contractNamesList: Record<string, string> = {}
 
   async function fetchAndAddContractName(address: string): Promise<void> {
     try {
-      const { contractName } = await getContractNameAndAbiFromFile(chain, address);
+      const { contractName } = await getContractNameAndAbiFromFile(chain, address)
       if (contractName) {
-        contractNamesList[contractName] = address;
+        contractNamesList[contractName] = address
       }
     } catch (error) {
-      console.error(`Failed to fetch contract name for address: ${address}`, error);
+      console.error(`Failed to fetch contract name for address: ${address}`, error)
     }
   }
 
-  await fetchAndAddContractName(target);
+  await fetchAndAddContractName(target)
   for (const address of argumentAddresses) {
-    await fetchAndAddContractName(address);
+    await fetchAndAddContractName(address)
   }
 
-  return contractNamesList;
+  return contractNamesList
 }
 
 function formatAISummary(summary: string) {
-  return 'No function formatter found. AI Generated: \n' + summary;
+  return 'No function formatter found. AI Generated: \n' + summary
 }
 
 async function defaultFormatter(chain: CometChains, target: string, functionSignature: string, decodedCalldata: Result) {
   try {
-    const { contractName } = await getContractNameAndAbiFromFile(chain, target);
-    return `The function **${functionSignature}** was called on the contract **${contractName}** with the following parameters:\n- ${decodedCalldata.join(', ')}`;
+    const { contractName } = await getContractNameAndAbiFromFile(chain, target)
+    return `The function **${functionSignature}** was called on the contract **${contractName}** with the following parameters:\n- ${decodedCalldata.join(
+      ', '
+    )}`
   } catch (error) {
-    console.error("Error in default formatter:", error);
-    return `The function **${functionSignature}** was called on ${target} with parameters: ${decodedCalldata.join(', ')}`;
+    console.error('Error in default formatter:', error)
+    return `The function **${functionSignature}** was called on ${target} with parameters: ${decodedCalldata.join(', ')}`
   }
 }
