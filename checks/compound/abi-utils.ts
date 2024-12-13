@@ -1,9 +1,16 @@
-import { FunctionFragment, Interface } from '@ethersproject/abi'
+import { FunctionFragment, Interface, Result } from '@ethersproject/abi'
 import fs from 'fs'
 import mftch from 'micro-ftch'
 import { CometChains, ContractNameAndAbi, ExecuteTransactionInfo } from './compound-types'
+import { diffString } from 'json-diff'
+
 // @ts-ignore
 const fetchUrl = mftch.default
+
+interface FunctionFragmentAndDecodedCalldata {
+  fun: FunctionFragment;
+  decodedCalldata: Result
+}
 
 export async function getContractNameAndAbiFromFile(chain: CometChains, addr: string): Promise<ContractNameAndAbi> {
   const address = addr.toLowerCase()
@@ -109,7 +116,7 @@ export function getExplorerBaseUrl(chain: CometChains) {
   }
 }
 
-export async function getFunctionFragmentAndDecodedCalldata(proposalId: number, chain: CometChains, transactionInfo: ExecuteTransactionInfo) {
+export async function getFunctionFragmentAndDecodedCalldata(proposalId: number, chain: CometChains, transactionInfo: ExecuteTransactionInfo): Promise<FunctionFragmentAndDecodedCalldata> {
   const { target, signature, calldata } = transactionInfo
   const contractNameAndAbi = await getContractNameAndAbiFromFile(chain, target)
 
@@ -134,6 +141,12 @@ export async function getFunctionFragmentAndDecodedCalldata(proposalId: number, 
     console.log(`Error decoding function: ${proposalId} target: ${target} signature: ${signature} calldata:${calldata}`)
     console.log(`ContractName: ${contractNameAndAbi.contractName} chain: ${chain}`)
     console.error(e)
+    
+    const isModified = await isContractModified(contractNameAndAbi, target, chain)
+    if (isModified) {
+      await storeContractNameAndAbi(chain, target)
+      return getFunctionFragmentAndDecodedCalldata(proposalId, chain, transactionInfo)
+    }
     throw e
   }
 
@@ -142,4 +155,16 @@ export async function getFunctionFragmentAndDecodedCalldata(proposalId: number, 
 
 export function getFunctionSignature(fun: FunctionFragment) {
   return `${fun.name}(${fun.inputs.map((input) => input.type).join(',')})`
+}
+
+async function isContractModified(contractNameAndAbi: ContractNameAndAbi, target: string, chain: CometChains): Promise<boolean> {
+  const {abi: newAbi} = await getContractNameAndAbi(chain, target)
+  
+  const oldAbiParsed = JSON.parse(contractNameAndAbi.abi.toString())
+  const newAbiParsed = JSON.parse(newAbi.toString())
+  
+  const changes = diffString(oldAbiParsed, newAbiParsed, { color: false, verbose: true })
+  const isEqual = JSON.stringify(oldAbiParsed) === JSON.stringify(newAbiParsed);
+  
+  return Boolean(changes) || !isEqual;
 }

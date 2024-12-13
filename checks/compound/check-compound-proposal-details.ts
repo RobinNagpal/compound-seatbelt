@@ -135,7 +135,15 @@ async function getTransactionMessages(chain: CometChains, proposalId: number, tr
 
     const functionSignature = getFunctionSignature(fun)
 
-    const contractFormatters = getFormatterForContract(contractNameAndAbi)
+    let contractFormatters: ContractTypeFormattingInfo;
+    try {
+      contractFormatters = getFormatterForContract(contractNameAndAbi);
+    } catch (err) {
+      // If no contract formatters are found at all, fallback to AI summary
+      console.error(`No contract formatters found for ${contractNameAndAbi.contractName}`, err);
+      const aiSummary = await generateAISummary(chain, target, functionSignature, decodedCalldata);
+      return { info: aiSummary };
+    }
 
     const functions = contractFormatters.functions
     const functionMapping = functions?.[functionSignature]
@@ -153,14 +161,18 @@ async function getTransactionMessages(chain: CometChains, proposalId: number, tr
     console.log(`GetFormatter: ContractName - ${contractName} and FormatterName - ${formatterName}`)
     const formattersLookupElement = formattersLookup[contractName]?.[formatterName]
     
-    const message = !formattersLookupElement
-      ? `${target}.${functionSignature} - called with ${decodedCalldata}`
-      : await formattersLookupElement(
+    if (!formattersLookupElement) {
+      const aiSummary = await generateAISummary(chain, target, functionSignature, decodedCalldata);
+      return { info: aiSummary };
+    } else {
+      return {
+        info: await formattersLookupElement(
           chain,
           transactionInfo,
-          decodedCalldata.map((data) => data.toString())
-        )
-    return { info: message }
+          decodedCalldata.map((data: any) => data.toString())
+        ),
+      };
+    }
     
   } catch (error) {
     console.error(`Error in decoding transaction ${JSON.stringify(transactionInfo)}`)
