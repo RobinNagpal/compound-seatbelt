@@ -122,7 +122,7 @@ async function getTransactionMessages(chain: CometChains, proposalId: number, tr
         }
       }
       return {
-        info: `\n\n${target}.${signature.split('(')[0]}(${decodedCalldata.join(',')}) and Transfer ${defactorFn(value.toString())} ETH to ${target}`,
+        info: `${target}.${signature.split('(')[0]}(${decodedCalldata.join(',')}) and Transfer ${defactorFn(value.toString())} ETH to ${target}`,
       }
     }
   }
