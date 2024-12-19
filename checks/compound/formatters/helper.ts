@@ -248,3 +248,38 @@ export function formatAddressesAndAmounts(addressesList: string[], amountsList: 
   }
   return results.join('\n\n')
 }
+
+export enum IconType {
+  Add = 'add',
+  Pause = 'pause',
+  Unpause = 'unpause',
+  Update = 'update',
+  Money = 'money',
+  Bridge = 'bridge',
+  Attention = 'attention',
+  WithinThreshold = 'withinThreshold',
+  AroundThreshold = 'aroundThreshold',
+  AboveThreshold = 'aboveThreshold',
+}
+
+export const iconLookupTable: Record<IconType, { icon: string; description: string }> = {
+  add: { icon: "➕", description: "Add/Create" },
+  pause: { icon: "⏸️", description: "Pause/Stop" },
+  unpause: { icon: "▶️", description: "Unpause/Resume" },
+  update: { icon: "🛠️", description: "Updates" },
+  money: { icon: "💲", description: "Money in/out" },
+  bridge: { icon: "🪜", description: "Bridge" },
+  attention: { icon: "⚠️", description: "Attention needed" },
+  withinThreshold: { icon: "🟢", description: "Value within threshold" },
+  aroundThreshold: { icon: "🟡", description: "Value bit above threshold" },
+  aboveThreshold: { icon: "🔴", description: "Value critically above threshold" },
+};
+
+export function getIcon(keyword: IconType) {
+  const result = iconLookupTable[keyword];
+  if (result) {
+    return result.icon;
+  } else {
+    return "❓";
+  }
+}

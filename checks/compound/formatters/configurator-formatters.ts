@@ -3,7 +3,7 @@ import { customProvider } from '../../../utils/clients/ethers'
 import { changeThresholds } from '../change-threshold'
 import { annualizeFn, dailyRateFn, defactorFn, percentageFn, subtractFn } from './../../../utils/roundingUtils'
 import { getContractNameAndAbiFromFile } from './../abi-utils'
-import { CometChains, ExecuteTransactionInfo, TransactionFormatter } from './../compound-types'
+import { ActionAnalysis, CometChains, ExecuteTransactionInfo, TransactionFormatter } from './../compound-types'
 import {
   addCommas,
   addressFormatter,
@@ -14,9 +14,10 @@ import {
   getContractSymbolAndDecimalsFromFile,
   getCriticalitySign,
   getFormattedTokenNameWithLink,
-  getPlatform,
+  getIcon,
   getPlatformFromGecko,
   getRecipientNameWithLink,
+  IconType,
   tab,
 } from './helper'
 
@@ -176,7 +177,9 @@ async function getTextForFactorChange(
     usePercentageConversion
   )}`
   const rawChanges = `Update from ${factorRaw} to ${newFactorRaw} for token - ${decodedParams[1]}`
-  return `${functionDescWithToken}\n\n${tab} **Changes:** ${normalizedChanges}\n\n${tab}  **Raw Changes:** ${rawChanges}`
+  const details = `${functionDescWithToken}\n\n${tab} **Changes:** ${normalizedChanges}\n\n${tab}  **Raw Changes:** ${rawChanges}`
+  const summary = `${changeInFactor.startsWith('-') ? 'Decrease' : 'Increase'} ${functionName} by ${changeInFactor} for ${tokenInfo} of ${await getMarket({chain, cometAddress:decodedParams[0]})} market (value=${newFactor}%).`
+  return { summary, details }
 }
 
 export const configuratorFormatters: { [functionName: string]: TransactionFormatter } = {
@@ -405,8 +408,8 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
 
       const addressesVerificationString =
         assetAddressOnGecko?.toLowerCase() === assetAddress.toLowerCase()
-          ? `${tab}* 🟢 Asset address is verified on CoinGecko.\n`
-          : `${tab}* 🔴 Asset address is not verified on CoinGecko.\n`
+          ? `${tab}* Asset address is verified ✅ on CoinGecko.\n`
+          : `${tab}* Asset address is not verified ❌ on CoinGecko.\n`
 
       const marketCapRankString = `${tab}* Asset has Market cap rank of ${marketCapRank}\n`
       const currentPriceString = `${tab}* Current price is ${addCommas(marketPriceUSD)} USD\n`
@@ -433,7 +436,8 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
 
     const contractNameWithLink = await getContractNameWithLink(decodedParams[1], chain)
 
-    return `🛑 Set factory of **${addressFormatter(baseToken, chain, tokenSymbol)}** to ${contractNameWithLink}.`
+    const details = `${getIcon(IconType.Update)} Update the factory of **${addressFormatter(baseToken, chain, tokenSymbol)}** to ${contractNameWithLink}.`
+    return { summary: details, details }
   },
   'setConfiguration(address,tuple)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const [address, tuple] = decodedParams
@@ -578,7 +582,8 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     const tokenInstance = new Contract(asset, tokenAbi, customProvider(chain))
     const { symbol: tokenSymbol } = await getContractSymbolAndDecimalsFromFile(asset, tokenInstance, chain)
 
-    return `🔄 Update price feed for **${addressFormatter(contractBaseToken, chain, contractBaseSymbol)}** market **${tokenSymbol}** to ${newPriceFeed}`
+    const details = `${getIcon(IconType.Update)} Update the price feed for **${addressFormatter(contractBaseToken, chain, contractBaseSymbol)}** market **${tokenSymbol}** to ${newPriceFeed}`
+    return { summary: details, details }
   },
 }
 
@@ -606,4 +611,22 @@ async function functionDescription({
   const targetContractNameWithLink = await getContractNameWithLink(targetAddress, chain)
 
   return `${sign} Set ${functionName} of **${addressFormatter(baseTokenAddress, chain, marketSymbol)}** via ${targetContractNameWithLink}`
+}
+
+async function getMarket({
+  chain,
+  cometAddress,
+}: {
+  chain: CometChains
+  cometAddress: string
+}) {
+  const { abi } = await getContractNameAndAbiFromFile(chain, cometAddress)
+  const currentCometInstance = new Contract(cometAddress, abi, customProvider(chain))
+
+  const baseTokenAddress = await currentCometInstance.callStatic.baseToken()
+  const { abi: baseTokenAbi } = await getContractNameAndAbiFromFile(chain, baseTokenAddress)
+  const baseTokenInstance = new Contract(baseTokenAddress, baseTokenAbi, customProvider(chain))
+  const { symbol: marketSymbol } = await getContractSymbolAndDecimalsFromFile(baseTokenAddress, baseTokenInstance, chain)
+
+  return `**${addressFormatter(baseTokenAddress, chain, marketSymbol)}**`
 }

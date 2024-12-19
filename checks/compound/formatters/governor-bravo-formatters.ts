@@ -1,7 +1,7 @@
 import { Contract } from 'ethers'
 import { getContractNameAndAbiFromFile } from '../abi-utils'
 import { CometChains, ExecuteTransactionInfo, TransactionFormatter } from './../compound-types'
-import { addCommas, addressFormatter, getChangeTextFn, getPlatform, getRecipientNameWithLink, tab } from './helper'
+import { addCommas, addressFormatter, getChangeTextFn, getIcon, getPlatform, getRecipientNameWithLink, IconType, tab } from './helper'
 import { customProvider } from '../../../utils/clients/ethers'
 import { defactorFn, subtractFn } from './../../../utils/roundingUtils'
 
@@ -20,7 +20,7 @@ export const governorBravoFormatters: { [functionName: string]: TransactionForma
 
     const changeInThreshold = subtractFn(newThreshold, prevThreshold)
 
-    const functionDesc = `Set proposal threshold of **${addressFormatter(transaction.target, chain, name)}**`
+    const functionDesc = `Update proposal threshold of **${addressFormatter(transaction.target, chain, name)}**`
     const normalizedChanges = `Update from ${addCommas(prevThreshold)} to ${addCommas(newThreshold)} ${getChangeTextFn(changeInThreshold)}`
     const rawChanges = `Update from ${prevThresholdRaw} to ${newThresholdRaw}`
 
@@ -34,7 +34,8 @@ export const governorBravoFormatters: { [functionName: string]: TransactionForma
     const name = await governanceInstance.callStatic.name()
     const guardianLink = addressFormatter(governanceAddress, chain, name)
 
-    return `Set the Whitelist Guardian of **${guardianLink}** to ${await getRecipientNameWithLink(chain, decodedParams[0])}.`
+    const details = `${getIcon(IconType.Update)} Update the Whitelist Guardian of **${guardianLink}** to ${await getRecipientNameWithLink(chain, decodedParams[0])}.`
+    return { summary: details, details }
   },
   '_setVotingDelay(uint256)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const governanceAddress = transaction.target

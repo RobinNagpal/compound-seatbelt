@@ -1,6 +1,6 @@
 import { getContractNameAndAbiFromFile } from '../abi-utils'
 import { CometChains, ExecuteTransactionInfo, TransactionFormatter } from '../compound-types'
-import { addCommas, addressFormatter, getChangeTextFn, getContractSymbolAndDecimalsFromFile, getFormattedTokenNameWithLink, getPlatform, tab } from './helper'
+import { addCommas, addressFormatter, getChangeTextFn, getContractSymbolAndDecimalsFromFile, getFormattedTokenNameWithLink, getIcon, getPlatform, IconType, tab } from './helper'
 import { customProvider } from './../../../utils/clients/ethers'
 import { defactorFn, percentageFn, subtractFn } from './../../../utils/roundingUtils'
 import { Contract } from 'ethers'
@@ -61,7 +61,8 @@ export const cerc20DelegateFormatters: { [functionName: string]: TransactionForm
   '_setInterestRateModel(address)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const coinLink = await getFormattedTokenNameWithLink(chain, transaction.target)
 
-    return `Set **${addressFormatter(decodedParams[0], chain, 'interest rate model')}** for ${coinLink}.`
+    const details = `${getIcon(IconType.Update)} Update the **${addressFormatter(decodedParams[0], chain, 'interest rate model')}** for ${coinLink}.`
+    return { summary: details, details }
   },
 
   'redeem(uint256)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {

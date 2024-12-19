@@ -11,8 +11,10 @@ import {
   getContractSymbolAndDecimalsFromFile,
   getCriticalitySign,
   getFormattedTokenNameWithLink,
+  getIcon,
   getPlatform,
   getRecipientNameWithLink,
+  IconType,
   tab,
 } from './helper'
 import { defactorFn, percentageFn, subtractFn } from './../../../utils/roundingUtils'
@@ -30,10 +32,11 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
 
     const numberOfCompTokens = defactorFn(decodedParams[1])
 
-    return `🛑 Grant **${addCommas(numberOfCompTokens)} ${addressFormatter(compAddress, chain, symbol)}** tokens to ${await getRecipientNameWithLink(
+    const details = `${getIcon(IconType.Money)} Grant **${addCommas(numberOfCompTokens)} ${addressFormatter(compAddress, chain, symbol)}** tokens to ${await getRecipientNameWithLink(
       chain,
       decodedParams[0]
     )}.`
+    return { summary: details, details }
   },
   '_setCompSpeeds(address[],uint256[],uint256[])': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     if (decodedParams.length === 0 || decodedParams.some((param) => param === '')) {
@@ -193,14 +196,17 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
     const prevValue = await targetInstance.callStatic.oracle()
     const newValue = decodedParams[0]
 
-    return `⚠️ Set new price oracle to **${addressFormatter(newValue, chain)}**. Previous oracle was **${addressFormatter(prevValue, chain)}**.`
+    const details = `${getIcon(IconType.Update)} Update the price oracle to **${addressFormatter(newValue, chain)}**. Previous oracle was **${addressFormatter(prevValue, chain)}**.`
+    return { summary: details, details }
   },
   '_setMintPaused(address,bool)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const coinLink = await getFormattedTokenNameWithLink(chain, decodedParams[0])
     const contractNameWithLink = await getContractNameWithLink(transaction.target, chain)
 
     const change = getCurrentChange(decodedParams[1])
-    return `⚠️ ${change} minting for ${coinLink} via ${contractNameWithLink}.`
+    
+    const details = `${change} minting for ${coinLink} via ${contractNameWithLink}.`
+    return { summary: details, details }
   },
   '_setBorrowPaused(address,bool)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const coinLink = await getFormattedTokenNameWithLink(chain, decodedParams[0])
@@ -208,14 +214,16 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
 
     const change = getCurrentChange(decodedParams[1])
 
-    return `⚠️ ${change} ${coinLink} borrowing via ${contractNameWithLink}.`
+    const details = `${change} ${coinLink} borrowing via ${contractNameWithLink}.`
+    return { summary: details, details }
   },
   '_setSeizePaused(bool)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const contractNameWithLink = await getContractNameWithLink(transaction.target, chain)
 
     const change = getCurrentChange(decodedParams[0])
 
-    return `⚠️ ${change} market liquidation via ${contractNameWithLink}.`
+    const details = `${change} market liquidation via ${contractNameWithLink}.`
+    return { summary: details, details }
   },
   '_setContributorCompSpeed(address,uint256)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const { abi, contractName } = await getContractNameAndAbiFromFile(chain, transaction.target)
@@ -239,28 +247,34 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
   '_supportMarket(address)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const marketLink = await getFormattedTokenNameWithLink(chain, decodedParams[0])
 
-    return `Support ${marketLink} on Compound.`
+    const details = `${getIcon(IconType.Add)} Add ${marketLink} on Compound.`
+    return { summary: details, details }
   },
   '_setPauseGuardian(address)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const contractNameWithLink = await getContractNameWithLink(transaction.target, chain)
 
-    return `🛑 Set the Pause Guardian to ${await getRecipientNameWithLink(chain, decodedParams[0])} via ${contractNameWithLink}.`
+    const details = `${getIcon(IconType.Update)} Update the Pause Guardian to ${await getRecipientNameWithLink(chain, decodedParams[0])} via ${contractNameWithLink}.`
+    return { summary: details, details }
   },
   '_become(address)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const targetAddress = addressFormatter(transaction.target, chain)
     const newImplementationAddress = addressFormatter(decodedParams[0], chain)
 
-    return `🛑 Upgrade of the Compound Comptroller contract to a new implementation **${newImplementationAddress}** from **${targetAddress}**.`
+    const details = `${getIcon(IconType.Update)} Update the implementation for Compound Comptroller from **${targetAddress}** to **${newImplementationAddress}**.`
+    return { summary: details, details }
   },
   'fixBadAccruals(address[],uint256[])': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const platform = getPlatform(chain)
     const addressesList = decodedParams[0].split(',')
     const amountsList = decodedParams[1].split(',')
 
-    return `🛑 Fix over-accrued COMP tokens of the addresses by their respective amounts:\n\n${formatAddressesAndAmounts(addressesList, amountsList, platform)}`
+    const icon = getIcon(IconType.Money)
+    const details = `${icon} Fix over-accrued COMP tokens of the addresses by their respective amounts:\n\n${formatAddressesAndAmounts(addressesList, amountsList, platform)}`
+    const summary = `${icon} Fix over-accrued COMP tokens of the addresses.`
+    return { summary, details }
   },
 }
 
 function getCurrentChange(change: string) {
-  return change === 'true' ? 'Pause' : 'Resume'
+  return change === 'true' ? `${getIcon(IconType.Pause)} Pause` : `${getIcon(IconType.Unpause)} Resume`
 }

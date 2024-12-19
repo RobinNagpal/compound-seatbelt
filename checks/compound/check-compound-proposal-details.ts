@@ -11,7 +11,7 @@ import {
   ExecuteTransactionsInfo,
   TargetTypeLookupData,
 } from './compound-types'
-import { getPlatform, getRecipientNameWithLink, tab } from './formatters/helper'
+import { getIcon, getPlatform, getRecipientNameWithLink, IconType, tab } from './formatters/helper'
 import { getDecodedBytesForChain, l2Bridges } from './l2-utils'
 import { formattersLookup } from './transaction-formatter'
 import { generateAISummary } from './aiSummary'
@@ -74,11 +74,14 @@ function pushMessageToCheckResults(checkResults: GovernanceProposalAnalysis, mes
       const chainedProposalAnalysis = checkResults.chainedProposalAnalysis.find((ca) => ca.chain === cometChain)
       if (chainedProposalAnalysis) {
         chainedProposalAnalysis.actionAnalysis.push(message)
+        return
       } else {
         checkResults.chainedProposalAnalysis.push({ chain: cometChain, actionAnalysis: [message] })
+        return
       }
     } else {
       checkResults.mainnetActionAnalysis.push(message)
+      return
     }
   }
 
@@ -133,7 +136,7 @@ async function getTransactionMessages(chain: CometChains, proposalId: number, tr
     }
   }
   if (isRemovedFunction(target, signature)) {
-    return `🛑 Function ${signature} is removed from ${target} contract`
+    return `${getIcon(IconType.Attention)} Function ${signature} is removed from ${target} contract`
   }
 
   try {
