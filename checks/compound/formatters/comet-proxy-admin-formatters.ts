@@ -19,4 +19,16 @@ export const cometProxyAdminFormatters: { [functionName: string]: TransactionFor
     const details = `${getIcon(IconType.Update)} Deploy and upgrade new implementation for **${addressFormatter(baseToken, chain, symbol)}** via ${contractNameWithLink}.`
     return { summary: details, details }
   },
+  'changeProxyAdmin(address,address)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
+    const contractNameWithLink = await getContractNameWithLink(decodedParams[0], chain)
+    
+    const details = `${getIcon(IconType.Update)} Change Proxy Admin of ${contractNameWithLink} to ${addressFormatter(decodedParams[1], chain)}.`
+    return {summary: details, details}
+  },
+  'upgrade(address,address)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
+    const contractNameWithLink = await getContractNameWithLink(decodedParams[0], chain)
+    
+    const details = `${getIcon(IconType.Update)} Upgrade the implementation of ${contractNameWithLink} to ${addressFormatter(decodedParams[1], chain)}.`
+    return {summary: details, details}
+  }
 }

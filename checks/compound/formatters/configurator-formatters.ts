@@ -615,6 +615,12 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     const details = `${getIcon(IconType.Update)} Update the price feed for **${addressFormatter(contractBaseToken, chain, contractBaseSymbol)}** market **${tokenSymbol}** to ${newPriceFeed}`
     return { summary: details, details }
   },
+  'setMarketAdminPermissionChecker(address)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
+    const contractNameWithLink = await getContractNameWithLink(transaction.target, chain)
+    
+    const details = `${getIcon(IconType.Update)} Update the MarketAdminPermissionChecker  of ${contractNameWithLink} to ${addressFormatter(decodedParams[0], chain)}.`
+    return {summary: details, details}
+  }
 }
 
 async function functionDescription({
