@@ -5,6 +5,7 @@
 import dotenv from 'dotenv'
 dotenv.config()
 
+import { analyzeProposal } from './checks/compound/check-compound-proposal-details'
 import { listFilesInFolder, uploadFileToS3 } from './checks/compound/s3-utils'
 import { BigNumber, Contract } from 'ethers'
 import { DAO_NAME, GOVERNOR_ADDRESS, SIM_NAME } from './utils/constants'
@@ -119,6 +120,7 @@ async function main() {
     // Run checks
     const { sim, proposal, latestBlock, config } = simOutput
     console.log(`  Running for proposal ID ${formatProposalId(governorType, proposal.id!)}...`)
+    /*
     const checksToRun = Object.keys(ALL_CHECKS).filter(
       (k) => !process.env.CHECKS_ENABLED || process.env.CHECKS_ENABLED.split(',').includes(k)
     )
@@ -133,7 +135,13 @@ async function main() {
           },
         ])
       )
-    )
+    )*/
+
+    const checkResults: AllCheckResults = {}
+
+    const compProposalAnalysis = await analyzeProposal(proposal, sim, proposalData)
+
+    console.log(JSON.stringify(compProposalAnalysis, null, 2))
 
     // Generate markdown report.
     const [startBlock, endBlock] = await Promise.all([
@@ -149,14 +157,16 @@ async function main() {
       { start: startBlock, end: endBlock, current: latestBlock },
       proposal,
       checkResults,
-      dir
+      dir,
+      compProposalAnalysis
     )
 
     await pushCompoundChecksToDiscord(
       governorType,
       { start: startBlock, end: endBlock, current: latestBlock },
       proposal,
-      checkResults
+      checkResults,
+      compProposalAnalysis
     )
 
     const reportPath = `reports/${config.daoName}/${config.governorAddress}/${proposal.id}`

@@ -1,6 +1,6 @@
 import { getContractNameAndAbiFromFile } from '../abi-utils'
 import { CometChains, ExecuteTransactionInfo, TransactionFormatter } from '../compound-types'
-import { addCommas, addressFormatter, getContractSymbolAndDecimalsFromFile, getRecipientNameWithLink, tab } from './helper'
+import { addCommas, addressFormatter, getContractSymbolAndDecimalsFromFile, getIcon, getRecipientNameWithLink, IconType, tab } from './helper'
 import { customProvider } from './../../../utils/clients/ethers'
 import { defactorFn, multiplyFn } from './../../../utils/roundingUtils'
 import { Contract } from 'ethers'
@@ -32,7 +32,11 @@ export const saiTapFormatters: { [functionName: string]: TransactionFormatter } 
     const cashAmountText = `**${addCommas(saiAmount)} ${addressFormatter(saiAddress, chain, tokenSymbol)}**`
     const collateralAmountText = `**${addCommas(collateralAmount)} ${addressFormatter(gemAddress, chain, collateralSymbol)}**`
     const rawChanges = `\n\n${tab}**Raw Changes:**Cash ${decodedParams[0]}`
-
-    return `Cash ${cashAmountText} into collateral ${collateralAmountText} and send to ${await getRecipientNameWithLink(chain, targetAddress)}${rawChanges}`
+    
+    const icon = getIcon(IconType.Money)
+    const functionDesc = `${icon} Cash ${cashAmountText} into collateral ${collateralAmountText} and send to ${await getRecipientNameWithLink(chain, targetAddress)}`
+    const details = `${functionDesc}${rawChanges}`
+    const summary = `${functionDesc}`
+    return { summary, details }
   },
 }
