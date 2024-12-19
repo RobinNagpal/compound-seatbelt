@@ -1,3 +1,4 @@
+import { Message } from '@/types'
 import { BigNumber } from '@ethersproject/bignumber'
 
 export interface ExecuteTransactionsInfo {
@@ -58,7 +59,7 @@ export enum CometChains {
   optimism = 'optimism',
 }
 
-export type TransactionFormatter = (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => Promise<string>
+export type TransactionFormatter = (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => Promise<string | ActionAnalysis>
 
 export interface ContractNameAndAbi {
   contractName: string
@@ -71,3 +72,24 @@ export interface SymbolAndDecimalsLookupData {
     decimals: string
   }
 }
+
+export interface ActionAnalysis {
+  summary: string
+  details: string
+}
+
+export interface ChainedProposalAnalysis {
+  chain: CometChains
+  actionAnalysis: ActionAnalysis[]
+}
+
+export interface GovernanceProposalAnalysis {
+  mainnetActionAnalysis: ActionAnalysis[]
+  chainedProposalAnalysis: ChainedProposalAnalysis[]
+  /**
+   * @deprecated: Use the above fields instead
+   */
+  info: Message[]
+}
+
+export type ProposalActionResponse = string | ActionAnalysis

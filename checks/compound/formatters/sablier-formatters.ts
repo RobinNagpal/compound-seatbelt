@@ -6,7 +6,9 @@ import {
   formatTimestamp,
   getContractNameWithLink,
   getContractSymbolAndDecimalsFromFile,
+  getIcon,
   getRecipientNameWithLink,
+  IconType,
   tab,
 } from './helper'
 import { customProvider } from './../../../utils/clients/ethers'
@@ -31,6 +33,9 @@ export const sablierFormatters: { [functionName: string]: TransactionFormatter }
     const functionDesc = `Create a stream on ${senderContractNameWithLink} to transfer ${tokensWithLink} to ${recipientWithLink}`
     const streamingInfo = `The stream will start at ${formatTimestamp(decodedParams[3])} and end at ${formatTimestamp(decodedParams[4])}.`
 
-    return `🛑 ${functionDesc}. ${streamingInfo}\n\n${tab}**Raw Changes:** Transfer ${amountRaw} to ${recipientAddress}`
+    const icon = getIcon(IconType.Add)
+    const details = `${icon} ${functionDesc}. ${streamingInfo}\n\n${tab}**Raw Changes:** Transfer ${amountRaw} to ${recipientAddress}`
+    const summary = `${icon} ${functionDesc}.`
+    return { summary, details }
   },
 }

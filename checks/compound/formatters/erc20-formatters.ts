@@ -4,7 +4,7 @@ import { customProvider } from '../../../utils/clients/ethers'
 import { getContractNameAndAbiFromFile } from '../abi-utils'
 import { CometChains, ExecuteTransactionInfo, TransactionFormatter } from '../compound-types'
 import { defactorFn } from './../../../utils/roundingUtils'
-import { addCommas, addressFormatter, getContractSymbolAndDecimalsFromFile, getPlatform, getRecipientNameWithLink } from './helper'
+import { addCommas, addressFormatter, getContractSymbolAndDecimalsFromFile, getIcon, getPlatform, getRecipientNameWithLink, IconType } from './helper'
 
 export const ERC20Formatters: { [functionName: string]: TransactionFormatter } = {
   'transfer(address,uint256)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
@@ -14,8 +14,9 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
     const { symbol, decimals } = await getContractSymbolAndDecimalsFromFile(coinAddress, tokenInstance, chain)
 
     const amount = defactorFn(decodedParams[1], `${decimals}`)
-
-    return `🛑 Transfer **${addCommas(amount)} ${addressFormatter(coinAddress, chain, symbol)}** to ${await getRecipientNameWithLink(chain, decodedParams[0])}.`
+    
+    const details = `${getIcon(IconType.Money)} Transfer **${addCommas(amount)} ${addressFormatter(coinAddress, chain, symbol)}** to ${await getRecipientNameWithLink(chain, decodedParams[0])}.`
+    return { summary: details, details }
   },
   'approve(address,uint256)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const tokenAddress = transaction.target
@@ -25,6 +26,7 @@ export const ERC20Formatters: { [functionName: string]: TransactionFormatter } =
 
     const amount = defactorFn(decodedParams[1], `${decimals}`)
 
-    return `🛑 Approve **${addCommas(amount)} ${addressFormatter(tokenAddress, chain, symbol)}** to ${await getRecipientNameWithLink(chain, decodedParams[0])}`
+    const details = `${getIcon(IconType.Money)} Approve **${addCommas(amount)} ${addressFormatter(tokenAddress, chain, symbol)}** to ${await getRecipientNameWithLink(chain, decodedParams[0])}`
+    return { summary: details, details }
   },
 }

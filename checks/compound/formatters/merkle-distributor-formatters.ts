@@ -1,6 +1,6 @@
 import { getContractNameAndAbiFromFile } from '../abi-utils'
 import { CometChains, ExecuteTransactionInfo, TransactionFormatter } from '../compound-types'
-import { addCommas, addressFormatter, getContractNameWithLink, getContractSymbolAndDecimalsFromFile, getPlatform, tab } from './helper'
+import { addCommas, addressFormatter, getContractNameWithLink, getContractSymbolAndDecimalsFromFile, getIcon, IconType, tab } from './helper'
 import { customProvider } from './../../../utils/clients/ethers'
 import { defactorFn } from './../../../utils/roundingUtils'
 import { Contract } from 'ethers'
@@ -27,7 +27,10 @@ export const merkleDistributorFormatters: { [functionName: string]: TransactionF
     const alreadyFunded = isFunded
       ? `but ${addressFormatter(distributorAddress, chain, distributorName)} has already been funded by ${funderContractNameWithLink}`
       : '.'
-
-    return `🛑 ${normalizedChange} ${fundAmountWithToken} by ${funderContractNameWithLink} ${alreadyFunded}\n\n${tab}**Raw Changes:** Fund ${fundingAmountRaw} to ${distributorAddress}`
+    
+    const icon = isFunded ? getIcon(IconType.Attention) : getIcon(IconType.Money)
+    const details = `${icon} ${normalizedChange} ${fundAmountWithToken} by ${funderContractNameWithLink} ${alreadyFunded}\n\n${tab}**Raw Changes:** Fund ${fundingAmountRaw} to ${distributorAddress}`
+    const summary = `${icon} Fund ${addressFormatter(distributorAddress, chain, distributorName)} with ${addCommas(fundingAmount)} ${addressFormatter(tokenAddress, chain, tokenSymbol)} ${isFunded? 'but its already funded':''}`
+    return {summary, details}
   },
 }

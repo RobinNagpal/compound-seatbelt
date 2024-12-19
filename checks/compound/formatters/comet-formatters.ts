@@ -3,7 +3,7 @@ import { getContractNameAndAbiFromFile } from '../abi-utils'
 import { CometChains, ExecuteTransactionInfo, TransactionFormatter } from '../compound-types'
 import { customProvider } from './../../../utils/clients/ethers'
 import { defactorFn } from './../../../utils/roundingUtils'
-import { addCommas, addressFormatter, getContractSymbolAndDecimalsFromFile, getRecipientNameWithLink } from './helper'
+import { addCommas, addressFormatter, getContractSymbolAndDecimalsFromFile, getIcon, getRecipientNameWithLink, IconType } from './helper'
 
 export const cometFormatters: { [functionName: string]: TransactionFormatter } = {
   'withdrawReserves(address,uint256)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
@@ -18,6 +18,7 @@ export const cometFormatters: { [functionName: string]: TransactionFormatter } =
 
     const amount = defactorFn(valueToTransfer, `${decimals}`)
 
-    return `🛑 Withdraw **${addCommas(amount)} ${addressFormatter(baseToken, chain, symbol)}** to ${recepient}.`
+    const details = `${getIcon(IconType.Money)} Withdraw **${addCommas(amount)} ${addressFormatter(baseToken, chain, symbol)}** to ${recepient}.`
+    return { summary: details, details }
   },
 }
