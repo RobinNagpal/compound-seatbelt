@@ -24,7 +24,11 @@ export const governorBravoFormatters: { [functionName: string]: TransactionForma
     const normalizedChanges = `Update from ${addCommas(prevThreshold)} to ${addCommas(newThreshold)} ${getChangeTextFn(changeInThreshold)}`
     const rawChanges = `Update from ${prevThresholdRaw} to ${newThresholdRaw}`
 
-    return `${functionDesc}.\n\n${tab}**Changes:** ${normalizedChanges}\n\n${tab}**Raw Changes:** ${rawChanges}`
+    const icon = getIcon(IconType.Update)
+    const details = `${icon} ${functionDesc}.\n\n${tab}**Changes:** ${normalizedChanges}\n\n${tab}**Raw Changes:** ${rawChanges}`
+    const summary = `${icon} ${changeInThreshold.startsWith('-') ? 'Decrease' : 'Increase'} proposal threshold by ${addCommas(changeInThreshold)} of ${addressFormatter(transaction.target, chain, name)} (value=${addCommas(newThreshold)}).`
+
+    return {summary, details}
   },
   '_setWhitelistGuardian(address)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const governanceAddress = transaction.target
@@ -64,9 +68,13 @@ export const governorBravoFormatters: { [functionName: string]: TransactionForma
 function getVotingChangeText(type: string, governanceAddress: string, chain: CometChains, name: string, prevVoting: string, newVoting: string) {
   const changeInVoting = subtractFn(newVoting, prevVoting)
 
-  const functionDesc = `Set Voting ${type} of **${addressFormatter(governanceAddress, chain, name)}**`
+  const functionDesc = `Update the Voting ${type} of **${addressFormatter(governanceAddress, chain, name)}**`
   const normalizedChanges = `Update from ${addCommas(prevVoting)} blocks to ${addCommas(newVoting)} blocks ${getChangeTextFn(changeInVoting)}`
   const rawChanges = `Update from ${prevVoting} to ${newVoting}`
-
-  return `${functionDesc}.\n\n${tab}**Changes:** ${normalizedChanges}\n\n${tab}**Raw Changes:** ${rawChanges}`
+  
+  const icon = getIcon(IconType.Update)
+  const details = `${icon} ${functionDesc}.\n\n${tab}**Changes:** ${normalizedChanges}\n\n${tab}**Raw Changes:** ${rawChanges}`
+  const summary = `${icon} ${changeInVoting.startsWith('-') ? 'Decrease' : 'Increase'} Voting ${type} by ${addCommas(changeInVoting)} of ${addressFormatter(governanceAddress, chain, name)} (value=${addCommas(newVoting)} blocks).`
+  
+  return {summary, details}
 }

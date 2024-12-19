@@ -3,7 +3,7 @@ import { customProvider } from '../../../utils/clients/ethers'
 import { changeThresholds } from '../change-threshold'
 import { annualizeFn, dailyRateFn, defactorFn, percentageFn, subtractFn } from './../../../utils/roundingUtils'
 import { getContractNameAndAbiFromFile } from './../abi-utils'
-import { ActionAnalysis, CometChains, ExecuteTransactionInfo, TransactionFormatter } from './../compound-types'
+import { CometChains, ExecuteTransactionInfo, TransactionFormatter } from './../compound-types'
 import {
   addCommas,
   addressFormatter,
@@ -12,13 +12,14 @@ import {
   getChangeTextFn,
   getContractNameWithLink,
   getContractSymbolAndDecimalsFromFile,
-  getCriticalitySign,
+  getAttentionSign,
   getFormattedTokenNameWithLink,
   getIcon,
   getPlatformFromGecko,
   getRecipientNameWithLink,
   IconType,
   tab,
+  getCriticalitySign,
 } from './helper'
 
 interface AssetConfig {
@@ -52,7 +53,7 @@ async function getTextForChangeInInterestRate(
   const currentRateInPercent = defactorFn(decodedParams[1])
 
   const changeInRate = subtractFn(currentRateInPercent, previousRateInPercent)
-  const sign = getCriticalitySign(changeInRate, thresholds)
+  const sign = getAttentionSign(changeInRate, thresholds)
 
   const functionDesc = await functionDescription({
     sign: sign,
@@ -61,8 +62,11 @@ async function getTextForChangeInInterestRate(
     targetAddress: transaction.target,
     cometAddress: decodedParams[0],
   })
-  const normalizedChanges = `${addCommas(previousRateInPercent)} to ${addCommas(currentRateInPercent)} ${getChangeTextFn(changeInRate)}`
-  return `${functionDesc}\n\n${tab}  **Changes:** ${normalizedChanges}\n\n${tab}  **Raw Changes:** new value is ${decodedParams[1]}`
+  const normalizedChanges = `${addCommas(previousRateInPercent)} to ${addCommas(currentRateInPercent)} ${getChangeTextFn(changeInRate, false, thresholds)}`
+  const details = `${functionDesc}\n\n${tab}  **Changes:** ${normalizedChanges}\n\n${tab}  **Raw Changes:** new value is ${decodedParams[1]}`
+  const summary = `${sign} ${changeInRate.startsWith('-') ? 'Decrease' : 'Increase'} ${interestRateName} by ${addCommas(changeInRate)} ${getCriticalitySign(changeInRate, thresholds)} of ${await getMarket({chain, cometAddress:decodedParams[0]})} market (value=${addCommas(currentRateInPercent)}).`
+  
+  return { summary, details }
 }
 
 async function getTextForKinkChange(
@@ -83,7 +87,7 @@ async function getTextForKinkChange(
 
   const changeInValues = subtractFn(newValue, prevValue)
 
-  const sign = getCriticalitySign(changeInValues, thresholds)
+  const sign = getAttentionSign(changeInValues, thresholds)
 
   const functionDesc = await functionDescription({
     sign: sign,
@@ -93,9 +97,12 @@ async function getTextForKinkChange(
     cometAddress: decodedParams[0],
   })
 
-  const normalizedChange = `Update from ${prevValue} to ${newValue} ${getChangeTextFn(changeInValues)}`
+  const normalizedChange = `Update from ${prevValue} to ${newValue} ${getChangeTextFn(changeInValues, false, thresholds)}`
   const rawChange = `new value is ${newValueRaw}`
-  return `${functionDesc}\n\n${tab}  **Changes:** ${normalizedChange}\n\n${tab}  **Raw Changes:** ${rawChange}`
+  const details = `${functionDesc}\n\n${tab}  **Changes:** ${normalizedChange}\n\n${tab}  **Raw Changes:** ${rawChange}`
+  const summary = `${sign} ${changeInValues.startsWith('-') ? 'Decrease' : 'Increase'} ${functionName} by ${addCommas(changeInValues)} ${getCriticalitySign(changeInValues, thresholds)} of ${await getMarket({chain, cometAddress:decodedParams[0]})} market (value=${newValue}).`
+
+  return { summary, details }
 }
 
 async function getTextForSpeedChange(
@@ -105,7 +112,7 @@ async function getTextForSpeedChange(
   getPreviousValue: (contract: Contract) => Promise<BigNumber>,
   functionName: string,
   speedName: string,
-  threshold: { warningThreshold: number; criticalThreshold: number }
+  thresholds: { warningThreshold: number; criticalThreshold: number }
 ) {
   const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
   const currentCometInstance = new Contract(decodedParams[0], abi, customProvider(chain))
@@ -118,10 +125,10 @@ async function getTextForSpeedChange(
   const newRewardValue = dailyRateFn(defactorFn(newSpeedValue, '15'))
   const changeInRewardValues = subtractFn(newRewardValue, prevRewardValue)
 
-  const sign = getCriticalitySign(changeInRewardValues, threshold)
+  const sign = getAttentionSign(changeInRewardValues, thresholds)
 
   const functionDesc = await functionDescription({
-    sign: sign,
+    sign,
     chain,
     functionName: functionName,
     targetAddress: transaction.target,
@@ -129,10 +136,15 @@ async function getTextForSpeedChange(
   })
 
   const normalizedChange = `Update from ${addCommas(prevSpeedValue)} to ${addCommas(newSpeedValue)} ${getChangeTextFn(
-    changeInSpeedValues
+    changeInSpeedValues,
+    false,
+    thresholds
   )}. Hence changing Daily ${speedName} rewards from ${addCommas(prevRewardValue)} to ${addCommas(newRewardValue)} ${getChangeTextFn(changeInRewardValues)}`
   const rawChanges = `new value is ${newSpeedValue}`
-  return `${functionDesc}\n\n${tab} **Changes:** ${normalizedChange}\n\n${tab}  **Raw Changes:** ${rawChanges}`
+  const details = `${functionDesc}\n\n${tab} **Changes:** ${normalizedChange}\n\n${tab}  **Raw Changes:** ${rawChanges}`
+  const summary = `${sign} ${changeInSpeedValues.startsWith('-') ? 'Decrease' : 'Increase'} ${functionName} by ${addCommas(changeInSpeedValues)} ${getCriticalitySign(changeInSpeedValues, thresholds)} of ${await getMarket({chain, cometAddress:decodedParams[0]})} market (value=${addCommas(newSpeedValue)}).`
+  
+  return { summary, details }
 }
 
 async function getTextForFactorChange(
@@ -140,7 +152,7 @@ async function getTextForFactorChange(
   transaction: ExecuteTransactionInfo,
   decodedParams: string[],
   functionName: string,
-  threshold: { warningThreshold: number; criticalThreshold: number },
+  thresholds: { warningThreshold: number; criticalThreshold: number },
   usePercentageConversion: boolean = true
 ) {
   const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[1])
@@ -159,7 +171,7 @@ async function getTextForFactorChange(
   const newFactor = usePercentageConversion ? percentageFn(defactorFn(newFactorRaw)) : defactorFn(newFactorRaw, decimals)
 
   const changeInFactor = subtractFn(newFactor, prevFactor)
-  const sign = getCriticalitySign(changeInFactor, threshold)
+  const sign = getAttentionSign(changeInFactor, thresholds)
 
   const tokenInfo = `**${addressFormatter(decodedParams[1], chain, tokenSymbol)}**`
 
@@ -174,11 +186,12 @@ async function getTextForFactorChange(
   const functionDescWithToken = `${functionDesc} for token - ${tokenInfo}`
   const normalizedChanges = `Update from ${prevFactor}${percentageSuffix} to ${newFactor}${percentageSuffix} ${getChangeTextFn(
     changeInFactor,
-    usePercentageConversion
+    usePercentageConversion,
+    thresholds
   )}`
   const rawChanges = `Update from ${factorRaw} to ${newFactorRaw} for token - ${decodedParams[1]}`
   const details = `${functionDescWithToken}\n\n${tab} **Changes:** ${normalizedChanges}\n\n${tab}  **Raw Changes:** ${rawChanges}`
-  const summary = `${changeInFactor.startsWith('-') ? 'Decrease' : 'Increase'} ${functionName} by ${changeInFactor} for ${tokenInfo} of ${await getMarket({chain, cometAddress:decodedParams[0]})} market (value=${newFactor}%).`
+  const summary = `${sign} ${changeInFactor.startsWith('-') ? 'Decrease' : 'Increase'} ${functionName} by ${addCommas(changeInFactor)} ${getCriticalitySign(changeInFactor, thresholds)} for ${tokenInfo} of ${await getMarket({chain, cometAddress:decodedParams[0]})} market (value=${newFactor}${percentageSuffix}).`
   return { summary, details }
 }
 
@@ -345,7 +358,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       warningThreshold: changeThresholds.V3.baseBorrowMinWarningThreshold,
       criticalThreshold: changeThresholds.V3.baseBorrowMinCriticalThreshold,
     }
-    const sign = getCriticalitySign(changeInBaseBorrowMin, thresholds)
+    const sign = getAttentionSign(changeInBaseBorrowMin, thresholds)
 
     const functionDesc = await functionDescription({
       sign: sign,
@@ -354,8 +367,11 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       targetAddress: transaction.target,
       cometAddress: decodedParams[0],
     })
-    const normalizedChanges = `Update from ${addCommas(prevBaseBorrowMin)} to ${addCommas(newBaseBorrowMin)} ${getChangeTextFn(changeInBaseBorrowMin)}`
-    return `${functionDesc}\n\n${tab}  **Changes:** ${normalizedChanges}\n\n${tab}  **Raw Changes:** Update from ${baseBorrowMin} to ${newBaseValueRaw}`
+    const normalizedChanges = `Update from ${addCommas(prevBaseBorrowMin)} to ${addCommas(newBaseBorrowMin)} ${getChangeTextFn(changeInBaseBorrowMin, false, thresholds)}`
+    const details = `${functionDesc}\n\n${tab}  **Changes:** ${normalizedChanges}\n\n${tab}  **Raw Changes:** Update from ${baseBorrowMin} to ${newBaseValueRaw}`
+    const summary = `${sign} ${changeInBaseBorrowMin.startsWith('-') ? 'Decrease' : 'Increase'} BaseBorrowMin by ${addCommas(changeInBaseBorrowMin)} ${getCriticalitySign(changeInBaseBorrowMin, thresholds)} of ${await getMarket({chain, cometAddress:decodedParams[0]})} market (value=${addCommas(newBaseBorrowMin)}).`
+    
+    return { summary, details }
   },
   'addAsset(address,tuple)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const [address, tuple] = decodedParams
@@ -419,11 +435,16 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       const totalSupplyString = `${tab}* Total supply is ${addCommas(assetTotalSupply)}`
       geckoResponse += `${tab}**Asset Information from CoinGecko:**\n${addressesVerificationString}${marketCapRankString}${currentPriceString}${priceChangeString}${marketCapString}${totalVolumeString}${totalSupplyString}`
     }
-    return `🛑 Add new asset to market **${addressFormatter(
+    
+    const icon = getIcon(IconType.Add)
+    const details = `${icon} Add new asset to market **${addressFormatter(
       baseToken,
       chain,
       symbol
     )}** with following asset configuration:\n\n${tab}${assetTable}\n${geckoResponse}`
+    const summary = `${icon} Add new asset ${addressFormatter(assetAddress, chain, assetSymbol)} to ${addressFormatter(baseToken,chain,symbol)} market.`
+    
+    return { summary, details }
   },
   'setFactory(address,address)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
@@ -539,11 +560,17 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     mainTable += `| BaseBorrowMin | ${addCommas(baseBorrowMin)} |${tupleList[18]} |\n`
     mainTable += `| TargetReserves | ${addCommas(targetReserves)} |${tupleList[19]} |\n`
 
-    return `⚠️ Set configuration for **${addressFormatter(
+    const icon = getIcon(IconType.Update)
+    const details = `${icon} Update the configuration for **${addressFormatter(
       contractBaseToken,
       chain,
       contractBaseSymbol
     )}** to: \n\n${tab}${mainTable}\n${tab}${assetConfigTables}`
+    
+    const assetList = assetConfigs.map((config) => config.asset).join(', ')
+    const summary = `${icon} Update the configuration for ${addressFormatter(contractBaseToken, chain, contractBaseSymbol)} market and the asset(s) ${assetList}.`
+    
+    return { summary, details }
   },
   'setStoreFrontPriceFactor(address,uint64)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const { abi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
@@ -562,10 +589,13 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       warningThreshold: changeThresholds.V3.storeFrontPriceFactorWarningThreshold,
       criticalThreshold: changeThresholds.V3.storeFrontPriceFactorCriticalThreshold,
     }
-    const sign = getCriticalitySign(changeInFactor, thresholds)
-    const normalizedChanges = `Update from ${priceFactorOld}% to ${priceFactorNew}% ${getChangeTextFn(changeInFactor, true)}`
+    const sign = getAttentionSign(changeInFactor, thresholds)
+    const normalizedChanges = `Update from ${priceFactorOld}% to ${priceFactorNew}% ${getChangeTextFn(changeInFactor, true, thresholds)}`
 
-    return `${sign} Set StoreFrontPriceFactor for ${tokenNameWithLink}\n\n${tab}  **Changes:** ${normalizedChanges}\n\n${tab}  **Raw Changes:** new value - ${decodedParams[1]}`
+    const details = `${sign} Update the StoreFrontPriceFactor for ${tokenNameWithLink}\n\n${tab}  **Changes:** ${normalizedChanges}\n\n${tab}  **Raw Changes:** new value - ${decodedParams[1]}`
+    const summary = `${sign} ${changeInFactor.startsWith('-') ? 'Decrease' : 'Increase'} StoreFrontPriceFactor by ${addCommas(changeInFactor)} ${getCriticalitySign(changeInFactor, thresholds)} for ${tokenNameWithLink} market (value=${priceFactorNew}%).`
+    
+    return { summary, details }
   },
   'updateAssetPriceFeed(address,address,address)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const [cometProxy, asset, newPriceFeed] = decodedParams
@@ -610,7 +640,7 @@ async function functionDescription({
 
   const targetContractNameWithLink = await getContractNameWithLink(targetAddress, chain)
 
-  return `${sign} Set ${functionName} of **${addressFormatter(baseTokenAddress, chain, marketSymbol)}** via ${targetContractNameWithLink}`
+  return `${sign} Update the ${functionName} of **${addressFormatter(baseTokenAddress, chain, marketSymbol)}** via ${targetContractNameWithLink}`
 }
 
 async function getMarket({
