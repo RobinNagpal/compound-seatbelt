@@ -1,23 +1,21 @@
-import {
-  pushChecksSummaryToDiscord,
-  pushChecksSummaryToDiscordAsEmbeds,
-} from '../checks/compound/formatters/push-to-discord'
-import fs, { promises as fsp } from 'fs'
 import { Block } from '@ethersproject/abstract-provider'
 import { BigNumber } from 'ethers'
+import fs, { promises as fsp } from 'fs'
+import { mdToPdf } from 'md-to-pdf'
+import rehypeSanitize from 'rehype-sanitize'
+import rehypeSlug from 'rehype-slug'
+import rehypeStringify from 'rehype-stringify'
 import { remark } from 'remark'
-import remarkToc from 'remark-toc'
 import remarkParse from 'remark-parse'
 import remarkRehype from 'remark-rehype'
-import rehypeSanitize from 'rehype-sanitize'
-import rehypeStringify from 'rehype-stringify'
-import rehypeSlug from 'rehype-slug'
-import { visit } from 'unist-util-visit'
+import remarkToc from 'remark-toc'
 import { unified } from 'unified'
-import { mdToPdf } from 'md-to-pdf'
-import { formatProposalId } from '../utils/contracts/governor'
-import { AllCheckResults, GovernorType, ProposalEvent } from '../types'
+import { visit } from 'unist-util-visit'
 import { checkforumPost, tab } from '../checks/compound/formatters/helper'
+import { pushChecksSummaryToDiscordAsEmbeds } from '../checks/compound/formatters/push-to-discord'
+import { AllCheckResults, GovernorType, ProposalEvent } from '../types'
+import { formatProposalId } from '../utils/contracts/governor'
+import { GovernanceProposalAnalysis } from './../checks/compound/compound-types'
 
 // --- Markdown helpers ---
 
@@ -123,7 +121,8 @@ export async function generateAndSaveReports(
   blocks: { current: Block; start: Block | null; end: Block | null },
   proposal: ProposalEvent,
   checks: AllCheckResults,
-  dir: string
+  dir: string,
+  compProposalAnalysis: GovernanceProposalAnalysis
 ) {
   // Prepare the output folder and filename.
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
@@ -131,7 +130,7 @@ export async function generateAndSaveReports(
   const path = `${dir}/${id}`
 
   // Generate the base markdown proposal report. This is the markdown report which is translated into other file types.
-  const baseReport = await toMarkdownProposalReport(governorType, blocks, proposal, checks)
+  const baseReport = await toMarkdownProposalReport(governorType, blocks, proposal, checks, compProposalAnalysis)
 
   // The table of contents' links in the baseReport work when converted to HTML, but do not work as Markdown
   // or PDF links, since the emojis in the header titles cause issues. We apply the remarkFixEmojiLinks plugin
@@ -161,7 +160,8 @@ export async function pushCompoundChecksToDiscord(
   governorType: GovernorType,
   blocks: { current: Block; start: Block | null; end: Block | null },
   proposal: ProposalEvent,
-  checks: AllCheckResults
+  checks: AllCheckResults,
+  compProposalAnalysis: GovernanceProposalAnalysis
 ) {
   const compoundChecks = checks['checkCompoundProposalDetails']
 
@@ -181,7 +181,7 @@ export async function pushCompoundChecksToDiscord(
           .join('\n')}`
     )
 
-  await pushChecksSummaryToDiscordAsEmbeds(failedChecks, warningChecks, compoundChecks.result, proposal.id!.toString())
+  await pushChecksSummaryToDiscordAsEmbeds(failedChecks, warningChecks, compProposalAnalysis, proposal.id!.toString())
 }
 
 /**
@@ -194,7 +194,8 @@ async function toMarkdownProposalReport(
   governorType: GovernorType,
   blocks: { current: Block; start: Block | null; end: Block | null },
   proposal: ProposalEvent,
-  checks: AllCheckResults
+  checks: AllCheckResults,
+  compProposalAnalysis: GovernanceProposalAnalysis
 ): Promise<string> {
   const { id, proposer, targets, endBlock, startBlock, description } = proposal
   const proposalID = formatProposalId(governorType, id!)
@@ -233,6 +234,21 @@ ${blockQuote(description.trim())}
 ${Object.keys(checks)
   .map((checkId) => toCheckSummary(checks[checkId]))
   .join('\n')}
+  
+## Compound Checks\n
+${toMessageList(
+  'Mainnet Actions',
+  compProposalAnalysis.mainnetActionAnalysis.map((a) => a.details)
+)}
+\n\n
+${compProposalAnalysis.chainedProposalAnalysis
+  .map((cp) =>
+    toMessageList(
+      cp.chain,
+      cp.actionAnalysis.map((a) => a.details)
+    )
+  )
+  .join('\n\n')}
 `
 
   // Add table of contents and return report.

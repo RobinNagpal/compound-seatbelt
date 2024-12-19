@@ -86,10 +86,6 @@ export interface ChainedProposalAnalysis {
 export interface GovernanceProposalAnalysis {
   mainnetActionAnalysis: ActionAnalysis[]
   chainedProposalAnalysis: ChainedProposalAnalysis[]
-  /**
-   * @deprecated: Use the above fields instead
-   */
-  info: Message[]
 }
 
-export type ProposalActionResponse = string | ActionAnalysis
+export type ProposalActionResponse = ActionAnalysis

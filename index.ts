@@ -157,14 +157,16 @@ async function main() {
       { start: startBlock, end: endBlock, current: latestBlock },
       proposal,
       checkResults,
-      dir
+      dir,
+      compProposalAnalysis
     )
 
     await pushCompoundChecksToDiscord(
       governorType,
       { start: startBlock, end: endBlock, current: latestBlock },
       proposal,
-      checkResults
+      checkResults,
+      compProposalAnalysis
     )
 
     const reportPath = `reports/${config.daoName}/${config.governorAddress}/${proposal.id}`
