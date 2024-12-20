@@ -125,14 +125,30 @@ export function addressFormatter(address: string, chain: CometChains, symbol?: s
   return `[${symbol ?? address}](https://${platform}/address/${address})`
 }
 
-export function getChangeTextFn(change: string, isPercentage: boolean = false): string {
-  const percentageSign = isPercentage ? '%' : ''
-  const absoluteChange = change.startsWith('-') ? change.substring(1) : change
+export function getChangeTextFn(
+  change: string,
+  isPercentage: boolean = false,
+  thresholds?: { warningThreshold?: number; criticalThreshold?: number }
+): string {
+  const percentageSign = isPercentage ? '%' : '';
+  const absoluteChange = Math.abs(parseFloat(change));
+
+  const criticalitySign =
+  thresholds?.warningThreshold !== undefined &&
+  thresholds?.criticalThreshold !== undefined
+    ? getCriticalitySign(change, {
+        warningThreshold: thresholds.warningThreshold,
+        criticalThreshold: thresholds.criticalThreshold,
+      })
+    : '';
+
   return `${
     change === '0'
       ? `(It remains the same)`
-      : `(It's getting ${change.startsWith('-') ? '**decreased**' : '**increased**'} by **${addCommas(absoluteChange)}${percentageSign}**)`
-  } `
+      : `(It's getting ${
+          change.startsWith('-') ? '**decreased**' : '**increased**'
+        } by **${addCommas(absoluteChange)}${percentageSign}** ${criticalitySign})`
+  } `;
 }
 
 export function formatTimestamp(timestampString: string) {
@@ -142,17 +158,32 @@ export function formatTimestamp(timestampString: string) {
   })} ET`
 }
 
-export function getCriticalitySign(changeInString: string, { warningThreshold, criticalThreshold }: { warningThreshold: number; criticalThreshold: number }) {
-  const change = parseFloat(changeInString)
+export function getAttentionSign(
+  changeInString: string,
+  { warningThreshold, criticalThreshold }: { warningThreshold: number; criticalThreshold: number }
+): string {
+  const change = Math.abs(parseFloat(changeInString));
 
-  if (change <= -criticalThreshold || change >= criticalThreshold) {
-    return '🛑'
-  } else if (change <= -warningThreshold || change >= warningThreshold) {
-    return '⚠️'
-  } else {
-    return ''
+  if (change >= warningThreshold || change >= criticalThreshold) {
+    return getIcon(IconType.Attention);
   }
+  return getIcon(IconType.Update);
 }
+
+export function getCriticalitySign(
+  changeInString: string,
+  { warningThreshold, criticalThreshold }: { warningThreshold: number; criticalThreshold: number }
+): string {
+  const change = Math.abs(parseFloat(changeInString));
+
+  if (change >= criticalThreshold) {
+    return getIcon(IconType.AboveThreshold);
+  } else if (change >= warningThreshold) {
+    return getIcon(IconType.AroundThreshold);
+  }
+  return getIcon(IconType.WithinThreshold);
+}
+
 
 export async function fetchAssertIdFromCoinGeckoForSymbol(symbol: string) {
   const baseUrl = 'https://api.coingecko.com/api/v3/search?query='
@@ -247,4 +278,43 @@ export function formatAddressesAndAmounts(addressesList: string[], amountsList: 
     results.push(`* [${addressesList[i]}](https://${platform}/address/${addressesList[i]}) by ${addCommas(defactorFn(amountsList[i]))} COMP`)
   }
   return results.join('\n\n')
+}
+
+export enum IconType {
+  Add = 'add',
+  Pause = 'pause',
+  Unpause = 'unpause',
+  Update = 'update',
+  Money = 'money',
+  Bridge = 'bridge',
+  Attention = 'attention',
+  WithinThreshold = 'withinThreshold',
+  AroundThreshold = 'aroundThreshold',
+  AboveThreshold = 'aboveThreshold',
+}
+
+export const iconLookupTable: Record<IconType, { icon: string; description: string }> = {
+  add: { icon: "➕", description: "Add/Create" },
+  pause: { icon: "⏸️", description: "Pause/Stop" },
+  unpause: { icon: "▶️", description: "Unpause/Resume" },
+  update: { icon: "🛠️", description: "Updates" },
+  money: { icon: "💵", description: "Money in/out" },
+  bridge: { icon: "🪜", description: "Bridge" },
+  attention: { icon: "⚠️", description: "Attention needed" },
+  withinThreshold: { icon: "🟢", description: "Value within threshold" },
+  aroundThreshold: { icon: "🟡", description: "Value bit above threshold" },
+  aboveThreshold: { icon: "🔴", description: "Value critically above threshold" },
+};
+
+export function getIcon(keyword: IconType) {
+  const result = iconLookupTable[keyword];
+  if (result) {
+    return result.icon;
+  } else {
+    return "❓";
+  }
+}
+
+export function capitalizeWord(word: string) {
+  return word.charAt(0).toUpperCase() + word.slice(1);
 }

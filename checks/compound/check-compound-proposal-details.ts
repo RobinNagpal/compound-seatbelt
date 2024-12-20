@@ -1,5 +1,6 @@
 import fs from 'fs'
-import { CheckResult, ProposalCheck, ProposalData } from './../../types'
+import { ProposalData, ProposalEvent, TenderlySimulation } from './../../types'
+import { ActionAnalysis, ChainedProposalAnalysis, GovernanceProposalAnalysis, ProposalActionResponse } from './compound-types'
 import { defactorFn } from './../../utils/roundingUtils'
 import { getContractNameAndAbiFromFile, getFunctionFragmentAndDecodedCalldata, getFunctionSignature } from './abi-utils'
 import {
@@ -9,35 +10,28 @@ import {
   ExecuteTransactionInfo,
   ExecuteTransactionsInfo,
   TargetTypeLookupData,
-  TransactionMessage,
 } from './compound-types'
-import { getPlatform, getRecipientNameWithLink, tab } from './formatters/helper'
+import { getIcon, getPlatform, getRecipientNameWithLink, IconType, tab } from './formatters/helper'
 import { getDecodedBytesForChain, l2Bridges } from './l2-utils'
 import { formattersLookup } from './transaction-formatter'
 import { generateAISummary } from './aiSummary'
 
-/**
- * Decodes proposal target calldata into a human-readable format
- */
-export const checkCompoundProposalDetails: ProposalCheck = {
-  name: 'Checks Compound Proposal Details',
-  async checkProposal(proposal, sim, deps: ProposalData) {
-    const { targets: targets, signatures: signatures, calldatas: calldatas, values } = proposal
-    const chain = CometChains.mainnet
-    const proposalId = proposal.id?.toNumber() || 0
+export async function analyzeProposal(proposal: ProposalEvent, sim: TenderlySimulation, deps: ProposalData): Promise<GovernanceProposalAnalysis> {
+  const { targets: targets, signatures: signatures, calldatas: calldatas, values } = proposal
+  const chain = CometChains.mainnet
+  const proposalId = proposal.id?.toNumber() || 0
 
-    const checkResults = await getCompoundCheckResults(chain, proposalId, { targets, signatures, calldatas, values })
+  const checkResults = await getCompoundCheckResults(chain, proposalId, { targets, signatures, calldatas, values })
 
-    return checkResults
-  },
+  return checkResults
 }
 
-async function getCompoundCheckResults(chain: CometChains, proposalId: number, transactions: ExecuteTransactionsInfo, isL2 = false): Promise<CheckResult> {
+async function getCompoundCheckResults(chain: CometChains, proposalId: number, transactions: ExecuteTransactionsInfo): Promise<GovernanceProposalAnalysis> {
   const { targets, signatures, calldatas, values } = transactions
 
   let messageCount = 0
 
-  const checkResults: CheckResult = { info: [], warnings: [], errors: [] }
+  const checkResults: GovernanceProposalAnalysis = { chainedProposalAnalysis: [], mainnetActionAnalysis: [] }
 
   for (const [i, targetNoCase] of targets.entries()) {
     const target = targetNoCase.toLowerCase()
@@ -50,39 +44,59 @@ async function getCompoundCheckResults(chain: CometChains, proposalId: number, t
     if (Object.keys(l2Bridges).includes(target)) {
       const cometChain = l2Bridges[target]
       const l2TransactionsInfo = await getDecodedBytesForChain(cometChain, proposalId, transactionInfo)
-      const l2CheckResults = await getCompoundCheckResults(cometChain, proposalId, l2TransactionsInfo, true)
-      const l2Messages = nestCheckResultsForChain(cometChain, l2CheckResults)
-      const countPrefixedL2Messages = `\n\n${++messageCount}. ${l2Messages}`
-      pushMessageToCheckResults(checkResults, { info: countPrefixedL2Messages })
-      continue
+      const l2CheckResults = await getL2CompoundCheckResults(cometChain, proposalId, l2TransactionsInfo)
+      checkResults.chainedProposalAnalysis.push(l2CheckResults)
+    } else {
+      const message = await getTransactionMessages(chain, proposalId, transactionInfo)
+      pushMessageToCheckResults(checkResults, message, messageCount)
     }
-
-    const message = await getTransactionMessages(chain, proposalId, transactionInfo)
-    const messagePrefix = isL2 ? '' : `\n\n${++messageCount}. `
-    const messageInfo = `${messagePrefix}${message.info}`
-    pushMessageToCheckResults(checkResults, { info: messageInfo })
   }
   return checkResults
 }
 
-function pushMessageToCheckResults(checkResults: CheckResult, message: TransactionMessage) {
-  if (message.info) {
-    checkResults.info.push(message.info)
-  } else if (message.warning) {
-    checkResults.warnings.push(message.warning)
-  } else if (message.error) {
-    checkResults.errors.push(message.error)
+async function getL2CompoundCheckResults(chain: CometChains, proposalId: number, transactions: ExecuteTransactionsInfo): Promise<ChainedProposalAnalysis> {
+  const { targets, signatures, calldatas, values } = transactions
+
+  let messageCount = 0
+
+  const chainedProposalAnalysis: ChainedProposalAnalysis = { chain, actionAnalysis: [] }
+
+  for (const [i, targetNoCase] of targets.entries()) {
+    const target = targetNoCase.toLowerCase()
+    const transactionInfo: ExecuteTransactionInfo = {
+      target,
+      signature: signatures[i],
+      calldata: calldatas[i],
+      value: values?.[i],
+    }
+    const message = await getTransactionMessages(chain, proposalId, transactionInfo)
+    pushMessageToChainAnalysis(chainedProposalAnalysis, message, messageCount)
+  }
+  return chainedProposalAnalysis
+}
+
+function pushMessageToCheckResults(checkResults: GovernanceProposalAnalysis, message: ProposalActionResponse, messageCount: number, cometChain?: CometChains) {
+  const messagePrefix = `\n\n${++messageCount}. `
+  const messageInfo: ActionAnalysis = { summary: `${messagePrefix}${message.summary}`, details: `${messagePrefix}${message.details}` }
+  if (cometChain) {
+    const chainedProposalAnalysis = checkResults.chainedProposalAnalysis.find((ca) => ca.chain === cometChain)
+    if (chainedProposalAnalysis) {
+      chainedProposalAnalysis.actionAnalysis.push(messageInfo)
+      return
+    } else {
+      checkResults.chainedProposalAnalysis.push({ chain: cometChain, actionAnalysis: [messageInfo] })
+      return
+    }
+  } else {
+    checkResults.mainnetActionAnalysis.push(messageInfo)
+    return
   }
 }
 
-function nestCheckResultsForChain(chain: CometChains, checkResult: CheckResult): string {
-  const capitalizedChain = `${chain.charAt(0).toUpperCase()}${chain.slice(1)}`
-  const alphabetPrefixedL2Messages = checkResult.info.map((message, index) => {
-    // use a..z for nested messages
-    const letter = String.fromCharCode(97 + index)
-    return `\n\n${tab}${letter}. ${message}`
-  })
-  return `**Bridge wrapped actions to ${capitalizedChain}**\n\n${tab}${alphabetPrefixedL2Messages.join()}`
+function pushMessageToChainAnalysis(chainedProposalAnalysis: ChainedProposalAnalysis, message: ProposalActionResponse, messageCount: number) {
+  const messagePrefix = `\n\n${++messageCount}. `
+  const messageInfo: ActionAnalysis = { summary: `${messagePrefix}${message.summary}`, details: `${messagePrefix}${message.details}` }
+  chainedProposalAnalysis.actionAnalysis.push(messageInfo)
 }
 
 function getFormatterForContract(contractNameAndAbi: ContractNameAndAbi): ContractTypeFormattingInfo {
@@ -107,27 +121,25 @@ function getFormatterForContract(contractNameAndAbi: ContractNameAndAbi): Contra
   return contractFormatters
 }
 
-async function getTransactionMessages(chain: CometChains, proposalId: number, transactionInfo: ExecuteTransactionInfo): Promise<TransactionMessage> {
+async function getTransactionMessages(chain: CometChains, proposalId: number, transactionInfo: ExecuteTransactionInfo): Promise<ActionAnalysis> {
   const { target, value, signature } = transactionInfo
   const contractNameAndAbi = await getContractNameAndAbiFromFile(chain, target)
   if (value?.toString() && value?.toString() !== '0') {
     const platform = getPlatform(chain)
     if (!signature) {
-      return { info: `Transfer **${defactorFn(value.toString())} ETH** to ${await getRecipientNameWithLink(chain, target)}.` }
+      return toActionAnalysis(`Transfer **${defactorFn(value.toString())} ETH** to ${await getRecipientNameWithLink(chain, target)}.`)
     } else {
       const { decodedCalldata } = await getFunctionFragmentAndDecodedCalldata(proposalId, chain, transactionInfo)
       if (contractNameAndAbi.contractName.toLowerCase() === 'WETH9'.toLowerCase() && signature === 'deposit()') {
-        return {
-          info: `Wrap **${defactorFn(value.toString())} ETH** to **[WETH](https://${platform}/address/${target})**.`,
-        }
+        return toActionAnalysis(`Wrap **${defactorFn(value.toString())} ETH** to **[WETH](https://${platform}/address/${target})**.`)
       }
-      return {
-        info: `${target}.${signature.split('(')[0]}(${decodedCalldata.join(',')}) and Transfer ${defactorFn(value.toString())} ETH to ${target}`,
-      }
+      return toActionAnalysis(
+        `${target}.${signature.split('(')[0]}(${decodedCalldata.join(',')}) and Transfer ${defactorFn(value.toString())} ETH to ${target}`
+      )
     }
   }
   if (isRemovedFunction(target, signature)) {
-    return { info: `🛑 Function ${signature} is removed from ${target} contract` }
+    return toActionAnalysis(`${getIcon(IconType.Attention)} Function ${signature} is removed from ${target} contract`)
   }
 
   try {
@@ -135,14 +147,14 @@ async function getTransactionMessages(chain: CometChains, proposalId: number, tr
 
     const functionSignature = getFunctionSignature(fun)
 
-    let contractFormatters: ContractTypeFormattingInfo;
+    let contractFormatters: ContractTypeFormattingInfo
     try {
-      contractFormatters = getFormatterForContract(contractNameAndAbi);
+      contractFormatters = getFormatterForContract(contractNameAndAbi)
     } catch (err) {
       // If no contract formatters are found at all, fallback to AI summary
-      console.error(`No contract formatters found for ${contractNameAndAbi.contractName}`, err);
-      const aiSummary = await generateAISummary(chain, target, functionSignature, decodedCalldata);
-      return { info: aiSummary };
+      console.error(`No contract formatters found for ${contractNameAndAbi.contractName}`, err)
+      const aiSummary = await generateAISummary(chain, target, functionSignature, decodedCalldata)
+      return toActionAnalysis(aiSummary)
     }
 
     const functions = contractFormatters.functions
@@ -154,33 +166,41 @@ async function getTransactionMessages(chain: CometChains, proposalId: number, tr
         `No functions found for ContractName - ${contractNameAndAbi.contractName}. FunctionSignature - ${functionSignature}. TransactionFormatter - ${transactionFormatter}. FunctionMapping - ${functionMapping}`
       )
       const aiSummary = await generateAISummary(chain, target, functionSignature, decodedCalldata)
-      return { info: aiSummary }
+      return toActionAnalysis(aiSummary)
     }
 
     const [contractName, formatterName] = transactionFormatter.split('.')
     console.log(`GetFormatter: ContractName - ${contractName} and FormatterName - ${formatterName}`)
     const formattersLookupElement = formattersLookup[contractName]?.[formatterName]
-    
+
     if (!formattersLookupElement) {
-      const aiSummary = await generateAISummary(chain, target, functionSignature, decodedCalldata);
-      return { info: aiSummary };
+      const aiSummary = await generateAISummary(chain, target, functionSignature, decodedCalldata)
+      return toActionAnalysis(aiSummary)
     } else {
-      return {
-        info: await formattersLookupElement(
-          chain,
-          transactionInfo,
-          decodedCalldata.map((data: any) => data.toString())
-        ),
-      };
+      const formattedResponse: string | ActionAnalysis = await formattersLookupElement(
+        chain,
+        transactionInfo,
+        decodedCalldata.map((data: any) => data.toString())
+      )
+
+      if (typeof formattedResponse === 'string') {
+        return toActionAnalysis(formattedResponse)
+      } else {
+        return formattedResponse
+      }
     }
-    
   } catch (error) {
     console.error(`Error in decoding transaction ${JSON.stringify(transactionInfo)}`)
     console.error(error)
-    return { info: `Error in decoding transaction: **${transactionInfo.target}.${transactionInfo.signature} called with:** (${transactionInfo.calldata})` }
+    return toActionAnalysis(
+      `Error in decoding transaction: **${transactionInfo.target}.${transactionInfo.signature} called with:** (${transactionInfo.calldata})`
+    )
   }
 }
 
+function toActionAnalysis(message: string): ActionAnalysis {
+  return { summary: message, details: message }
+}
 function isRemovedFunction(target: string, signature: string) {
   const removedFunctions: { [target: string]: string[] } = {
     '0x70e36f6bf80a52b3b46b3af8e106cc0ed743e8e4': ['_setImplementation(address,bool,bytes)'],

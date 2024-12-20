@@ -165,6 +165,9 @@
       },
       "updateAssetPriceFeed(address,address,address)": {
         "transactionFormatter": "Configurator.updateAssetPriceFeed(address,address,address)"
+      },
+      "setMarketAdminPermissionChecker(address)":{
+        "transactionFormatter": "Configurator.setMarketAdminPermissionChecker(address)"
       }
     }
   },
@@ -172,6 +175,12 @@
     "functions": {
       "deployAndUpgradeTo(address,address)": {
         "transactionFormatter": "CometProxyAdmin.deployAndUpgradeTo(address,address)"
+      },
+      "changeProxyAdmin(address,address)": {
+        "transactionFormatter": "CometProxyAdmin.changeProxyAdmin(address,address)"
+      },
+      "upgrade(address,address)": {
+        "transactionFormatter": "CometProxyAdmin.upgrade(address,address)"
       }
     }
   },

@@ -1,8 +1,8 @@
 import axios from 'axios'
 import FormData from 'form-data'
-import { CheckResult } from './../../../types'
 import { DISCORD_WEBHOOK_URL } from './../../../utils/constants'
-import { checkforumPost } from './helper'
+import { GovernanceProposalAnalysis } from './../../compound/compound-types'
+import { capitalizeWord, checkforumPost } from './helper'
 
 function extractChecksMarkdown(reportMarkdown: string) {
   return reportMarkdown.slice(reportMarkdown.indexOf('## Checks'))
@@ -59,7 +59,12 @@ function adjustMessageLength(messages: Embed[]): Embed[] {
   return shortenedMessages
 }
 
-export async function pushChecksSummaryToDiscordAsEmbeds(failedChecks: string[], warningChecks: string[], checkResult: CheckResult, proposalNo: string) {
+export async function pushChecksSummaryToDiscordAsEmbeds(
+  failedChecks: string[],
+  warningChecks: string[],
+  compoundChecks: GovernanceProposalAnalysis,
+  proposalNo: string
+) {
   const s3ReportsFolder = process.env.AWS_BUCKET_BASE_PATH || 'all-proposals'
 
   const failedEmbeds = (failedChecks || []).map((m) => ({
@@ -72,16 +77,27 @@ export async function pushChecksSummaryToDiscordAsEmbeds(failedChecks: string[],
     color: 16776960, // Yellow color for warning checks
   }))
 
-  const compoundEmbeds = checkResult.info.map((m) => {
-    const embedMessage = getEmbedMessage(m)
+  const compoundMainnetEmbeds = compoundChecks.mainnetActionAnalysis.map((m) => {
+    const embedMessage = getEmbedMessage(m.summary)
     return {
       description: embedMessage,
       color: 1127128, // Blue color for info messages
     }
   })
 
+  const compoundChainEmbeds = compoundChecks.chainedProposalAnalysis.map((m) => {
+    return {
+      description: `Bridge wrapped actions to ${capitalizeWord(m.chain)}`,
+      color: 1127128, // Blue color for info messages
+      fields: m.actionAnalysis.map((a) => ({
+        name: '',
+        value: a.summary,
+      })),
+    }
+  })
+
   // Combine failedEmbeds and compoundEmbeds
-  const allEmbeds = [...failedEmbeds, ...warningEmbeds, ...compoundEmbeds]
+  const allEmbeds = [...failedEmbeds, ...warningEmbeds, ...compoundMainnetEmbeds, ...compoundChainEmbeds]
 
   // Discord limits
   const MAX_EMBEDS_PER_MESSAGE = 6
