@@ -33,7 +33,7 @@ export const cerc20DelegateFormatters: { [functionName: string]: TransactionForm
       return {summary, details}
     }
 
-    const details = `${functionDesc}\n\n${tab}  **Changes:** ${newReservePercentage}%\n\n${tab}  **Raw Changes: ${newReserve}**`
+    const details = `${functionDesc}\n\n${tab}  **Changes:** New value is ${newReservePercentage}%\n\n${tab}  **Raw Changes: New value is ${newReserve}**`
     const summary = `${functionDesc} to ${newReservePercentage}%`
     
     return {summary, details}

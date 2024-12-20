@@ -2,7 +2,7 @@ import axios from 'axios'
 import FormData from 'form-data'
 import { DISCORD_WEBHOOK_URL } from './../../../utils/constants'
 import { GovernanceProposalAnalysis } from './../../compound/compound-types'
-import { checkforumPost } from './helper'
+import { capitalizeWord, checkforumPost } from './helper'
 
 function extractChecksMarkdown(reportMarkdown: string) {
   return reportMarkdown.slice(reportMarkdown.indexOf('## Checks'))
@@ -87,7 +87,7 @@ export async function pushChecksSummaryToDiscordAsEmbeds(
 
   const compoundChainEmbeds = compoundChecks.chainedProposalAnalysis.map((m) => {
     return {
-      description: 'Bridge Actions to Chain: ' + m.chain,
+      description: `Bridge wrapped actions to ${capitalizeWord(m.chain)}`,
       color: 1127128, // Blue color for info messages
       fields: m.actionAnalysis.map((a) => ({
         name: '',

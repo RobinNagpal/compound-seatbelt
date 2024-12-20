@@ -125,11 +125,11 @@ export const comptrollerFormatters: { [functionName: string]: TransactionFormatt
       }
       const sign = getAttentionSign(changeInFactor, thresholds)
       const targetTokenLink = addressFormatter(targetToken, chain, symbol)
-      const normalizedChanges = `${prevValuePercentage}% to ${newValuePercentage}% ${getChangeTextFn(changeInFactor, true, thresholds)}`
+      const normalizedChanges = `Update from ${prevValuePercentage}% to ${newValuePercentage}% ${getChangeTextFn(changeInFactor, true, thresholds)}`
       const rawChanges = `Update from ${prevValueRaw} to ${newValueRaw}`
 
-      const details = `${sign} Update the collateral factor for **${targetTokenLink}**\n\n${tab}  **Changes:** ${normalizedChanges}\n\n${tab}  **Raw Changes:** ${rawChanges}`
-      const summary = `${sign} ${changeInFactor.startsWith('-') ? 'Decrease' : 'Increase'} CollteralFactor by ${addCommas(changeInFactor)} ${getCriticalitySign(changeInFactor, thresholds)} for **${targetTokenLink}** (value=${newValuePercentage}%).`
+      const details = `${sign} Update the collateral factor for **${targetTokenLink}**\n\n${tab}  **Changes:** New value is ${normalizedChanges}\n\n${tab}  **Raw Changes:** New value is ${rawChanges}`
+      const summary = `${sign} ${changeInFactor.startsWith('-') ? 'Decrease' : 'Increase'} CollateralFactor by ${addCommas(changeInFactor)} ${getCriticalitySign(changeInFactor, thresholds)} for **${targetTokenLink}** (value=${newValuePercentage}%).`
       
       return {summary, details}
     }

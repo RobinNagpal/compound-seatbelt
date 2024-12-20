@@ -62,8 +62,8 @@ async function getTextForChangeInInterestRate(
     targetAddress: transaction.target,
     cometAddress: decodedParams[0],
   })
-  const normalizedChanges = `${addCommas(previousRateInPercent)} to ${addCommas(currentRateInPercent)} ${getChangeTextFn(changeInRate, false, thresholds)}`
-  const details = `${functionDesc}\n\n${tab}  **Changes:** ${normalizedChanges}\n\n${tab}  **Raw Changes:** new value is ${decodedParams[1]}`
+  const normalizedChanges = `Update from ${addCommas(previousRateInPercent)} to ${addCommas(currentRateInPercent)} ${getChangeTextFn(changeInRate, false, thresholds)}`
+  const details = `${functionDesc}\n\n${tab}  **Changes:** ${normalizedChanges}\n\n${tab}  **Raw Changes:** New value is ${decodedParams[1]}`
   const summary = `${sign} ${changeInRate.startsWith('-') ? 'Decrease' : 'Increase'} ${interestRateName} by ${addCommas(changeInRate)} ${getCriticalitySign(changeInRate, thresholds)} of ${await getMarket({chain, cometAddress:decodedParams[0]})} market (value=${addCommas(currentRateInPercent)}).`
   
   return { summary, details }
@@ -98,7 +98,7 @@ async function getTextForKinkChange(
   })
 
   const normalizedChange = `Update from ${prevValue} to ${newValue} ${getChangeTextFn(changeInValues, false, thresholds)}`
-  const rawChange = `new value is ${newValueRaw}`
+  const rawChange = `New value is ${newValueRaw}`
   const details = `${functionDesc}\n\n${tab}  **Changes:** ${normalizedChange}\n\n${tab}  **Raw Changes:** ${rawChange}`
   const summary = `${sign} ${changeInValues.startsWith('-') ? 'Decrease' : 'Increase'} ${functionName} by ${addCommas(changeInValues)} ${getCriticalitySign(changeInValues, thresholds)} of ${await getMarket({chain, cometAddress:decodedParams[0]})} market (value=${newValue}).`
 
@@ -140,7 +140,7 @@ async function getTextForSpeedChange(
     false,
     thresholds
   )}. Hence changing Daily ${speedName} rewards from ${addCommas(prevRewardValue)} to ${addCommas(newRewardValue)} ${getChangeTextFn(changeInRewardValues)}`
-  const rawChanges = `new value is ${newSpeedValue}`
+  const rawChanges = `New value is ${newSpeedValue}`
   const details = `${functionDesc}\n\n${tab} **Changes:** ${normalizedChange}\n\n${tab}  **Raw Changes:** ${rawChanges}`
   const summary = `${sign} ${changeInSpeedValues.startsWith('-') ? 'Decrease' : 'Increase'} ${functionName} by ${addCommas(changeInSpeedValues)} ${getCriticalitySign(changeInSpeedValues, thresholds)} of ${await getMarket({chain, cometAddress:decodedParams[0]})} market (value=${addCommas(newSpeedValue)}).`
   
@@ -437,11 +437,11 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     }
     
     const icon = getIcon(IconType.Add)
-    const details = `${icon} Add new asset to market **${addressFormatter(
+    const details = `${icon} Add new asset to **${addressFormatter(
       baseToken,
       chain,
       symbol
-    )}** with following asset configuration:\n\n${tab}${assetTable}\n${geckoResponse}`
+    )}** market with following asset configuration:\n\n${tab}${assetTable}\n${geckoResponse}`
     const summary = `${icon} Add new asset ${addressFormatter(assetAddress, chain, assetSymbol)} to ${addressFormatter(baseToken,chain,symbol)} market.`
     
     return { summary, details }
@@ -612,7 +612,7 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     const tokenInstance = new Contract(asset, tokenAbi, customProvider(chain))
     const { symbol: tokenSymbol } = await getContractSymbolAndDecimalsFromFile(asset, tokenInstance, chain)
 
-    const details = `${getIcon(IconType.Update)} Update the price feed for **${addressFormatter(contractBaseToken, chain, contractBaseSymbol)}** market **${tokenSymbol}** to ${newPriceFeed}`
+    const details = `${getIcon(IconType.Update)} Update the price feed of **${addressFormatter(asset, chain, tokenSymbol)}** for **${addressFormatter(contractBaseToken, chain, contractBaseSymbol)}** market to ${addressFormatter(newPriceFeed, chain)}`
     return { summary: details, details }
   },
   'setMarketAdminPermissionChecker(address)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {

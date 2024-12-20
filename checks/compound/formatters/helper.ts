@@ -298,7 +298,7 @@ export const iconLookupTable: Record<IconType, { icon: string; description: stri
   pause: { icon: "⏸️", description: "Pause/Stop" },
   unpause: { icon: "▶️", description: "Unpause/Resume" },
   update: { icon: "🛠️", description: "Updates" },
-  money: { icon: "💲", description: "Money in/out" },
+  money: { icon: "💵", description: "Money in/out" },
   bridge: { icon: "🪜", description: "Bridge" },
   attention: { icon: "⚠️", description: "Attention needed" },
   withinThreshold: { icon: "🟢", description: "Value within threshold" },
@@ -313,4 +313,8 @@ export function getIcon(keyword: IconType) {
   } else {
     return "❓";
   }
+}
+
+export function capitalizeWord(word: string) {
+  return word.charAt(0).toUpperCase() + word.slice(1);
 }

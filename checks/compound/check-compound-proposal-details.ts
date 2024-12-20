@@ -45,10 +45,7 @@ async function getCompoundCheckResults(chain: CometChains, proposalId: number, t
       const cometChain = l2Bridges[target]
       const l2TransactionsInfo = await getDecodedBytesForChain(cometChain, proposalId, transactionInfo)
       const l2CheckResults = await getL2CompoundCheckResults(cometChain, proposalId, l2TransactionsInfo)
-      // const l2Messages = nestCheckResultsForChain(cometChain, l2CheckResults)
-      // const countPrefixedL2Messages = `\n\n${++messageCount}. ${l2Messages}`
       checkResults.chainedProposalAnalysis.push(l2CheckResults)
-      // pushMessageToCheckResults(checkResults, toActionAnalysis(countPrefixedL2Messages), messageCount, cometChain)
     } else {
       const message = await getTransactionMessages(chain, proposalId, transactionInfo)
       pushMessageToCheckResults(checkResults, message, messageCount)
@@ -79,10 +76,9 @@ async function getL2CompoundCheckResults(chain: CometChains, proposalId: number,
 }
 
 function pushMessageToCheckResults(checkResults: GovernanceProposalAnalysis, message: ProposalActionResponse, messageCount: number, cometChain?: CometChains) {
+  const messagePrefix = `\n\n${++messageCount}. `
+  const messageInfo: ActionAnalysis = { summary: `${messagePrefix}${message.summary}`, details: `${messagePrefix}${message.details}` }
   if (cometChain) {
-    const messagePrefix = `\n\n${++messageCount}. `
-    const messageInfo: ActionAnalysis = { summary: `${messagePrefix}${message.summary}`, details: `${messagePrefix}${message.details}` }
-
     const chainedProposalAnalysis = checkResults.chainedProposalAnalysis.find((ca) => ca.chain === cometChain)
     if (chainedProposalAnalysis) {
       chainedProposalAnalysis.actionAnalysis.push(messageInfo)
@@ -92,7 +88,7 @@ function pushMessageToCheckResults(checkResults: GovernanceProposalAnalysis, mes
       return
     }
   } else {
-    checkResults.mainnetActionAnalysis.push(message)
+    checkResults.mainnetActionAnalysis.push(messageInfo)
     return
   }
 }
@@ -101,25 +97,6 @@ function pushMessageToChainAnalysis(chainedProposalAnalysis: ChainedProposalAnal
   const messagePrefix = `\n\n${++messageCount}. `
   const messageInfo: ActionAnalysis = { summary: `${messagePrefix}${message.summary}`, details: `${messagePrefix}${message.details}` }
   chainedProposalAnalysis.actionAnalysis.push(messageInfo)
-}
-
-function nestCheckResultsForChain(chain: CometChains, checkResult: ChainedProposalAnalysis): ActionAnalysis {
-  const capitalizedChain = `${chain.charAt(0).toUpperCase()}${chain.slice(1)}`
-  const alphabetPrefixedL2SummaryMessages = checkResult.actionAnalysis.map((message, index) => {
-    // use a..z for nested messages
-    const letter = String.fromCharCode(97 + index)
-    return `\n\n${tab}${letter}. ${message.summary}`
-  })
-
-  const alphabetPrefixedL2DetailedMessages = checkResult.actionAnalysis.map((message, index) => {
-    // use a..z for nested messages
-    const letter = String.fromCharCode(97 + index)
-    return `\n\n${tab}${letter}. ${message.details}`
-  })
-  return {
-    summary: `**Bridge wrapped actions to ${capitalizedChain}**\n\n${tab}${alphabetPrefixedL2SummaryMessages.join()}`,
-    details: `**Bridge wrapped actions to ${capitalizedChain}**\n\n${tab}${alphabetPrefixedL2DetailedMessages.join()}`,
-  }
 }
 
 function getFormatterForContract(contractNameAndAbi: ContractNameAndAbi): ContractTypeFormattingInfo {
