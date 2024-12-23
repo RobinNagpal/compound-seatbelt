@@ -93,6 +93,8 @@ export function getExplorerApiUrl(chain: CometChains, address: string) {
     return `https://api.scrollscan.com/api?module=contract&action=getsourcecode&address=${address}&apikey=${process.env.SCROLL_API_KEY}`
   } else if (chain === CometChains.optimism) {
     return `https://api-optimistic.etherscan.io/api?module=contract&action=getsourcecode&address=${address}&apikey=${process.env.OPTIMISM_API_KEY}`
+  } else if (chain === CometChains.mantle) {
+    return `https://api.mantlescan.xyz/api?module=contract&action=getsourcecode&address=${address}&apikey=${process.env.MANTLE_API_KEY}`
   } else {
     throw new Error('Unknown chain: ' + chain)
   }
@@ -111,6 +113,8 @@ export function getExplorerBaseUrl(chain: CometChains) {
     return `https://scrollscan.com/address/`
   } else if (chain === CometChains.optimism) {
     return `https://optimistic.etherscan.io/address/`
+  } else if (chain === CometChains.mantle) {
+    return `https://mantlescan.xyz/address/`
   } else {
     throw new Error('Unknown chain: ' + chain)
   }

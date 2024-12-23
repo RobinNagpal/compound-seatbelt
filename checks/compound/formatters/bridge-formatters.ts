@@ -44,6 +44,10 @@ export const bridgeFormatters: { [functionName: string]: TransactionFormatter } 
       const recipientWithLink = await getRecipientNameWithLink(CometChains.optimism, toAddress)
       const details = `${icon} Bridge **${addCommas(defactoredAmount)} ${addressFormatter(localToken, chain, symbol)}** tokens over Optimism to ${recipientWithLink}.`
       return {summary: details, details}
+    } else if (transaction.target === '0x95fc37a27a2f68e3a647cdc081f0a89bb47c3012') {
+      const recipientWithLink = await getRecipientNameWithLink(CometChains.optimism, toAddress)
+      const details = `${icon} Bridge **${addCommas(defactoredAmount)} ${addressFormatter(localToken, chain, symbol)}** tokens over Mantle to ${recipientWithLink}.`
+      return {summary: details, details}
     }
 
     throw new Error('Unknown bridge contract')
@@ -53,7 +57,7 @@ export const bridgeFormatters: { [functionName: string]: TransactionFormatter } 
 
     if (transaction.target === '0x3154cf16ccdb4c6d922629664174b904d80f2c35') {
       const recipent = await getRecipientNameWithLink(chain, decodedParams[0])
-      const details = `${icon} Bridge ETH on Base to ${recipent}.`
+      const details = `${icon} Bridge **${defactorFn(transaction.value ? transaction.value.toString() : '')} ETH** on Base to ${recipent}.`
       return {summary: details, details}
     }
 

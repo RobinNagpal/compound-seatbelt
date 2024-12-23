@@ -9,6 +9,7 @@ export const l2Bridges: { [address: string]: CometChains } = {
   '0x866e82a600a1414e583f7f13623f1ac5d58b0afa': CometChains.base,
   '0x6774bcbd5cecef1336b5300fb5186a12ddd8b367': CometChains.scroll,
   '0x25ace71c97b33cc4729cf772ae268934f7ab5fa1': CometChains.optimism,
+  '0x676a795fe6e43c17c668de16730c3f690feb7120': CometChains.mantle,
 }
 
 export async function getDecodedBytesForChain(
@@ -27,6 +28,8 @@ export async function getDecodedBytesForChain(
       return getDecodedBytesForScroll(proposalId, transactionInfo)
     case CometChains.optimism:
       return getDecodedBytesForOptimism(proposalId, transactionInfo)
+    case CometChains.mantle:
+      return getDecodedBytesForMantle(proposalId, transactionInfo)
     default:
       throw new Error(`Chain ${chain} is not supported`)
   }
@@ -40,6 +43,13 @@ export async function getDecodedBytesForArbitrum(proposalId: number, transaction
 }
 
 export async function getDecodedBytesForOptimism(proposalId: number, transactionInfo: ExecuteTransactionInfo): Promise<ExecuteTransactionsInfo> {
+  const sentMessageSignature = 'sendMessage(address,bytes,uint32)'
+  const decodedCalldata = await getDecodedCallDataSentToBridge(proposalId, sentMessageSignature, transactionInfo)
+  const parsedDataToBridge = decodedCalldata.at(1)
+  return extractTransactionsFromBridgedData(parsedDataToBridge)
+}
+
+export async function getDecodedBytesForMantle(proposalId: number, transactionInfo: ExecuteTransactionInfo): Promise<ExecuteTransactionsInfo> {
   const sentMessageSignature = 'sendMessage(address,bytes,uint32)'
   const decodedCalldata = await getDecodedCallDataSentToBridge(proposalId, sentMessageSignature, transactionInfo)
   const parsedDataToBridge = decodedCalldata.at(1)

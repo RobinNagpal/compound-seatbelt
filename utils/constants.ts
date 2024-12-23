@@ -10,6 +10,7 @@ export const RPC_URL_SCROLL: string = process.env.RPC_URL_SCROLL!
 export const RPC_URL_ARBITRUM: string = process.env.RPC_URL_ARBITRUM!
 
 export const RPC_URL_OPTIMISM: string = process.env.RPC_URL_OPTIMISM!
+export const RPC_URL_MANTLE: string = process.env.RPC_URL_MANTLE!
 export const TENDERLY_ACCESS_TOKEN: string = process.env.TENDERLY_ACCESS_TOKEN!
 export const TENDERLY_USER: string = process.env.TENDERLY_USER!
 export const TENDERLY_PROJECT_SLUG: string = process.env.TENDERLY_PROJECT_SLUG!
