@@ -249,6 +249,18 @@
       }
     }
   },
+  "L1ChugSplashProxy": {
+    "functions": {
+      "depositERC20To(address,address,address,uint256,uint32,bytes)": {
+        "description": "depositERC20To(address,address,address,uint256,uint32,bytes)",
+        "transactionFormatter": "BridgeFormatters.depositERC20To(address,address,address,uint256,uint32,bytes)"
+      },
+      "depositETHTo(address,uint32,bytes)": {
+        "description": "depositETHTo(address,uint32,bytes)",
+        "transactionFormatter": "BridgeFormatters.depositETHTo(address,uint32,bytes)"
+      }
+    }
+  },
   "TokenMessenger": {
     "functions": {
       "depositForBurn(uint256,uint32,bytes32,address)": {
@@ -266,6 +278,15 @@
       },
       "resume()": {
         "transactionFormatter": "AeraVault.resume()"
+      },
+      "setGuardianAndFeeRecipient(address,address)": {
+        "transactionFormatter": "AeraVault.setGuardianAndFeeRecipient(address,address)"
+      },
+      "setHooks(address)": {
+        "transactionFormatter": "AeraVault.setHooks(address)"
+      },
+      "execute(tuple)": {
+        "transactionFormatter": "AeraVault.execute(tuple)"
       }
     }
   },
@@ -273,6 +294,9 @@
     "functions": {
       "acceptOwnership()": {
         "transactionFormatter": "AeraVault.acceptOwnership()"
+      },
+      "addAsset(tuple)": {
+        "transactionFormatter": "AeraVault.addAsset(tuple)"
       }
     }
   },

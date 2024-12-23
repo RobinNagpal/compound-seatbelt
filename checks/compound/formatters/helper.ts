@@ -29,6 +29,8 @@ export function getPlatform(chain: CometChains) {
       return 'scrollscan.com'
     case CometChains.optimism:
       return 'optimistic.etherscan.io'
+    case CometChains.mantle:
+      return 'mantlescan.xyz'
   }
 }
 
@@ -282,6 +284,7 @@ export function formatAddressesAndAmounts(addressesList: string[], amountsList: 
 
 export enum IconType {
   Add = 'add',
+  Delete = 'delete',
   Pause = 'pause',
   Unpause = 'unpause',
   Update = 'update',
@@ -295,6 +298,7 @@ export enum IconType {
 
 export const iconLookupTable: Record<IconType, { icon: string; description: string }> = {
   add: { icon: "➕", description: "Add/Create" },
+  delete: { icon: "🚮", description: "Delete/Remove" },
   pause: { icon: "⏸️", description: "Pause/Stop" },
   unpause: { icon: "▶️", description: "Unpause/Resume" },
   update: { icon: "🛠️", description: "Updates" },

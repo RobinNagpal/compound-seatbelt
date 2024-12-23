@@ -4,7 +4,7 @@ import { getContractNameAndAbiFromFile, getExplorerApiUrl, getExplorerBaseUrl } 
 import { CometChains } from './compound-types'
 import { Result } from 'ethers/lib/utils'
 
-export async function generateAISummary(chain: CometChains, target: string, signature: string, decodedCalldata: Result) {
+export async function generateAISummary(chain: CometChains, target: string, signature: string, decodedCalldata: Result, isNotAIGenerated: boolean = false) {
   const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
   })
@@ -42,6 +42,8 @@ ${contractList}
 
 Here is the source code of the target contract:
 ${sourceCode}
+
+Just return the summary.
 `
 
     const response = await openai.chat.completions.create({
@@ -64,7 +66,10 @@ ${sourceCode}
       console.error('Response from AI is empty, falling back to default formatter.')
       return await defaultFormatter(chain, target, signature, decodedCalldata)
     }
-
+    
+    if (isNotAIGenerated) {
+      return (message.trim())
+    }
     return formatAISummary(message.trim())
   } catch (error) {
     console.error('Error generating AI summary:', error)
