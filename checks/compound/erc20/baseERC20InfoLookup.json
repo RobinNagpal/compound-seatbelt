@@ -30,5 +30,9 @@
   "0xc1cba3fcea344f92d9239c08c0568f6f2f0ee452": {
     "symbol": "wstETH",
     "decimals": "18"
+  },
+  "0x04c0599ae5a44757c0af6f9ec3b93da8976c150a": {
+    "symbol": "weETH",
+    "decimals": "18"
   }
 }

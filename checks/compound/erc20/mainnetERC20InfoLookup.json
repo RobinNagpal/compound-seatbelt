@@ -190,5 +190,9 @@
   "0x18084fba666a33d37592fa2633fd49a74dd93a88": {
     "symbol": "tBTC",
     "decimals": "18"
+  },
+  "0xdc035d45d973e3ec169d2276ddab16f1e407384f": {
+    "symbol": "USDS",
+    "decimals": "18"
   }
 }

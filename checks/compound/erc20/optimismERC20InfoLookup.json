@@ -26,5 +26,13 @@
   "0x2416092f143378750bb29b79ed961ab195cceea5": {
     "symbol": "ezETH",
     "decimals": "18"
+  },
+  "0x5a7facb970d094b6c7ff1df0ea68d99e6e73cbff": {
+    "symbol": "weETH",
+    "decimals": "18"
+  },
+  "0x87eee96d50fb761ad85b1c982d28a042169d61b1": {
+    "symbol": "wrsETH",
+    "decimals": "18"
   }
 }
