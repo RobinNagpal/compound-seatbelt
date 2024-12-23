@@ -45,7 +45,7 @@ export const bridgeFormatters: { [functionName: string]: TransactionFormatter } 
       const details = `${icon} Bridge **${addCommas(defactoredAmount)} ${addressFormatter(localToken, chain, symbol)}** tokens over Optimism to ${recipientWithLink}.`
       return {summary: details, details}
     } else if (transaction.target === '0x95fc37a27a2f68e3a647cdc081f0a89bb47c3012') {
-      const recipientWithLink = await getRecipientNameWithLink(CometChains.optimism, toAddress)
+      const recipientWithLink = await getRecipientNameWithLink(CometChains.mantle, toAddress)
       const details = `${icon} Bridge **${addCommas(defactoredAmount)} ${addressFormatter(localToken, chain, symbol)}** tokens over Mantle to ${recipientWithLink}.`
       return {summary: details, details}
     }
