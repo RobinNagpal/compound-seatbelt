@@ -51,7 +51,7 @@ export const aeraVaultFormatters: { [functionName: string]: TransactionFormatter
     const isERC4626 = tuple[2] == 'true'
     
     const functionDesc = `${getIcon(IconType.Add)} Add ${isERC4626 ? 'yield-bearing asset': 'asset'} ${assetNameWithLink} to ${targetContractNameWithLink}`
-    const details = `${functionDesc} with update frequency of ${decodedUpdateFrequency} and oracle ${addressFormatter(tuple[3],chain)}.`
+    const details = `${functionDesc} with update frequency of ${decodedUpdateFrequency} and oracle as ${addressFormatter(tuple[3],chain)}.`
     return { summary: functionDesc, details }
   },
   'removeAsset(address)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
@@ -77,10 +77,10 @@ export const aeraVaultFormatters: { [functionName: string]: TransactionFormatter
     }
     
     const decodedTransaction = await generateAISummary(chain, executeTarget, decoded.signature, decoded.argsArray, true)
-    const functionDesc = `Execute a transaction via the ${targetContractNameWithLink}`
-    const details = `${functionDesc}:\n ${decodedTransaction}${transferDetails}`
+    const functionDesc = `${getIcon(IconType.Execute)} Execute a transaction via the ${targetContractNameWithLink}`
+    const details = `${functionDesc}: ${decodedTransaction} (AI Generated)${transferDetails}`
     
-    return { summary: functionDesc, details }
+    return { summary: details, details }
   },
 }
 

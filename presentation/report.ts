@@ -11,7 +11,7 @@ import remarkRehype from 'remark-rehype'
 import remarkToc from 'remark-toc'
 import { unified } from 'unified'
 import { visit } from 'unist-util-visit'
-import { capitalizeWord, checkforumPost, tab } from '../checks/compound/formatters/helper'
+import { capitalizeWord, checkforumPost, iconLookupTable, tab } from '../checks/compound/formatters/helper'
 import { pushChecksSummaryToDiscordAsEmbeds } from '../checks/compound/formatters/push-to-discord'
 import { AllCheckResults, GovernorType, ProposalEvent } from '../types'
 import { formatProposalId } from '../utils/contracts/governor'
@@ -224,6 +224,14 @@ _Updated as of block [${blocks.current.number}](https://etherscan.io/block/${blo
 ## Forum Post
 
 ${checkforumPost(description.trim(), proposalID)} 
+
+## Legend
+
+| Icon | Description |
+|------|-------------|
+${Object.values(iconLookupTable)
+  .map(({ icon, description }) => `| ${icon} | ${description} |`)
+  .join('\n')}
 
 ## Table of contents
 
