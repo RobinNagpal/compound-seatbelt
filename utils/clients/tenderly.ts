@@ -484,6 +484,7 @@ async function simulateExecuted(config: SimulationConfigExecuted): Promise<Simul
   const formattedProposal: ProposalEvent = {
     ...proposal,
     id: BigNumber.from(proposalId), // Make sure we always have an ID field
+    values: proposalCreatedEvent.args?.[3],
   }
   return { sim, proposal: formattedProposal, latestBlock }
 }
