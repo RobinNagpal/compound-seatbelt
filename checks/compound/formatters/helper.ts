@@ -291,6 +291,7 @@ export enum IconType {
   Add = 'add',
   Delete = 'delete',
   Convert = 'convert',
+  Execute = 'execute',
   Pause = 'pause',
   Unpause = 'unpause',
   Update = 'update',
@@ -303,18 +304,19 @@ export enum IconType {
 }
 
 export const iconLookupTable: Record<IconType, { icon: string; description: string }> = {
-  add: { icon: "➕", description: "Add/Create" },
-  delete: { icon: "🚮", description: "Delete/Remove" },
-  convert: { icon: "🔄", description: "Convert/Exchange" },
-  pause: { icon: "⏸️", description: "Pause/Stop" },
-  unpause: { icon: "▶️", description: "Unpause/Resume" },
-  update: { icon: "🛠️", description: "Updates" },
-  money: { icon: "💵", description: "Money in/out" },
-  bridge: { icon: "🪜", description: "Bridge" },
-  attention: { icon: "⚠️", description: "Attention needed" },
-  withinThreshold: { icon: "🟢", description: "Value within threshold" },
-  aroundThreshold: { icon: "🟡", description: "Value bit above threshold" },
-  aboveThreshold: { icon: "🔴", description: "Value critically above threshold" },
+  add: { icon: "➕", description: "Add or create operation" },
+  delete: { icon: "🚮", description: "Delete or remove operation" },
+  convert: { icon: "🔄", description: "Convert or swap assets operation" },
+  execute: { icon: "🚀", description: "Execute an action or call" },
+  pause: { icon: "⏸️", description: "Pause or stop operation" },
+  unpause: { icon: "▶️", description: "Unpause or resume operation" },
+  update: { icon: "🛠️", description: "Update or change operation" },
+  money: { icon: "💵", description: "Money related operation" },
+  bridge: { icon: "🪜", description: "Bridge assets between networks" },
+  attention: { icon: "⚠️", description: "Requires attention or review" },
+  withinThreshold: { icon: "🟢", description: "Value is within the acceptable threshold" },
+  aroundThreshold: { icon: "🟡", description: "Value slightly above the threshold" },
+  aboveThreshold: { icon: "🔴", description: "Value critically above the threshold" },
 };
 
 export function getIcon(keyword: IconType) {
