@@ -7,7 +7,7 @@ import { addCommas, addressFormatter, getContractSymbolAndDecimalsFromFile, getI
 
 export const cometFormatters: { [functionName: string]: TransactionFormatter } = {
   'withdrawReserves(address,uint256)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
-    const [recepient, valueToTransfer] = decodedParams
+    const recepient = await getRecipientNameWithLink(chain, decodedParams[0])
     const { abi: contractAbi } = await getContractNameAndAbiFromFile(chain, transaction.target)
     const contractInstance = new Contract(transaction.target, contractAbi, customProvider(chain))
 
@@ -16,7 +16,7 @@ export const cometFormatters: { [functionName: string]: TransactionFormatter } =
     const baseTokenInstance = new Contract(baseToken, baseTokenAbi, customProvider(chain))
     const { symbol, decimals } = await getContractSymbolAndDecimalsFromFile(baseToken, baseTokenInstance, chain)
 
-    const amount = defactorFn(valueToTransfer, `${decimals}`)
+    const amount = defactorFn(decodedParams[1], `${decimals}`)
 
     const details = `${getIcon(IconType.Money)} Withdraw **${addCommas(amount)} ${addressFormatter(baseToken, chain, symbol)}** to ${recepient}.`
     return { summary: details, details }

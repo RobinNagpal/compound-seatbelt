@@ -125,7 +125,7 @@ async function getTextForSpeedChange(
   const newRewardValue = dailyRateFn(defactorFn(newSpeedValue, '15'))
   const changeInRewardValues = subtractFn(newRewardValue, prevRewardValue)
 
-  const sign = getAttentionSign(changeInRewardValues, thresholds)
+  const sign = getAttentionSign(changeInSpeedValues, thresholds)
 
   const functionDesc = await functionDescription({
     sign,
