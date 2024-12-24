@@ -56,12 +56,8 @@ export const aeraVaultFormatters: { [functionName: string]: TransactionFormatter
   },
   'removeAsset(address)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const targetContractNameWithLink = await getContractNameWithLink(transaction.target, chain)
-    const tuple = decodedParams[0].split(',')
-    const assetAddress = tuple[0]
     
-    const assetNameWithLink = await getFormattedTokenNameWithLink(chain, assetAddress)
-    const decodedUpdateFrequency = decodeUpdateFrequency(parseInt(tuple[1]))
-    const isERC4626 = tuple[2] == 'true'
+    const assetNameWithLink = await getFormattedTokenNameWithLink(chain, decodedParams[0])
     
     const details = `${getIcon(IconType.Delete)} Remove asset ${assetNameWithLink} from ${targetContractNameWithLink}.`
     return { summary: details, details }

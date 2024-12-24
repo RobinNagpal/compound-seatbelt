@@ -168,6 +168,9 @@
       },
       "setMarketAdminPermissionChecker(address)":{
         "transactionFormatter": "Configurator.setMarketAdminPermissionChecker(address)"
+      },
+      "setBaseTokenPriceFeed(address,address)":{
+        "transactionFormatter": "Configurator.setBaseTokenPriceFeed(address,address)"
       }
     }
   },
@@ -213,6 +216,23 @@
       },
       "transfer(address,uint256)": {
         "transactionFormatter": "ERC20.transfer(address,uint256)"
+      },
+      "approve(address,uint256)": {
+        "transactionFormatter": "ERC20.approve(address,uint256)"
+      }
+    }
+  },
+  "USDT": {
+    "functions": {
+      "approve(address,uint256)": {
+        "transactionFormatter": "ERC20.approve(address,uint256)"
+      }
+    }
+  },
+  "LBRouter": {
+    "functions": {
+      "swapTokensForExactTokens(uint256,uint256,tuple,address,uint256)": {
+        "transactionFormatter": "LBRouter.swapTokensForExactTokens(uint256,uint256,tuple,address,uint256)"
       }
     }
   },
@@ -297,6 +317,9 @@
       },
       "addAsset(tuple)": {
         "transactionFormatter": "AeraVault.addAsset(tuple)"
+      },
+      "removeAsset(address)": {
+        "transactionFormatter": "AeraVault.removeAsset(address)"
       }
     }
   },
@@ -331,6 +354,13 @@
     "functions": {
       "_become(address)": {
         "transactionFormatter": "Comptroller._become(address)"
+      }
+    }
+  },
+  "DaiUsds": {
+    "functions": {
+      "daiToUsds(address,uint256)": {
+        "transactionFormatter": "DaiUsds.daiToUsds(address,uint256)"
       }
     }
   }

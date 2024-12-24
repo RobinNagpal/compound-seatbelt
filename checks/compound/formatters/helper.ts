@@ -84,6 +84,11 @@ export async function getFormattedTokenWithLink(chain: CometChains, tokenAddress
 export async function getFormattedTokenNameWithLink(chain: CometChains, tokenAddress: string) {
   const platform = getPlatform(chain)
   const { abi: compAddressAbi } = await getContractNameAndAbiFromFile(chain, tokenAddress)
+  if (compAddressAbi.toString() === "Contract source code not verified") {
+    console.log(`Contract at address ${tokenAddress} is not verified.`);
+    return `**[Unverified Contract](https://${platform}/address/${tokenAddress})**`;
+  }
+
   const compInstance = new Contract(tokenAddress, compAddressAbi, customProvider(chain))
   const { symbol } = await getContractSymbolAndDecimalsFromFile(tokenAddress, compInstance, chain)
 
@@ -133,7 +138,7 @@ export function getChangeTextFn(
   thresholds?: { warningThreshold?: number; criticalThreshold?: number }
 ): string {
   const percentageSign = isPercentage ? '%' : '';
-  const absoluteChange = Math.abs(parseFloat(change));
+  const absoluteChange = defactorFn((Math.abs(parseFloat(change))).toString());
 
   const criticalitySign =
   thresholds?.warningThreshold !== undefined &&
@@ -285,6 +290,7 @@ export function formatAddressesAndAmounts(addressesList: string[], amountsList: 
 export enum IconType {
   Add = 'add',
   Delete = 'delete',
+  Convert = 'convert',
   Pause = 'pause',
   Unpause = 'unpause',
   Update = 'update',
@@ -299,6 +305,7 @@ export enum IconType {
 export const iconLookupTable: Record<IconType, { icon: string; description: string }> = {
   add: { icon: "➕", description: "Add/Create" },
   delete: { icon: "🚮", description: "Delete/Remove" },
+  convert: { icon: "🔄", description: "Convert/Exchange" },
   pause: { icon: "⏸️", description: "Pause/Stop" },
   unpause: { icon: "▶️", description: "Unpause/Resume" },
   update: { icon: "🛠️", description: "Updates" },

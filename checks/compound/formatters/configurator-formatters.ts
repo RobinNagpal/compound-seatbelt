@@ -418,7 +418,8 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       const marketCapRank = assetData.market_cap_rank
       const marketPriceUSD = assetData.market_data.current_price.usd
       const priceChangePercentage24h = assetData.market_data.price_change_percentage_24h
-      const priceChange24hInUsd = assetData.market_data.market_cap_change_24h_in_currency.usd
+      const marketCap = assetData.market_data.market_cap.usd
+      const circulatingSupply = assetData.market_data.circulating_supply
       const assetTotalVolume = assetData.market_data.total_volume.usd
       const assetTotalSupply = assetData.market_data.total_supply
 
@@ -430,10 +431,11 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       const marketCapRankString = `${tab}* Asset has Market cap rank of ${marketCapRank}\n`
       const currentPriceString = `${tab}* Current price is ${addCommas(marketPriceUSD)} USD\n`
       const priceChangeString = `${tab}* Price change in 24hrs is ${addCommas(priceChangePercentage24h)}%\n`
-      const marketCapString = `${tab}* Market cap is ${addCommas(priceChange24hInUsd)} USD\n`
+      const marketCapString = `${tab}* Market Cap is ${addCommas(marketCap)} USD\n`
       const totalVolumeString = `${tab}* Total volume is ${addCommas(assetTotalVolume)} USD\n`
+      const circulatingSupplyString = `${tab}* Circulating supply is ${addCommas(circulatingSupply)}\n`
       const totalSupplyString = `${tab}* Total supply is ${addCommas(assetTotalSupply)}`
-      geckoResponse += `${tab}**Asset Information from CoinGecko:**\n${addressesVerificationString}${marketCapRankString}${currentPriceString}${priceChangeString}${marketCapString}${totalVolumeString}${totalSupplyString}`
+      geckoResponse += `${tab}**Asset Information from CoinGecko:**\n${addressesVerificationString}${marketCapRankString}${currentPriceString}${priceChangeString}${marketCapString}${totalVolumeString}${circulatingSupplyString}${totalSupplyString}`
     }
     
     const icon = getIcon(IconType.Add)
@@ -613,6 +615,20 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     const { symbol: tokenSymbol } = await getContractSymbolAndDecimalsFromFile(asset, tokenInstance, chain)
 
     const details = `${getIcon(IconType.Update)} Update the price feed of **${addressFormatter(asset, chain, tokenSymbol)}** for **${addressFormatter(contractBaseToken, chain, contractBaseSymbol)}** market to ${addressFormatter(newPriceFeed, chain)}`
+    return { summary: details, details }
+  },
+  'setBaseTokenPriceFeed(address,address)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
+    const [cometProxy, newPriceFeed] = decodedParams
+
+    const { abi: contractAbi } = await getContractNameAndAbiFromFile(chain, cometProxy)
+    const contractInstance = new Contract(cometProxy, contractAbi, customProvider(chain))
+    const contractBaseToken = await contractInstance.callStatic.baseToken()
+
+    const { abi: baseTokenAbi } = await getContractNameAndAbiFromFile(chain, contractBaseToken)
+    const baseTokenInstance = new Contract(contractBaseToken, baseTokenAbi, customProvider(chain))
+    const { symbol: contractBaseSymbol } = await getContractSymbolAndDecimalsFromFile(contractBaseToken, baseTokenInstance, chain)
+
+    const details = `${getIcon(IconType.Update)} Update the base token price feed of **${addressFormatter(contractBaseToken, chain, contractBaseSymbol)}** market to ${addressFormatter(newPriceFeed, chain)}`
     return { summary: details, details }
   },
   'setMarketAdminPermissionChecker(address)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {

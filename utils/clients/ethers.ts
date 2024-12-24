@@ -4,6 +4,7 @@ import {
   RPC_URL_ARBITRUM,
   RPC_URL_BASE,
   RPC_URL_MAINNET,
+  RPC_URL_MANTLE,
   RPC_URL_OPTIMISM,
   RPC_URL_POLYGON,
   RPC_URL_SCROLL,
@@ -25,6 +26,8 @@ export function customProvider(chain: CometChains) {
       return new providers.JsonRpcProvider(RPC_URL_SCROLL)
     case CometChains.optimism:
       return new providers.JsonRpcProvider(RPC_URL_OPTIMISM)
+    case CometChains.mantle:
+      return new providers.JsonRpcProvider(RPC_URL_MANTLE)
     default:
       throw new Error('Unknown chain: ' + chain)
   }

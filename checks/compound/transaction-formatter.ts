@@ -17,6 +17,8 @@ import { sablierFormatters } from './formatters/sablier-formatters'
 import { saiTapFormatters } from './formatters/sai-tap-formatters'
 import { tokenMessengerFormatters } from './formatters/token-messenger-formatters'
 import { weth9Formatters } from './formatters/weth9-formatters'
+import { daiusdsFormatters } from './formatters/daiusds-formatters'
+import { lbrouterFormatters } from './formatters/lbrouter-formatters'
 
 export const formattersLookup: {
   [contractName: string]: {
@@ -36,6 +38,8 @@ export const formattersLookup: {
   CometProxyAdmin: cometProxyAdminFormatters,
   SaiTap: saiTapFormatters,
   WETH9: weth9Formatters,
+  DaiUsds: daiusdsFormatters,
+  LBRouter: lbrouterFormatters,
   PublicResolver: publicResolverFormatter,
   TokenMessenger: tokenMessengerFormatters,
   AeraVault: aeraVaultFormatters,
