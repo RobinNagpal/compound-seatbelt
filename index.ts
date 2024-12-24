@@ -120,10 +120,10 @@ async function main() {
     // Run checks
     const { sim, proposal, latestBlock, config } = simOutput
     console.log(`  Running for proposal ID ${formatProposalId(governorType, proposal.id!)}...`)
-    /*
-    const checksToRun = Object.keys(ALL_CHECKS).filter(
-      (k) => !process.env.CHECKS_ENABLED || process.env.CHECKS_ENABLED.split(',').includes(k)
-    )
+    
+    const checksToRun = Object.keys(ALL_CHECKS).filter(() => {
+      return !process.env.SKIP_DEFAULT_CHECKS;
+    });
     console.log(`Running ${checksToRun.length} checks: ${checksToRun.join(', ')} for proposal ID ${proposal.id!}`)
     const checkResults: AllCheckResults = Object.fromEntries(
       await Promise.all(
@@ -135,9 +135,7 @@ async function main() {
           },
         ])
       )
-    )*/
-
-    const checkResults: AllCheckResults = {}
+    )
 
     const compProposalAnalysis = await analyzeProposal(proposal, sim, proposalData)
 

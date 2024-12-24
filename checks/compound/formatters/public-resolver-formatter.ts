@@ -25,7 +25,7 @@ export const publicResolverFormatter: { [functionName: string]: TransactionForma
     const changes = diffString(oldJson, newJson, { color: false, verbose: true })
     
     const icon = getIcon(IconType.Update)
-    const details = `${icon} Update ENS text for ${ENSSubdomain} with key: ${decodedParams[1]} and updates:  \n\n${codeBlock(changes)}`
+    const details = `${icon} Update ENS text for ${ENSSubdomain} with key: ${decodedParams[1]}${changes ? ` and updates:  \n\n${codeBlock(changes)}` : ''}`
     const summary = `${icon} Update ENS text for ${ENSSubdomain}`
     
     return { summary, details }

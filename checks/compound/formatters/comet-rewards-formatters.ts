@@ -18,7 +18,7 @@ export const cometRewardsFormatters: { [functionName: string]: TransactionFormat
     const compInstance = new Contract(decodedParams[1], compAbi, customProvider(chain))
     const { symbol } = await getContractSymbolAndDecimalsFromFile(decodedParams[1], compInstance, chain)
 
-    const details = `${getIcon(IconType.Update)} Update the reward token of the market **${addressFormatter(baseToken, chain, tokenSymbol)}** to **${addressFormatter(decodedParams[1], chain, symbol)}**.`
+    const details = `${getIcon(IconType.Update)} Update the reward token of **${addressFormatter(baseToken, chain, tokenSymbol)}** market to **${addressFormatter(decodedParams[1], chain, symbol)}**.`
     return { summary: details, details }
   },
 }
