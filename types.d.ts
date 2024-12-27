@@ -34,8 +34,15 @@ export interface SimulationConfigNew extends SimulationConfigBase {
 
 export type SimulationConfig = SimulationConfigExecuted | SimulationConfigProposed | SimulationConfigNew
 
+export interface MultiChainSimulation {
+  mainnetSim: TenderlySimulation
+  bridgedSims?: {
+    chain: string
+    sim: TenderlySimulation
+  }[]
+}
 export interface SimulationResult {
-  sim: TenderlySimulation
+  sim: MultiChainSimulation
   proposal: ProposalEvent
   latestBlock: Block
 }
@@ -100,7 +107,7 @@ export type ProposalData = {
 
 export interface ProposalCheck {
   name: string
-  checkProposal(proposal: ProposalEvent, tx: TenderlySimulation, deps: ProposalData): Promise<CheckResult>
+  checkProposal(proposal: ProposalEvent, tx: MultiChainSimulation, deps: ProposalData): Promise<CheckResult>
 }
 
 export interface AllCheckResults {
