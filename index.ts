@@ -58,7 +58,7 @@ async function main() {
     const allProposalIds = await getProposalIds(governorType, GOVERNOR_ADDRESS, latestBlock.number)
     const files = await listFilesInFolder(s3ReportsFolder)
     console.log('files', files)
-    const proposalIdsArr = [374] || allProposalIds.filter((id) => id.toNumber() > 228)
+    const proposalIdsArr = allProposalIds.filter((id) => id.toNumber() > 228)
     const proposalIds = proposalIdsArr.map((id) => BigNumber.from(id))
 
     governor = getGovernor(governorType, GOVERNOR_ADDRESS)
