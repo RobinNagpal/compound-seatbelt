@@ -243,9 +243,7 @@ async function simulateNew(config: SimulationConfigNew): Promise<SimulationResul
   }
   const sim = await sendSimulation(simulationPayload)
   writeFileSync('new-response.json', JSON.stringify(sim, null, 2))
-  return { sim: {
-    mainnetSim: sim,
-  }, proposal, latestBlock }
+  return { sim, proposal, latestBlock }
 }
 
 async function createBridgedSimulationPayload(
@@ -260,11 +258,11 @@ async function createBridgedSimulationPayload(
     arbitrum: '42161',
     optimism: '10',
     polygon: '137',
-    base: '8453'
-  };
+    base: '8453',
+  }
 
-  const networkId = networkIdMap[destinationChain];
-  if (!networkId) throw new Error(`Unsupported destination chain: ${destinationChain}`);
+  const networkId = networkIdMap[destinationChain]
+  if (!networkId) throw new Error(`Unsupported destination chain: ${destinationChain}`)
 
   // Create block and timestamp placeholders for the bridged chain
   const blockNumberToUse = (await getLatestBlock(networkId)) - 3 // subtracting a few blocks to ensure tenderly has the block
@@ -277,7 +275,7 @@ async function createBridgedSimulationPayload(
     value: values[i].toString(),
     signature: signatures[i],
     calldata: calldatas[i],
-  }));
+  }))
 
   // Construct the payload for the bridged chain simulation
   const payload: TenderlyPayload = {
@@ -300,11 +298,10 @@ async function createBridgedSimulationPayload(
       timestamp: hexStripZeros(BigNumber.from(latestBlock.timestamp).toHexString()),
     },
     state_objects: {}, // Optionally add state overrides if required
-  };
+  }
 
-  return payload;
+  return payload
 }
-
 
 /**
  * @notice Simulates execution of an on-chain proposal that has not yet been executed
@@ -340,24 +337,28 @@ async function simulateProposed(config: SimulationConfigProposed): Promise<Simul
   const values: BigNumber[] = proposalCreatedEvent.args![3]
 
   // --- Detect and handle bridged transactions ---
-  const bridgedSims: { chain: string; sim: TenderlySimulation }[] = [];
+  const bridgedSims: { chain: string; sim: TenderlySimulation }[] = []
   for (const [i, targetNoCase] of targets.entries()) {
     const target = targetNoCase.toLowerCase()
     const transactionInfo: ExecuteTransactionInfo = {
       target: targets[i],
       signature: sigs[i],
       calldata: calldatas[i],
-      value: values?.[i]
+      value: values?.[i],
     }
-    console.log(`Checking target ${target} for bridged transactions`);
+    console.log(`Checking target ${target} for bridged transactions`)
     if (l2Bridges[target]) {
-      console.log(`Detected bridged transaction targeting ${target}`);
+      console.log(`Detected bridged transaction targeting ${target}`)
       // Decode bridged calldata
       const l2Chain = l2Bridges[target]
-      const l2TransactionsInfo = await getDecodedBytesForChain(l2Chain, BigNumber.from(proposalId).toNumber(), transactionInfo)
-      console.log(`Decoded bridged calldata for ${l2Chain}`, l2TransactionsInfo);
+      const l2TransactionsInfo = await getDecodedBytesForChain(
+        l2Chain,
+        BigNumber.from(proposalId).toNumber(),
+        transactionInfo
+      )
+      console.log(`Decoded bridged calldata for ${l2Chain}`, l2TransactionsInfo)
       // Detect bridged chain
-      console.log(`Simulating bridged transaction on ${l2Chain}`);
+      console.log(`Simulating bridged transaction on ${l2Chain}`)
 
       try {
         const bridgedSimPayload = await createBridgedSimulationPayload(
@@ -366,16 +367,16 @@ async function simulateProposed(config: SimulationConfigProposed): Promise<Simul
           l2TransactionsInfo.values,
           l2TransactionsInfo.calldatas,
           l2Chain
-        );
-        const bridgedSim = await sendSimulation(bridgedSimPayload);
-        bridgedSims.push({ chain: l2Chain, sim: bridgedSim });
-        console.log(`Bridged simulation for ${l2Chain} successful`);
+        )
+        const bridgedSim = await sendSimulation(bridgedSimPayload)
+        bridgedSims.push({ chain: l2Chain, sim: bridgedSim })
+        console.log(`Bridged simulation for ${l2Chain} successful`)
       } catch (err) {
-        console.error(`Error simulating bridged transaction on ${l2Chain}:`, err);
+        console.error(`Error simulating bridged transaction on ${l2Chain}:`, err)
       }
     }
   }
-    
+
   // --- Prepare simulation configuration ---
   // We need the following state conditions to be true to successfully simulate a proposal:
   //   - proposal.canceled == false
@@ -519,10 +520,16 @@ async function simulateProposed(config: SimulationConfigProposed): Promise<Simul
   const totalValue = values.reduce((sum, cur) => sum.add(cur), Zero)
 
   // Sim succeeded, or failure was not due to an ETH balance issue, so return the simulation.
-  if (sim.simulation.status || totalValue.eq(Zero)) return { sim: {
-    mainnetSim: sim,
-    bridgedSims,
-  }, proposal: formattedProposal, latestBlock }
+  if (sim.simulation.status || totalValue.eq(Zero))
+    return {
+      sim,
+      multiSim: {
+        mainnetSim: sim,
+        bridgedSims,
+      },
+      proposal: formattedProposal,
+      latestBlock,
+    }
 
   // Simulation failed, try again by setting value to the difference between total call values and governor ETH balance.
   const governorEthBalance = await provider.getBalance(governor.address)
@@ -530,19 +537,30 @@ async function simulateProposed(config: SimulationConfigProposed): Promise<Simul
   simulationPayload.value = newValue
   simulationPayload.state_objects![from].balance = newValue
   sim = await sendSimulation(simulationPayload)
-  if (sim.simulation.status) return { sim: {
-    mainnetSim: sim,
-    bridgedSims,
-  }, proposal: formattedProposal, latestBlock }
+  if (sim.simulation.status)
+    return {
+      sim,
+      multiSim: {
+        mainnetSim: sim,
+        bridgedSims,
+      },
+      proposal: formattedProposal,
+      latestBlock,
+    }
 
   // Simulation failed, try again by setting value to the total call values.
   simulationPayload.value = totalValue.toString()
   simulationPayload.state_objects![from].balance = totalValue.toString()
   sim = await sendSimulation(simulationPayload)
-  return { sim: {
-    mainnetSim: sim,
-    bridgedSims,
-  }, proposal: formattedProposal, latestBlock }
+  return {
+    sim,
+    multiSim: {
+      mainnetSim: sim,
+      bridgedSims,
+    },
+    proposal: formattedProposal,
+    latestBlock,
+  }
 }
 
 /**
@@ -551,7 +569,7 @@ async function simulateProposed(config: SimulationConfigProposed): Promise<Simul
  */
 async function simulateExecuted(config: SimulationConfigExecuted): Promise<SimulationResult> {
   console.log('Simulating executed proposal')
-  
+
   const { governorAddress, governorType, proposalId } = config
 
   // --- Get details about the proposal we're analyzing ---
@@ -577,25 +595,29 @@ async function simulateExecuted(config: SimulationConfigExecuted): Promise<Simul
   const values: BigNumber[] = proposalCreatedEvent.args![3]
 
   // --- Detect and handle bridged transactions ---
-  const bridgedSims: { chain: string; sim: TenderlySimulation }[] = [];
+  const bridgedSims: { chain: string; sim: TenderlySimulation }[] = []
   for (const [i, targetNoCase] of targets.entries()) {
     const target = targetNoCase.toLowerCase()
     const transactionInfo: ExecuteTransactionInfo = {
       target: targets[i],
       signature: sigs[i],
       calldata: calldatas[i],
-      value: values?.[i]
+      value: values?.[i],
     }
-    console.log(`Checking target ${target} for bridged transactions`);
+    console.log(`Checking target ${target} for bridged transactions`)
     if (l2Bridges[target]) {
-      console.log(`Detected bridged transaction targeting ${target}`);
-      console.log(`Transaction info:`, transactionInfo);
+      console.log(`Detected bridged transaction targeting ${target}`)
+      console.log(`Transaction info:`, transactionInfo)
       // Decode bridged calldata
       const l2Chain = l2Bridges[target]
-      const l2TransactionsInfo = await getDecodedBytesForChain(l2Chain, BigNumber.from(proposalId).toNumber(), transactionInfo)
-      console.log(`Decoded bridged calldata for ${l2Chain}`, l2TransactionsInfo);
+      const l2TransactionsInfo = await getDecodedBytesForChain(
+        l2Chain,
+        BigNumber.from(proposalId).toNumber(),
+        transactionInfo
+      )
+      console.log(`Decoded bridged calldata for ${l2Chain}`, l2TransactionsInfo)
       // Detect bridged chain
-      console.log(`Simulating bridged transaction on ${l2Chain}`);
+      console.log(`Simulating bridged transaction on ${l2Chain}`)
 
       try {
         const bridgedSimPayload = await createBridgedSimulationPayload(
@@ -604,13 +626,13 @@ async function simulateExecuted(config: SimulationConfigExecuted): Promise<Simul
           l2TransactionsInfo.values,
           l2TransactionsInfo.calldatas,
           l2Chain
-        );
-        const bridgedSim = await sendSimulation(bridgedSimPayload);
+        )
+        const bridgedSim = await sendSimulation(bridgedSimPayload)
         console.log('bridgedSim', bridgedSim.transaction)
-        bridgedSims.push({ chain: l2Chain, sim: bridgedSim });
-        console.log(`Bridged simulation for ${l2Chain} successful`);
+        bridgedSims.push({ chain: l2Chain, sim: bridgedSim })
+        console.log(`Bridged simulation for ${l2Chain} successful`)
       } catch (err) {
-        console.error(`Error simulating bridged transaction on ${l2Chain}:`, err);
+        console.error(`Error simulating bridged transaction on ${l2Chain}:`, err)
       }
     }
   }
@@ -642,9 +664,11 @@ async function simulateExecuted(config: SimulationConfigExecuted): Promise<Simul
     id: BigNumber.from(proposalId), // Make sure we always have an ID field
     values: proposalCreatedEvent.args?.[3],
   }
-  return { sim: {
-    mainnetSim: sim,
-  }, proposal: formattedProposal, latestBlock }
+  return {
+    sim,
+    proposal: formattedProposal,
+    latestBlock,
+  }
 }
 
 // --- Helper methods ---

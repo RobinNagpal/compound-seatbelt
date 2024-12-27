@@ -42,7 +42,8 @@ export interface MultiChainSimulation {
   }[]
 }
 export interface SimulationResult {
-  sim: MultiChainSimulation
+  sim: TenderlySimulation
+  multiSim?: MultiChainSimulation
   proposal: ProposalEvent
   latestBlock: Block
 }
@@ -107,7 +108,12 @@ export type ProposalData = {
 
 export interface ProposalCheck {
   name: string
-  checkProposal(proposal: ProposalEvent, tx: MultiChainSimulation, deps: ProposalData): Promise<CheckResult>
+  checkProposal(
+    proposal: ProposalEvent,
+    tx: TenderlySimulation,
+    deps: ProposalData,
+    multiSim?: MultiChainSimulation
+  ): Promise<CheckResult>
 }
 
 export interface AllCheckResults {

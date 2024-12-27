@@ -1,17 +1,14 @@
 import { getAddress } from '@ethersproject/address'
 import { getContractName } from '../utils/clients/tenderly'
 import { bullet } from '../presentation/report'
-import { ProposalCheck, StateDiff } from '../types'
+import { MultiChainSimulation, ProposalCheck, StateDiff } from '../types'
 
 /**
  * Reports all state changes from the proposal
  */
 export const checkStateChanges: ProposalCheck = {
   name: 'Reports all state changes from the proposal',
-  async checkProposal(proposal, mergedSim, deps) {
-    console.log('Checking state changes')
-    const sim = mergedSim.mainnetSim
-    const bridgeSims = mergedSim.bridgedSims
+  async checkProposal(proposal, sim, deps, multiSim?: MultiChainSimulation) {
     const info: string[] = []
     const warnings = []
     // Check if the transaction reverted, and if so return revert reason
@@ -23,14 +20,14 @@ export const checkStateChanges: ProposalCheck = {
       const error = `Transaction reverted with reason: ${reason}`
       return { info: [], warnings: [], errors: [error] }
     }
-    
-    if(bridgeSims) {
+
+    const bridgeSims = multiSim?.bridgedSims
+    if (bridgeSims) {
       console.log('Bridge sims found')
       for (const bridgeSim of bridgeSims) {
         console.log('Bridge sim', bridgeSim)
       }
     }
-        
 
     // State diffs in the simulation are an array, so first we organize them by address. We skip
     // recording state changes for (1) the `queuedTransactions` mapping of the timelock, and
