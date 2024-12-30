@@ -1,5 +1,5 @@
 import { getAddress } from '@ethersproject/address'
-import { defaultAbiCoder } from '@ethersproject/abi'
+import { defaultAbiCoder, Interface } from '@ethersproject/abi'
 import { BigNumber, BigNumberish } from '@ethersproject/bignumber'
 import { hexStripZeros } from '@ethersproject/bytes'
 import { HashZero, Zero } from '@ethersproject/constants'
@@ -26,6 +26,7 @@ import {
   TENDERLY_BASE_URL,
   TENDERLY_ENCODE_URL,
   TENDERLY_SIM_URL,
+  TENDERLY_SIM_BUNDLE_URL,
 } from '../constants'
 import {
   ProposalEvent,
@@ -252,7 +253,7 @@ async function createBridgedSimulationPayload(
   values: BigNumber[],
   calldatas: string[],
   destinationChain: CometChains
-): Promise<TenderlyPayload> {
+): Promise<TenderlyPayload[]> {
   // Define network ID mapping for supported bridged chains
   const networkIdMap: Record<string, string> = {
     arbitrum: '42161',
@@ -268,37 +269,51 @@ async function createBridgedSimulationPayload(
   const blockNumberToUse = (await getLatestBlock(networkId)) - 3 // subtracting a few blocks to ensure tenderly has the block
   const customChainProvider = customProvider(destinationChain)
   const latestBlock = await customChainProvider.getBlock(blockNumberToUse)
-
-  // Prepare calldata for execution
-  const executeInputs = targets.map((target, i) => ({
-    target,
-    value: values[i].toString(),
-    signature: signatures[i],
-    calldata: calldatas[i],
-  }))
+  
+  const stateOverrides = {
+    "0x4200000000000000000000000000000000000007": {
+      storage: {
+        "0x00000000000000000000000000000000000000000000000000000000000000cc":"0x0000000000000000000000006d903f6003cca6255d85cca4d3b5e5146dc33925"
+      },
+    },
+  };
+  
+  const iface = new Interface([
+    'function l1CrossDomainMessenger() view returns (address)', // Adjust return type as needed
+  ]);
 
   // Construct the payload for the bridged chain simulation
-  const payload: TenderlyPayload = {
-    network_id: String(networkId) as TenderlyPayload['network_id'],
-    block_number: latestBlock.number,
-    from: '0x4200000000000000000000000000000000000007', // Use a default address or the actual message sender on the destination chain
-    to: '0xC3a73A70d1577CD5B02da0bA91C0Afc8fA434DAF', // Assuming the first target is the contract to execute on the bridged chain
-    input: defaultAbiCoder.encode(
-      ['address[]', 'uint256[]', 'string[]', 'bytes[]'],
-      [targets, values, signatures, calldatas]
-    ),
-    gas: BLOCK_GAS_LIMIT,
-    gas_price: '0', // Gas price can be adjusted based on chain requirements
-    value: '0', // If the transaction sends ETH, adjust this field
-    save_if_fails: false,
-    save: false,
-    generate_access_list: true,
-    block_header: {
-      number: hexStripZeros(BigNumber.from(latestBlock.number).toHexString()),
-      timestamp: hexStripZeros(BigNumber.from(latestBlock.timestamp).toHexString()),
-    },
-    state_objects: {}, // Optionally add state overrides if required
-  }
+  const payload: TenderlyPayload[] = [
+    // {
+    //   network_id: String(networkId) as TenderlyPayload['network_id'],
+    //   from: '0x6d903f6003cca6255D85CcA4D3B5E5146dC33925', 
+    //   to: '0xC0d3c0d3c0D3c0D3C0d3C0D3C0D3c0d3c0d30007', 
+    //   input: iface.encodeFunctionData('l1CrossDomainMessenger', []),
+    //   gas: BLOCK_GAS_LIMIT,
+    //   state_objects: stateOverrides,
+    // },
+    {
+      network_id: String(networkId) as TenderlyPayload['network_id'],
+      block_number: latestBlock.number,
+      from: '0x4200000000000000000000000000000000000007', // Use a default address or the actual message sender on the destination chain
+      to: '0xC3a73A70d1577CD5B02da0bA91C0Afc8fA434DAF', // Assuming the first target is the contract to execute on the bridged chain
+      input: defaultAbiCoder.encode(
+        ['address[]', 'uint256[]', 'string[]', 'bytes[]'],
+        [targets, values, signatures, calldatas]
+      ),
+      gas: BLOCK_GAS_LIMIT,
+      gas_price: '0', // Gas price can be adjusted based on chain requirements
+      value: '0', // If the transaction sends ETH, adjust this field
+      save_if_fails: false,
+      save: false,
+      generate_access_list: true,
+      block_header: {
+        number: hexStripZeros(BigNumber.from(latestBlock.number).toHexString()),
+        timestamp: hexStripZeros(BigNumber.from(latestBlock.timestamp).toHexString()),
+      },
+      state_objects: stateOverrides, // Optionally add state overrides if required
+    }
+  ]
 
   return payload
 }
@@ -368,7 +383,8 @@ async function simulateProposed(config: SimulationConfigProposed): Promise<Simul
           l2TransactionsInfo.calldatas,
           l2Chain
         )
-        const bridgedSim = await sendSimulation(bridgedSimPayload)
+        console.log('bridgedSimPayload', bridgedSimPayload)
+        const bridgedSim = await sendBundleSimulation(bridgedSimPayload)
         bridgedSims.push({ chain: l2Chain, sim: bridgedSim })
         console.log(`Bridged simulation for ${l2Chain} successful`)
       } catch (err) {
@@ -627,7 +643,8 @@ async function simulateExecuted(config: SimulationConfigExecuted): Promise<Simul
           l2TransactionsInfo.calldatas,
           l2Chain
         )
-        const bridgedSim = await sendSimulation(bridgedSimPayload)
+        console.log('bridgedSimPayload', bridgedSimPayload)
+        const bridgedSim = await sendBundleSimulation(bridgedSimPayload)
         console.log('bridgedSim', bridgedSim.transaction)
         bridgedSims.push({ chain: l2Chain, sim: bridgedSim })
         console.log(`Bridged simulation for ${l2Chain} successful`)
@@ -769,5 +786,34 @@ async function sendSimulation(payload: TenderlyPayload, delay = 1000): Promise<T
     console.log(JSON.stringify(payload))
     await sleep(delay + randomInt(0, 1000))
     return await sendSimulation(payload, delay * 2)
+  }
+}
+
+async function sendBundleSimulation(payload: TenderlyPayload[], delay = 1000): Promise<TenderlySimulation> {
+  const fetchOptions = <Partial<FETCH_OPT>>{ method: 'POST', data: {simulations: payload}, ...TENDERLY_FETCH_OPTIONS }
+  try {
+    // Send simulation request
+    const sim = <TenderlySimulation>await fetchUrl(TENDERLY_SIM_BUNDLE_URL, fetchOptions)
+    console.log('sim in sendBundleSimulation', sim)
+    // Post-processing to ensure addresses we use are checksummed (since ethers returns checksummed addresses)
+    // sim.transaction.addresses = sim.transaction.addresses.map(getAddress)
+    // sim.contracts.forEach((contract) => (contract.address = getAddress(contract.address)))
+    writeFileSync('new-bundle.json', JSON.stringify(sim, null, 2))
+    return sim
+  } catch (err: any) {
+    console.log('err in sendSimulation: ', JSON.stringify(err))
+    const is429 = typeof err === 'object' && err?.statusCode === 429
+    if (delay > 8000 || !is429) {
+      console.warn(`Simulation request failed with the below request payload and error`)
+      console.log(JSON.stringify(fetchOptions))
+      throw err
+    }
+    console.warn(err)
+    console.warn(
+      `Simulation request failed with the above error, retrying in ~${delay} milliseconds. See request payload below`
+    )
+    console.log(JSON.stringify(payload))
+    await sleep(delay + randomInt(0, 1000))
+    return await sendBundleSimulation(payload, delay * 2)
   }
 }
