@@ -7,6 +7,9 @@ import { keccak256 } from '@ethersproject/keccak256'
 import { toUtf8Bytes } from '@ethersproject/strings'
 import { parseEther } from '@ethersproject/units'
 import { provider } from './ethers'
+import { getContractNameAndAbiFromFile } from '../../checks/compound/abi-utils'
+import { Contract } from 'ethers'
+
 import mftch, { FETCH_OPT } from 'micro-ftch'
 // @ts-ignore
 const fetchUrl = mftch.default
@@ -256,21 +259,19 @@ async function createBridgedSimulationPayload(
 ): Promise<TenderlyPayload[]> {
   // Define network ID mapping for supported bridged chains
   const networkIdMap: Record<string, string> = {
-    arbitrum: '42161',
+    // arbitrum: '42161',
     optimism: '10',
-    polygon: '137',
-    base: '8453',
+    // polygon: '137',
+    // base: '8453',
   }
 
   const networkId = networkIdMap[destinationChain]
   if (!networkId) throw new Error(`Unsupported destination chain: ${destinationChain}`)
+    
+  const bridgeReceiverAddress = '0xC3a73A70d1577CD5B02da0bA91C0Afc8fA434DAF'
 
-  // Create block and timestamp placeholders for the bridged chain
-  const blockNumberToUse = (await getLatestBlock(networkId)) - 3 // subtracting a few blocks to ensure tenderly has the block
-  const customChainProvider = customProvider(destinationChain)
-  const latestBlock = await customChainProvider.getBlock(blockNumberToUse)
   
-  const stateOverrides = {
+  const stateOverridesBridgeReceiver = {
     "0x4200000000000000000000000000000000000007": {
       storage: {
         "0x00000000000000000000000000000000000000000000000000000000000000cc":"0x0000000000000000000000006d903f6003cca6255d85cca4d3b5e5146dc33925"
@@ -278,23 +279,63 @@ async function createBridgedSimulationPayload(
     },
   };
   
-  const iface = new Interface([
-    'function l1CrossDomainMessenger() view returns (address)', // Adjust return type as needed
-  ]);
+  
+  const { abi: bridgeAbi } = await getContractNameAndAbiFromFile(destinationChain, bridgeReceiverAddress)
+  const bridgeInstance = new Contract(bridgeReceiverAddress, bridgeAbi, customProvider(destinationChain))
+  const localTimelock = await bridgeInstance.callStatic.localTimelock()
+  const proposalCount = await bridgeInstance.callStatic.proposalCount()
+  console.log('proposal count', proposalCount)
+  
+  const { abi: timelockAbi } = await getContractNameAndAbiFromFile(destinationChain, localTimelock)
+  const timelockInstance = new Contract(localTimelock, timelockAbi, customProvider(destinationChain))
+  
+  // Get delay and latest block details
+  const delay = await timelockInstance.callStatic.delay(); // Delay in seconds
+  const blockNumberToUse = (await getLatestBlock(networkId)) - 5; // Use a block safely in the past
+  const customChainProvider = customProvider(destinationChain);
+  const latestBlock = await customChainProvider.getBlock(blockNumberToUse);
 
+  console.log('Latest block number:', latestBlock.number);
+  console.log('Latest block timestamp:', latestBlock.timestamp);
+
+  // Calculate first block number and ETA
+  const firstBlockNumber = blockNumberToUse - delay - 10; // Ensure block is before the ETA
+  const firstBlock = await customChainProvider.getBlock(firstBlockNumber);
+  const eta = BigNumber.from(firstBlock.timestamp); // ETA is first block's timestamp + delay
+
+  console.log('First block number:', firstBlockNumber);
+  console.log('First block timestamp:', firstBlock.timestamp);
+  console.log('Calculated ETA:', eta.toString());
+
+  const iface = new Interface(bridgeAbi)
+  
+  const txHashes = targets.map((target, i) => {
+    const [val, sig, calldata] = [values[i], signatures[i], calldatas[i]]
+    return keccak256(
+      defaultAbiCoder.encode(['address', 'uint256', 'string', 'bytes', 'uint256'], [target, val, sig, calldata, eta])
+    )
+  })
+    
+  const timelockStorageObj: Record<string, string> = {}
+  txHashes.forEach((hash) => {
+    timelockStorageObj[`queuedTransactions[${hash}]`] = 'true'
+  })
+  
+  const stateOverrides = {
+    networkID: String(networkId) as TenderlyPayload['network_id'],
+    stateOverrides: {
+      [localTimelock]: {
+        value: timelockStorageObj,
+      },
+    },
+  }
+  const storageObj = await sendEncodeRequest(stateOverrides)
+  
   // Construct the payload for the bridged chain simulation
   const payload: TenderlyPayload[] = [
-    // {
-    //   network_id: String(networkId) as TenderlyPayload['network_id'],
-    //   from: '0x6d903f6003cca6255D85CcA4D3B5E5146dC33925', 
-    //   to: '0xC0d3c0d3c0D3c0D3C0d3C0D3C0D3c0d3c0d30007', 
-    //   input: iface.encodeFunctionData('l1CrossDomainMessenger', []),
-    //   gas: BLOCK_GAS_LIMIT,
-    //   state_objects: stateOverrides,
-    // },
     {
       network_id: String(networkId) as TenderlyPayload['network_id'],
-      block_number: latestBlock.number,
+      block_number: firstBlock.number,
       from: '0x4200000000000000000000000000000000000007', // Use a default address or the actual message sender on the destination chain
       to: '0xC3a73A70d1577CD5B02da0bA91C0Afc8fA434DAF', // Assuming the first target is the contract to execute on the bridged chain
       input: defaultAbiCoder.encode(
@@ -308,11 +349,32 @@ async function createBridgedSimulationPayload(
       save: false,
       generate_access_list: true,
       block_header: {
+        number: hexStripZeros(BigNumber.from(firstBlock.number).toHexString()),
+        timestamp: hexStripZeros(BigNumber.from(firstBlock.timestamp).toHexString()),
+      },
+      state_objects: stateOverridesBridgeReceiver, // Optionally add state overrides if required
+    },
+    {
+      network_id: String(networkId) as TenderlyPayload['network_id'],
+      block_number: latestBlock.number,
+      from: '0x6d903f6003cca6255d85cca4d3b5e5146dc33925', // Use a default address or the actual message sender on the destination chain
+      to: '0xC3a73A70d1577CD5B02da0bA91C0Afc8fA434DAF', // Assuming the first target is the contract to execute on the bridged chain
+      input: iface.encodeFunctionData('executeProposal', [proposalCount.add(1)]), // Adjust proposal ID as needed
+      gas: BLOCK_GAS_LIMIT,
+      gas_price: '0', // Gas price can be adjusted based on chain requirements
+      value: '0', // If the transaction sends ETH, adjust this field
+      save_if_fails: false,
+      save: false,
+      generate_access_list: true,
+      block_header: {
         number: hexStripZeros(BigNumber.from(latestBlock.number).toHexString()),
         timestamp: hexStripZeros(BigNumber.from(latestBlock.timestamp).toHexString()),
       },
-      state_objects: stateOverrides, // Optionally add state overrides if required
+      state_objects:{
+        // [localTimelock]: { storage: storageObj.stateOverrides[localTimelock.toLowerCase()].value },
+      }
     }
+    
   ]
 
   return payload
@@ -350,48 +412,6 @@ async function simulateProposed(config: SimulationConfigProposed): Promise<Simul
   // We know that the values are the 4th parameter in
   // `ProposalCreated(proposalId, proposer, targets, values, signatures, calldatas, startBlock, endBlock, description)`
   const values: BigNumber[] = proposalCreatedEvent.args![3]
-
-  // --- Detect and handle bridged transactions ---
-  const bridgedSims: { chain: string; sim: TenderlySimulation }[] = []
-  for (const [i, targetNoCase] of targets.entries()) {
-    const target = targetNoCase.toLowerCase()
-    const transactionInfo: ExecuteTransactionInfo = {
-      target: targets[i],
-      signature: sigs[i],
-      calldata: calldatas[i],
-      value: values?.[i],
-    }
-    console.log(`Checking target ${target} for bridged transactions`)
-    if (l2Bridges[target]) {
-      console.log(`Detected bridged transaction targeting ${target}`)
-      // Decode bridged calldata
-      const l2Chain = l2Bridges[target]
-      const l2TransactionsInfo = await getDecodedBytesForChain(
-        l2Chain,
-        BigNumber.from(proposalId).toNumber(),
-        transactionInfo
-      )
-      console.log(`Decoded bridged calldata for ${l2Chain}`, l2TransactionsInfo)
-      // Detect bridged chain
-      console.log(`Simulating bridged transaction on ${l2Chain}`)
-
-      try {
-        const bridgedSimPayload = await createBridgedSimulationPayload(
-          l2TransactionsInfo.targets,
-          l2TransactionsInfo.signatures,
-          l2TransactionsInfo.values,
-          l2TransactionsInfo.calldatas,
-          l2Chain
-        )
-        console.log('bridgedSimPayload', bridgedSimPayload)
-        const bridgedSim = await sendBundleSimulation(bridgedSimPayload)
-        bridgedSims.push({ chain: l2Chain, sim: bridgedSim })
-        console.log(`Bridged simulation for ${l2Chain} successful`)
-      } catch (err) {
-        console.error(`Error simulating bridged transaction on ${l2Chain}:`, err)
-      }
-    }
-  }
 
   // --- Prepare simulation configuration ---
   // We need the following state conditions to be true to successfully simulate a proposal:
@@ -534,6 +554,48 @@ async function simulateProposed(config: SimulationConfigProposed): Promise<Simul
 
   let sim = await sendSimulation(simulationPayload)
   const totalValue = values.reduce((sum, cur) => sum.add(cur), Zero)
+  
+  // --- Detect and handle bridged transactions ---
+  const bridgedSims: { chain: string; sim: TenderlySimulation }[] = []
+  for (const [i, targetNoCase] of targets.entries()) {
+    const target = targetNoCase.toLowerCase()
+    const transactionInfo: ExecuteTransactionInfo = {
+      target: targets[i],
+      signature: sigs[i],
+      calldata: calldatas[i],
+      value: values?.[i],
+    }
+    console.log(`Checking target ${target} for bridged transactions`)
+    if (l2Bridges[target]) {
+      console.log(`Detected bridged transaction targeting ${target}`)
+      // Decode bridged calldata
+      const l2Chain = l2Bridges[target]
+      const l2TransactionsInfo = await getDecodedBytesForChain(
+        l2Chain,
+        BigNumber.from(proposalId).toNumber(),
+        transactionInfo
+      )
+      console.log(`Decoded bridged calldata for ${l2Chain}`, l2TransactionsInfo)
+      // Detect bridged chain
+      console.log(`Simulating bridged transaction on ${l2Chain}`)
+
+      try {
+        const bridgedSimPayload = await createBridgedSimulationPayload(
+          l2TransactionsInfo.targets,
+          l2TransactionsInfo.signatures,
+          l2TransactionsInfo.values,
+          l2TransactionsInfo.calldatas,
+          l2Chain
+        )
+        console.log('bridgedSimPayload', bridgedSimPayload)
+        const bridgedSim = await sendBundleSimulation(bridgedSimPayload)
+        bridgedSims.push({ chain: l2Chain, sim: bridgedSim })
+        console.log(`Bridged simulation for ${l2Chain} successful`)
+      } catch (err) {
+        console.error(`Error simulating bridged transaction on ${l2Chain}:`, err)
+      }
+    }
+  }
 
   // Sim succeeded, or failure was not due to an ETH balance issue, so return the simulation.
   if (sim.simulation.status || totalValue.eq(Zero))
