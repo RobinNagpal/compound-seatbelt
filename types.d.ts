@@ -1,6 +1,5 @@
-import { BigNumber, BigNumberish, Block, Contract } from 'ethers'
-import { ContractTransaction } from '@ethersproject/contracts'
 import { JsonRpcProvider } from '@ethersproject/providers'
+import { BigNumber, BigNumberish, Block, Contract } from 'ethers'
 
 // --- Simulation configurations ---
 // TODO Consider refactoring to an enum instead of string.
@@ -35,7 +34,7 @@ export interface SimulationConfigNew extends SimulationConfigBase {
 export type SimulationConfig = SimulationConfigExecuted | SimulationConfigProposed | SimulationConfigNew
 
 export interface BridgedSimulation {
-  chain: string
+  chain: L2Chain
   sim: TenderlyBundledSimulation
 }
 export interface SimulationResult {
@@ -91,9 +90,15 @@ export interface ProposalEvent {
 
 export type Message = string
 
+export type PlainCheckResult = {
+  info: Message[]
+  warnings: Message[]
+  errors: Message[]
+}
+
 export type BridgedCheckResult = {
   chain: string
-  checkResults: CheckResult
+  checkResults: PlainCheckResult
 }
 
 export type CheckResult = {
@@ -674,6 +679,7 @@ interface LogRaw {
 }
 
 interface StateDiff {
+  address?: string
   soltype: SoltypeElement | null
   original: string | Record<string, any>
   dirty: string | Record<string, any>
@@ -686,3 +692,21 @@ interface RawElement {
   original: string
   dirty: string
 }
+
+export enum CometChains {
+  arbitrum = 'arbitrum',
+  polygon = 'polygon',
+  mainnet = 'mainnet',
+  base = 'base',
+  scroll = 'scroll',
+  optimism = 'optimism',
+  mantle = 'mantle',
+}
+
+export type L2Chain =
+  | CometChains.arbitrum
+  | CometChains.polygon
+  | CometChains.base
+  | CometChains.optimism
+  | CometChains.scroll
+  | CometChains.mantle

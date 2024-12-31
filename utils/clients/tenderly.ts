@@ -698,8 +698,8 @@ async function simulateBridgedTransactions(
         gas: BLOCK_GAS_LIMIT,
         gas_price: '0',
         value: '0',
-        save_if_fails: false,
-        save: false,
+        save_if_fails: true,
+        save: true,
         generate_access_list: true,
         block_header: {
           number: hexStripZeros(BigNumber.from(latestBlock.number + 2).toHexString()),
@@ -736,13 +736,15 @@ async function sendBundleSimulation(payload: TenderlyPayload[], delay = 1000): P
   const fetchOptions = <Partial<FETCH_OPT>>{ method: 'POST', data: { simulations: payload }, ...TENDERLY_FETCH_OPTIONS }
   try {
     // Send simulation request
-    const sim = <TenderlyBundledSimulation>await fetchUrl(TENDERLY_SIM_BUNDLE_URL, fetchOptions)
-    console.log('sim in sendBundleSimulation', sim)
+    const bundledSim = <TenderlyBundledSimulation>await fetchUrl(TENDERLY_SIM_BUNDLE_URL, fetchOptions)
+    console.log('sim in sendBundleSimulation', bundledSim)
     // Post-processing to ensure addresses we use are checksummed (since ethers returns checksummed addresses)
-    // sim.transaction.addresses = sim.transaction.addresses.map(getAddress)
-    // sim.contracts.forEach((contract) => (contract.address = getAddress(contract.address)))
-    writeFileSync('new-bundle.json', JSON.stringify(sim, null, 2))
-    return sim
+
+    bundledSim.simulation_results.forEach((sim) => {
+      sim.transaction.addresses = sim.transaction.addresses.map(getAddress)
+      sim.contracts.forEach((contract) => (contract.address = getAddress(contract.address)))
+    })
+    return bundledSim
   } catch (err: any) {
     console.log('err in sendSimulation: ', JSON.stringify(err))
     const is429 = typeof err === 'object' && err?.statusCode === 429

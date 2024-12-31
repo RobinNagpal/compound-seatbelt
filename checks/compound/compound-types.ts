@@ -1,4 +1,3 @@
-import { Message } from '@/types'
 import { BigNumber } from '@ethersproject/bignumber'
 
 export interface ExecuteTransactionsInfo {
@@ -50,18 +49,6 @@ export interface TransactionMessage {
   error?: string
 }
 
-export enum CometChains {
-  arbitrum = 'arbitrum',
-  polygon = 'polygon',
-  mainnet = 'mainnet',
-  base = 'base',
-  scroll = 'scroll',
-  optimism = 'optimism',
-  mantle = 'mantle',
-}
-
-export type L2Chain = CometChains.arbitrum | CometChains.polygon | CometChains.base | CometChains.optimism | CometChains.scroll | CometChains.mantle
-
 export type TenderlySupportedL2Chain = CometChains.arbitrum | CometChains.polygon | CometChains.base | CometChains.optimism | CometChains.mantle
 
 export type TransactionFormatter = (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => Promise<string | ActionAnalysis>
@@ -94,3 +81,15 @@ export interface GovernanceProposalAnalysis {
 }
 
 export type ProposalActionResponse = ActionAnalysis
+
+export enum CometChains {
+  arbitrum = 'arbitrum',
+  polygon = 'polygon',
+  mainnet = 'mainnet',
+  base = 'base',
+  scroll = 'scroll',
+  optimism = 'optimism',
+  mantle = 'mantle',
+}
+
+export type L2Chain = CometChains.arbitrum | CometChains.polygon | CometChains.base | CometChains.optimism | CometChains.scroll | CometChains.mantle
