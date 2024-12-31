@@ -58,7 +58,9 @@ async function main() {
     const allProposalIds = await getProposalIds(governorType, GOVERNOR_ADDRESS, latestBlock.number)
     const files = await listFilesInFolder(s3ReportsFolder)
     console.log('files', files)
-    const proposalIdsArr = allProposalIds.filter((id) => id.toNumber() > 228)
+    const proposalIdsArr =
+      process.env.SELECTED_PROPOSALS?.split(',') || allProposalIds.filter((id) => id.toNumber() > 228)
+
     const proposalIds = proposalIdsArr.map((id) => BigNumber.from(id))
 
     governor = getGovernor(governorType, GOVERNOR_ADDRESS)
@@ -99,7 +101,7 @@ async function main() {
 
       const pdfExists = files.includes(`${s3ReportsFolder}/${simProposal.id.toString()}.pdf`)
 
-      if (pdfExists) {
+      if (!process.env.SELECTED_PROPOSALS && pdfExists) {
         console.log(`Skipping simulation for proposal ${simProposal.id}  as PDF already exists in S3...`)
         continue
       }
