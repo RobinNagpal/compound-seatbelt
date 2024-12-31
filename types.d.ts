@@ -34,16 +34,13 @@ export interface SimulationConfigNew extends SimulationConfigBase {
 
 export type SimulationConfig = SimulationConfigExecuted | SimulationConfigProposed | SimulationConfigNew
 
-export interface MultiChainSimulation {
-  mainnetSim: TenderlySimulation
-  bridgedSims?: {
-    chain: string
-    sim: TenderlySimulation
-  }[]
+export interface BridgedSimulation {
+  chain: string
+  sim: TenderlyBundledSimulation
 }
 export interface SimulationResult {
   sim: TenderlySimulation
-  multiSim?: MultiChainSimulation
+  bridgedSimulations?: BridgedSimulation[]
   proposal: ProposalEvent
   latestBlock: Block
 }
@@ -112,7 +109,7 @@ export interface ProposalCheck {
     proposal: ProposalEvent,
     tx: TenderlySimulation,
     deps: ProposalData,
-    multiSim?: MultiChainSimulation
+    bridgedSimulations?: BridgedSimulation[]
   ): Promise<CheckResult>
 }
 
@@ -190,6 +187,10 @@ export interface TenderlySimulation {
   simulation: Simulation
   contracts: TenderlyContract[]
   generated_access_list: GeneratedAccessList[]
+}
+
+export interface TenderlyBundledSimulation {
+  simulation_results: TenderlySimulation[]
 }
 
 interface TenderlyContract {
@@ -439,6 +440,7 @@ interface CallTrace {
   decoded_output: FunctionVariableElement[]
   network_id: string
   calls: CallTraceCall[]
+  error_reason?: string
 }
 
 interface Caller {

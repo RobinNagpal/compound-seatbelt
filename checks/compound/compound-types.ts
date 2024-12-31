@@ -60,6 +60,10 @@ export enum CometChains {
   mantle = 'mantle',
 }
 
+export type L2Chain = CometChains.arbitrum | CometChains.polygon | CometChains.base | CometChains.optimism | CometChains.scroll | CometChains.mantle
+
+export type TenderlySupportedL2Chain = CometChains.arbitrum | CometChains.polygon | CometChains.base | CometChains.optimism | CometChains.mantle
+
 export type TransactionFormatter = (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => Promise<string | ActionAnalysis>
 
 export interface ContractNameAndAbi {

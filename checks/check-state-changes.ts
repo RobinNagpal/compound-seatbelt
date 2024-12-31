@@ -1,14 +1,14 @@
 import { getAddress } from '@ethersproject/address'
 import { getContractName } from '../utils/clients/tenderly'
 import { bullet } from '../presentation/report'
-import { MultiChainSimulation, ProposalCheck, StateDiff } from '../types'
+import { BridgedSimulation, ProposalCheck, StateDiff } from '../types'
 
 /**
  * Reports all state changes from the proposal
  */
 export const checkStateChanges: ProposalCheck = {
   name: 'Reports all state changes from the proposal',
-  async checkProposal(proposal, sim, deps, multiSim?: MultiChainSimulation) {
+  async checkProposal(proposal, sim, deps, bridgedSimulations?: BridgedSimulation[]) {
     const info: string[] = []
     const warnings = []
     // Check if the transaction reverted, and if so return revert reason
@@ -21,7 +21,7 @@ export const checkStateChanges: ProposalCheck = {
       return { info: [], warnings: [], errors: [error] }
     }
 
-    const bridgeSims = multiSim?.bridgedSims
+    const bridgeSims = bridgedSimulations
     if (bridgeSims) {
       console.log('Bridge sims found')
       for (const bridgeSim of bridgeSims) {
