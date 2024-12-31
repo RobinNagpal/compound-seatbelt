@@ -84,9 +84,9 @@ export async function getFormattedTokenWithLink(chain: CometChains, tokenAddress
 export async function getFormattedTokenNameWithLink(chain: CometChains, tokenAddress: string) {
   const platform = getPlatform(chain)
   const { abi: compAddressAbi } = await getContractNameAndAbiFromFile(chain, tokenAddress)
-  if (compAddressAbi.toString() === "Contract source code not verified") {
-    console.log(`Contract at address ${tokenAddress} is not verified.`);
-    return `**[Unverified Contract](https://${platform}/address/${tokenAddress})**`;
+  if (compAddressAbi.toString() === 'Contract source code not verified') {
+    console.log(`Contract at address ${tokenAddress} is not verified.`)
+    return `**[Unverified Contract](https://${platform}/address/${tokenAddress})**`
   }
 
   const compInstance = new Contract(tokenAddress, compAddressAbi, customProvider(chain))
@@ -132,30 +132,23 @@ export function addressFormatter(address: string, chain: CometChains, symbol?: s
   return `[${symbol ?? address}](https://${platform}/address/${address})`
 }
 
-export function getChangeTextFn(
-  change: string,
-  isPercentage: boolean = false,
-  thresholds?: { warningThreshold?: number; criticalThreshold?: number }
-): string {
-  const percentageSign = isPercentage ? '%' : '';
-  const absoluteChange = defactorFn((Math.abs(parseFloat(change))).toString());
+export function getChangeTextFn(change: string, isPercentage: boolean = false, thresholds?: { warningThreshold?: number; criticalThreshold?: number }): string {
+  const percentageSign = isPercentage ? '%' : ''
+  const absoluteChange = defactorFn(Math.abs(parseFloat(change)).toString())
 
   const criticalitySign =
-  thresholds?.warningThreshold !== undefined &&
-  thresholds?.criticalThreshold !== undefined
-    ? getCriticalitySign(change, {
-        warningThreshold: thresholds.warningThreshold,
-        criticalThreshold: thresholds.criticalThreshold,
-      })
-    : '';
+    thresholds?.warningThreshold !== undefined && thresholds?.criticalThreshold !== undefined
+      ? getCriticalitySign(change, {
+          warningThreshold: thresholds.warningThreshold,
+          criticalThreshold: thresholds.criticalThreshold,
+        })
+      : ''
 
   return `${
     change === '0'
       ? `(It remains the same)`
-      : `(It's getting ${
-          change.startsWith('-') ? '**decreased**' : '**increased**'
-        } by **${addCommas(absoluteChange)}${percentageSign}** ${criticalitySign})`
-  } `;
+      : `(It's getting ${change.startsWith('-') ? '**decreased**' : '**increased**'} by **${addCommas(absoluteChange)}${percentageSign}** ${criticalitySign})`
+  } `
 }
 
 export function formatTimestamp(timestampString: string) {
@@ -169,28 +162,27 @@ export function getAttentionSign(
   changeInString: string,
   { warningThreshold, criticalThreshold }: { warningThreshold: number; criticalThreshold: number }
 ): string {
-  const change = Math.abs(parseFloat(changeInString));
+  const change = Math.abs(parseFloat(changeInString))
 
   if (change >= warningThreshold || change >= criticalThreshold) {
-    return getIcon(IconType.Attention);
+    return getIcon(IconType.Attention)
   }
-  return getIcon(IconType.Update);
+  return getIcon(IconType.Update)
 }
 
 export function getCriticalitySign(
   changeInString: string,
   { warningThreshold, criticalThreshold }: { warningThreshold: number; criticalThreshold: number }
 ): string {
-  const change = Math.abs(parseFloat(changeInString));
+  const change = Math.abs(parseFloat(changeInString))
 
   if (change >= criticalThreshold) {
-    return getIcon(IconType.AboveThreshold);
+    return getIcon(IconType.AboveThreshold)
   } else if (change >= warningThreshold) {
-    return getIcon(IconType.AroundThreshold);
+    return getIcon(IconType.AroundThreshold)
   }
-  return getIcon(IconType.WithinThreshold);
+  return getIcon(IconType.WithinThreshold)
 }
-
 
 export async function fetchAssertIdFromCoinGeckoForSymbol(symbol: string) {
   const baseUrl = 'https://api.coingecko.com/api/v3/search?query='
@@ -304,30 +296,30 @@ export enum IconType {
 }
 
 export const iconLookupTable: Record<IconType, { icon: string; description: string }> = {
-  add: { icon: "➕", description: "Add or create operation" },
-  delete: { icon: "🚮", description: "Delete or remove operation" },
-  convert: { icon: "🔄", description: "Convert or swap assets operation" },
-  execute: { icon: "🚀", description: "Execute an action or call" },
-  pause: { icon: "⏸️", description: "Pause or stop operation" },
-  unpause: { icon: "▶️", description: "Unpause or resume operation" },
-  update: { icon: "🛠️", description: "Update or change operation" },
-  money: { icon: "💵", description: "Money related operation" },
-  bridge: { icon: "🪜", description: "Bridge assets between networks" },
-  attention: { icon: "⚠️", description: "Requires attention or review" },
-  withinThreshold: { icon: "🟢", description: "Value is within the acceptable threshold" },
-  aroundThreshold: { icon: "🟡", description: "Value slightly above the threshold" },
-  aboveThreshold: { icon: "🔴", description: "Value critically above the threshold" },
-};
+  add: { icon: '➕', description: 'Add or create operation' },
+  delete: { icon: '🚮', description: 'Delete or remove operation' },
+  convert: { icon: '🔄', description: 'Convert or swap assets operation' },
+  execute: { icon: '🚀', description: 'Execute an action or call' },
+  pause: { icon: '⏸️', description: 'Pause or stop operation' },
+  unpause: { icon: '▶️', description: 'Unpause or resume operation' },
+  update: { icon: '🛠️', description: 'Update or change operation' },
+  money: { icon: '💵', description: 'Money related operation' },
+  bridge: { icon: '🪜', description: 'Bridge assets between networks' },
+  attention: { icon: '⚠️', description: 'Requires attention or review' },
+  withinThreshold: { icon: '🟢', description: 'Value is within the acceptable threshold' },
+  aroundThreshold: { icon: '🟡', description: 'Value slightly above the threshold' },
+  aboveThreshold: { icon: '🔴', description: 'Value critically above the threshold' },
+}
 
 export function getIcon(keyword: IconType) {
-  const result = iconLookupTable[keyword];
+  const result = iconLookupTable[keyword]
   if (result) {
-    return result.icon;
+    return result.icon
   } else {
-    return "❓";
+    return '❓'
   }
 }
 
 export function capitalizeWord(word: string) {
-  return word.charAt(0).toUpperCase() + word.slice(1);
+  return word.charAt(0).toUpperCase() + word.slice(1)
 }

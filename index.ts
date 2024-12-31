@@ -58,7 +58,9 @@ async function main() {
     const allProposalIds = await getProposalIds(governorType, GOVERNOR_ADDRESS, latestBlock.number)
     const files = await listFilesInFolder(s3ReportsFolder)
     console.log('files', files)
-    const proposalIdsArr = allProposalIds.filter((id) => id.toNumber() > 228)
+    const proposalIdsArr =
+      process.env.SELECTED_PROPOSALS?.split(',') || allProposalIds.filter((id) => id.toNumber() > 228)
+
     const proposalIds = proposalIdsArr.map((id) => BigNumber.from(id))
 
     governor = getGovernor(governorType, GOVERNOR_ADDRESS)
@@ -99,7 +101,7 @@ async function main() {
 
       const pdfExists = files.includes(`${s3ReportsFolder}/${simProposal.id.toString()}.pdf`)
 
-      if (pdfExists) {
+      if (!process.env.SELECTED_PROPOSALS && pdfExists) {
         console.log(`Skipping simulation for proposal ${simProposal.id}  as PDF already exists in S3...`)
         continue
       }
@@ -120,10 +122,12 @@ async function main() {
     // Run checks
     const { sim, proposal, latestBlock, config } = simOutput
     console.log(`  Running for proposal ID ${formatProposalId(governorType, proposal.id!)}...`)
-    
-    const checksToRun = Object.keys(ALL_CHECKS).filter((key) => {
-      return String(process.env.SKIP_DEFAULT_CHECKS).toLowerCase() !== "true";
-    });    
+
+    const checksToRun = Object.keys(ALL_CHECKS)
+      .filter((key) => (process.env.ENABLED_CHECKS ? process.env.ENABLED_CHECKS.split(',').includes(key) : true))
+      .filter((key) => {
+        return String(process.env.SKIP_DEFAULT_CHECKS).toLowerCase() !== 'true'
+      })
     console.log(`Running ${checksToRun.length} checks: ${checksToRun.join(', ')} for proposal ID ${proposal.id!}`)
     const checkResults: AllCheckResults = Object.fromEntries(
       await Promise.all(
@@ -137,7 +141,10 @@ async function main() {
       )
     )
 
-    const compProposalAnalysis = await analyzeProposal(proposal, sim, proposalData)
+    const compProposalAnalysis =
+      process.env.DISABLE_COMPOUND_CHECKS === 'true'
+        ? { mainnetActionAnalysis: [], chainedProposalAnalysis: [] }
+        : await analyzeProposal(proposal, sim, proposalData)
 
     console.log(JSON.stringify(compProposalAnalysis, null, 2))
 

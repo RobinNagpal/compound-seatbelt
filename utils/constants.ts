@@ -29,6 +29,7 @@ export const BLOCK_GAS_LIMIT = 30_000_000
 export const TENDERLY_BASE_URL = `https://api.tenderly.co/api/v1`
 export const TENDERLY_ENCODE_URL = `${TENDERLY_BASE_URL}/account/${TENDERLY_USER}/project/${TENDERLY_PROJECT_SLUG}/contracts/encode-states`
 export const TENDERLY_SIM_URL = `${TENDERLY_BASE_URL}/account/${TENDERLY_USER}/project/${TENDERLY_PROJECT_SLUG}/simulate`
+export const TENDERLY_SIM_BUNDLE_URL = `${TENDERLY_BASE_URL}/account/${TENDERLY_USER}/project/${TENDERLY_PROJECT_SLUG}/simulate-bundle`
 export const DISCORD_WEBHOOK_URL: string = process.env.DISCORD_WEBHOOK_URL!
 
 // Only required when running a specific sim from a config file
