@@ -436,7 +436,7 @@ async function simulateProposed(config: SimulationConfigProposed): Promise<Simul
 
   // Sim succeeded, or failure was not due to an ETH balance issue, so return the simulation.
   if (sim.simulation.status || totalValue.eq(Zero))
-    return { sim, proposal: formattedProposal, latestBlock, bridgedSimulations }
+    return { sim: { ...sim, bridgedSimulations }, proposal: formattedProposal, latestBlock }
 
   // Simulation failed, try again by setting value to the difference between total call values and governor ETH balance.
   const governorEthBalance = await provider.getBalance(governor.address)
@@ -444,14 +444,14 @@ async function simulateProposed(config: SimulationConfigProposed): Promise<Simul
   simulationPayload.value = newValue
   simulationPayload.state_objects![from].balance = newValue
   sim = await sendSimulation(simulationPayload)
-  if (sim.simulation.status) return { sim, proposal: formattedProposal, latestBlock, bridgedSimulations }
+  if (sim.simulation.status) return { sim: { ...sim, bridgedSimulations }, proposal: formattedProposal, latestBlock }
 
   // Simulation failed, try again by setting value to the total call values.
   simulationPayload.value = totalValue.toString()
   simulationPayload.state_objects![from].balance = totalValue.toString()
   sim = await sendSimulation(simulationPayload)
 
-  return { sim, proposal: formattedProposal, latestBlock, bridgedSimulations }
+  return { sim: { ...sim, bridgedSimulations }, proposal: formattedProposal, latestBlock }
 }
 
 /**
@@ -461,6 +461,7 @@ async function simulateProposed(config: SimulationConfigProposed): Promise<Simul
 async function simulateExecuted(config: SimulationConfigExecuted): Promise<SimulationResult> {
   const { governorAddress, governorType, proposalId } = config
 
+  console.log(`Simulating executed proposal #${proposalId}...`)
   // --- Get details about the proposal we're analyzing ---
   const latestBlock = await provider.getBlock('latest')
   const blockRange = [0, latestBlock.number]
@@ -507,7 +508,8 @@ async function simulateExecuted(config: SimulationConfigExecuted): Promise<Simul
   }
 
   const bridgedSimulations = await simulateBridgedTransactions(config.proposalId, proposal)
-  return { sim, proposal: formattedProposal, latestBlock, bridgedSimulations }
+  console.log(`Bridge simulations: ${bridgedSimulations.length}`)
+  return { sim: { ...sim, bridgedSimulations }, proposal: formattedProposal, latestBlock }
 }
 
 // --- Helper methods ---
@@ -657,10 +659,6 @@ async function simulateBridgedTransactions(
         customProvider(destinationChain)
       )
 
-      const l2TimelockContract = l2Timelock(
-        ChainAddresses.L2Timelock[destinationChain],
-        customProvider(destinationChain)
-      )
       const stateOverrides = getBridgeReceiverOverrides(destinationChain)
 
       const { targets, values, signatures, calldatas } = l2TransactionsInfo
@@ -714,15 +712,18 @@ async function simulateBridgedTransactions(
       console.log(
         'response.transaction',
         JSON.stringify(
-          response.simulation_results.map((s) =>
-            !s.transaction ? s.simulation : s.transaction?.transaction_info?.call_trace?.error_reason
-          ),
+          response.simulation_results.map((s) => {
+            const errorReason = s.transaction?.transaction_info?.call_trace?.error_reason
+            if (errorReason) {
+              console.log('error call trace', JSON.stringify(s.transaction?.transaction_info?.call_trace, null, 2))
+            }
+
+            return errorReason
+          }),
           null,
           2
         )
       )
-
-      console.log(`Detected bridged transaction targeting ${target}`)
 
       bridgedSims.push({ chain: destinationChain, sim: response })
     }

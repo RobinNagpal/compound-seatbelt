@@ -40,7 +40,7 @@ export interface BridgedSimulation {
 }
 export interface SimulationResult {
   sim: TenderlySimulation
-  bridgedSimulations?: BridgedSimulation[]
+
   proposal: ProposalEvent
   latestBlock: Block
 }
@@ -91,10 +91,16 @@ export interface ProposalEvent {
 
 export type Message = string
 
+export type BridgedCheckResult = {
+  chain: string
+  checkResults: CheckResult
+}
+
 export type CheckResult = {
   info: Message[]
   warnings: Message[]
   errors: Message[]
+  bridgedCheckResults?: BridgedCheckResult[]
 }
 
 export type ProposalData = {
@@ -105,12 +111,7 @@ export type ProposalData = {
 
 export interface ProposalCheck {
   name: string
-  checkProposal(
-    proposal: ProposalEvent,
-    tx: TenderlySimulation,
-    deps: ProposalData,
-    bridgedSimulations?: BridgedSimulation[]
-  ): Promise<CheckResult>
+  checkProposal(proposal: ProposalEvent, tx: TenderlySimulation, deps: ProposalData): Promise<CheckResult>
 }
 
 export interface AllCheckResults {
@@ -187,6 +188,8 @@ export interface TenderlySimulation {
   simulation: Simulation
   contracts: TenderlyContract[]
   generated_access_list: GeneratedAccessList[]
+
+  bridgedSimulations?: BridgedSimulation[]
 }
 
 export interface TenderlyBundledSimulation {
