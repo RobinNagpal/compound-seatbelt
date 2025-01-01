@@ -68,7 +68,7 @@ function toCheckSummary({ result: { errors, warnings, info }, name }: AllCheckRe
   const status =
     errors.length === 0 ? (warnings.length === 0 ? '✅ Passed' : '❗❗ **Passed with warnings**') : '❌ **Failed**'
 
-  return `### ${name} ${status}
+  return `#### ${name} ${status}
 
 ${toMessageList('Errors', errors)}
 
@@ -77,6 +77,41 @@ ${toMessageList('Warnings', warnings)}
 ${toMessageList('Info', info)}
 `
 }
+
+function populateChecks(checks: AllCheckResults): string {
+  const checksSummary = Object.keys(checks)
+    .map((checkId) => {
+      const { result: { errors, warnings, info, bridgedCheckResults }, name } = checks[checkId];
+
+      // Create the mainnet check summary
+      const mainnetSummary = toCheckSummary({
+        result: { errors, warnings, info },
+        name,
+      });
+
+      // If there are no bridged results, return the mainnet summary alone
+      if (!bridgedCheckResults || bridgedCheckResults.length === 0) return `### Mainnet Changes\n\n${mainnetSummary}`;
+
+      // Add summaries for each bridged chain
+      const bridgedSummaries = bridgedCheckResults
+        .map(({ chain, checkResults }) => {
+          const chainSummary = toCheckSummary({
+            result: { ...checkResults, bridgedCheckResults: undefined },
+            name: `Reports all state changes from the bridged proposal`,
+          });
+          return `### Bridge Changes of ${capitalizeWord(chain)}\n\n${chainSummary}`;
+        })
+        .join('\n');
+
+      // Combine mainnet and bridged summaries
+      return `### Mainnet Changes\n\n${mainnetSummary}\n\n${bridgedSummaries}`;
+    })
+    .join('\n');
+
+  return `${checksSummary}`;
+}
+
+
 
 /**
  * Pulls the title out of the markdown description, from the first markdown h1 line
@@ -242,9 +277,7 @@ This is filled in by remark-toc and this sentence will be removed.
 ${blockQuote(description.trim())}
 
 ## Checks\n
-${Object.keys(checks)
-  .map((checkId) => toCheckSummary(checks[checkId]))
-  .join('\n')}
+${populateChecks(checks)}
   
 ## Compound Checks\n
 ${toMessageList(
