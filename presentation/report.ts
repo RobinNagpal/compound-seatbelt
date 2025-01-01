@@ -112,13 +112,13 @@ function populateChecks(checks: AllCheckResults): string {
   });
 
   // Create the consolidated mainnet summary
-  const mainnetSummary = `## Mainnet Changes\n\n${mainnetSummaries.join('\n\n')}`;
+  const mainnetSummary = `### Mainnet Changes\n\n${mainnetSummaries.join('\n\n')}`;
 
   // Create the consolidated bridged summaries for each chain
   const bridgedSummary = Object.keys(bridgedSummaries)
     .map(
       (chain) =>
-        `## Bridge Changes of ${capitalizeWord(chain)}\n\n${bridgedSummaries[chain].join('\n\n')}`
+        `### Bridge Changes of ${capitalizeWord(chain)}\n\n${bridgedSummaries[chain].join('\n\n')}`
     )
     .join('\n\n');
 
