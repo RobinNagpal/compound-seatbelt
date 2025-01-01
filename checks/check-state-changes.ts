@@ -12,6 +12,70 @@ import {
 import { getContractName } from '../utils/clients/tenderly'
 import { ChainAddresses } from './../checks/compound/l2-utils'
 
+/**
+ * Reports all state changes from the proposal
+ */
+export const checkStateChanges: ProposalCheck = {
+  name: 'Reports all state changes from the proposal',
+  async checkProposal(proposal, sim, deps): Promise<CheckResult> {
+    const bridgedSimulations = sim.bridgedSimulations || []
+    console.log(`check-state-changes - Bridge simulations: ${bridgedSimulations?.length}`)
+    // Check if the transaction reverted, and if so return revert reason
+    if (!sim.transaction.status) {
+      const txInfo = sim.transaction.transaction_info
+      const reason = txInfo.stack_trace
+        ? txInfo.stack_trace[0].error_reason ?? txInfo.stack_trace[0].error
+        : 'unknown error'
+      const error = `Transaction reverted with reason: ${reason}`
+      return { info: [], warnings: [], errors: [error] }
+    }
+
+    const bridgeSims = bridgedSimulations
+    if (bridgeSims) {
+      console.log('Bridge sims found')
+      for (const bridgeSim of bridgeSims) {
+        console.log('Bridge sim', bridgeSim)
+      }
+    }
+
+    // State diffs in the simulation are an array, so first we organize them by address. We skip
+    // recording state changes for (1) the `queuedTransactions` mapping of the timelock, and
+    // (2) the `proposal.executed` change of the governor, because this will be consistent across
+    // all proposals and mainly add noise to the output
+    const simStateDiffs = sim.transaction.transaction_info.state_diff
+    if (!simStateDiffs) {
+      console.log('State diff is empty, printing sim response')
+      console.log(JSON.stringify(sim, null, 2))
+    }
+    const tenderlyContracts = sim.contracts
+    const mainnetChecks = createStateDiffsResult(simStateDiffs, deps, tenderlyContracts)
+
+    const bridgedCheckResults: BridgedCheckResult[] = []
+    bridgedSimulations.forEach((b) => {
+      const bridgedStateDiffs = b.sim.simulation_results
+        .map((sr) => {
+          return sr.transaction.transaction_info.state_diff.filter((sd) => {
+            if (
+              sd.address?.toLowerCase() === ChainAddresses.L2Timelock[b.chain].toLowerCase() ||
+              sd.address?.toLowerCase() === ChainAddresses.L2BridgeReceiver[b.chain].toLowerCase()
+            ) {
+              return false
+            }
+
+            return true
+          })
+        })
+        .flat()
+      const bridgedContracts = b.sim.simulation_results.map((sr) => sr.contracts).flat()
+
+      const bridgedStateResult = createStateDiffsResult(bridgedStateDiffs, deps, bridgedContracts)
+      bridgedCheckResults.push({ chain: b.chain, checkResults: bridgedStateResult })
+    })
+
+    return { ...mainnetChecks, bridgedCheckResults }
+  },
+}
+
 function createStateDiffsResult(
   simStateDiffs: StateDiff[],
   deps: ProposalData,
@@ -118,70 +182,4 @@ function createStateDiffsResult(
   }
 
   return { info, warnings: [], errors: [] }
-}
-
-/**
- * Reports all state changes from the proposal
- */
-export const checkStateChanges: ProposalCheck = {
-  name: 'Reports all state changes from the proposal',
-  async checkProposal(proposal, sim, deps): Promise<CheckResult> {
-    const bridgedSimulations = sim.bridgedSimulations || []
-    console.log(`check-state-changes - Bridge simulations: ${bridgedSimulations?.length}`)
-    // Check if the transaction reverted, and if so return revert reason
-    if (!sim.transaction.status) {
-      const txInfo = sim.transaction.transaction_info
-      const reason = txInfo.stack_trace
-        ? txInfo.stack_trace[0].error_reason ?? txInfo.stack_trace[0].error
-        : 'unknown error'
-      const error = `Transaction reverted with reason: ${reason}`
-      return { info: [], warnings: [], errors: [error] }
-    }
-
-    const bridgeSims = bridgedSimulations
-    if (bridgeSims) {
-      console.log('Bridge sims found')
-      for (const bridgeSim of bridgeSims) {
-        console.log('Bridge sim', bridgeSim)
-      }
-    }
-
-    // State diffs in the simulation are an array, so first we organize them by address. We skip
-    // recording state changes for (1) the `queuedTransactions` mapping of the timelock, and
-    // (2) the `proposal.executed` change of the governor, because this will be consistent across
-    // all proposals and mainly add noise to the output
-    const simStateDiffs = sim.transaction.transaction_info.state_diff
-    if (!simStateDiffs) {
-      console.log('State diff is empty, printing sim response')
-      console.log(JSON.stringify(sim, null, 2))
-    }
-    const tenderlyContracts = sim.contracts
-    const mainnetChecks = createStateDiffsResult(simStateDiffs, deps, tenderlyContracts)
-
-    const bridgedCheckResults: BridgedCheckResult[] = []
-    bridgedSimulations.forEach((b) => {
-      const bridgedStateDiffs = b.sim.simulation_results
-        .map((sr) => {
-          return sr.transaction.transaction_info.state_diff.filter((sd) => {
-            if (
-              sd.address?.toLowerCase() === ChainAddresses.L2Timelock[b.chain].toLowerCase() ||
-              sd.address?.toLowerCase() === ChainAddresses.L2BridgeReceiver[b.chain].toLowerCase()
-            ) {
-              return false
-            }
-
-            return true
-          })
-        })
-        .flat()
-      const bridgedContracts = b.sim.simulation_results.map((sr) => sr.contracts).flat()
-
-      const bridgedStateResult = createStateDiffsResult(bridgedStateDiffs, deps, bridgedContracts)
-      bridgedCheckResults.push({ chain: b.chain, checkResults: bridgedStateResult })
-    })
-
-    console.log('Mainnet checks', JSON.stringify(mainnetChecks, null, 2))
-    console.log('Bridged checks', JSON.stringify(bridgedCheckResults, null, 2))
-    return { ...mainnetChecks, bridgedCheckResults }
-  },
 }
