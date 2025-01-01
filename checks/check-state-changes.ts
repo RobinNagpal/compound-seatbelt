@@ -19,7 +19,6 @@ export const checkStateChanges: ProposalCheck = {
   name: 'Reports all state changes from the proposal',
   async checkProposal(proposal, sim, deps): Promise<CheckResult> {
     const bridgedSimulations = sim.bridgedSimulations || []
-    console.log(`check-state-changes - Bridge simulations: ${bridgedSimulations?.length}`)
     // Check if the transaction reverted, and if so return revert reason
     if (!sim.transaction.status) {
       const txInfo = sim.transaction.transaction_info
@@ -28,14 +27,6 @@ export const checkStateChanges: ProposalCheck = {
         : 'unknown error'
       const error = `Transaction reverted with reason: ${reason}`
       return { info: [], warnings: [], errors: [error] }
-    }
-
-    const bridgeSims = bridgedSimulations
-    if (bridgeSims) {
-      console.log('Bridge sims found')
-      for (const bridgeSim of bridgeSims) {
-        console.log('Bridge sim', bridgeSim)
-      }
     }
 
     // State diffs in the simulation are an array, so first we organize them by address. We skip

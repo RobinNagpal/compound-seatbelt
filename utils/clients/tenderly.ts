@@ -43,13 +43,15 @@ import {
   hashOperationBatchOz,
   hashOperationOz,
 } from '../contracts/governor'
-import { ExecuteTransactionInfo } from './../../checks/compound/compound-types'
+import { CometChains, ExecuteTransactionInfo } from './../../checks/compound/compound-types'
 import {
   ChainAddresses,
+  getBridgeReceiverInput,
   getBridgeReceiverOverrides,
   getDecodedBytesForChain,
   l2Bridges,
   l2ChainIdMap,
+  l2ChainSenderMap,
 } from './../../checks/compound/l2-utils'
 import { bridgeReceiver, l2Timelock } from './../contracts/baseBridgeReceiver'
 import { provider } from './ethers'
@@ -629,7 +631,15 @@ async function simulateBridgedTransactions(
         .map((a) => a.toLowerCase())
         .includes(target.toLowerCase())
     ) {
+      console.log(`Detected bridged transaction targeting ${target} for proposalID#${proposalId}`)
+      
       const destinationChain = l2Bridges[target]
+      
+      if(destinationChain === CometChains.scroll) {
+        console.log('Tenderly does not support simulating transactions on Scroll')
+        continue
+      }
+      
       const transactionInfo: ExecuteTransactionInfo = {
         target: proposalEvent.targets[i],
         signature: proposalEvent.signatures[i],
@@ -639,9 +649,6 @@ async function simulateBridgedTransactions(
 
       const networkId = l2ChainIdMap[destinationChain]
 
-      console.log(`Detected bridged transaction targeting ${target} for ${proposalId}`)
-      console.log(`Transaction info:`, transactionInfo)
-      // Decode bridged calldata
 
       const l2TransactionsInfo = await getDecodedBytesForChain(
         destinationChain,
@@ -660,22 +667,18 @@ async function simulateBridgedTransactions(
       )
 
       const stateOverrides = getBridgeReceiverOverrides(destinationChain)
-
-      const { targets, values, signatures, calldatas } = l2TransactionsInfo
+      const payloadSender = l2ChainSenderMap[destinationChain]
+      const input = getBridgeReceiverInput(destinationChain, l2TransactionsInfo)
 
       // Construct the payload for the bridged chain simulation
       const beforeProposalCount = ((await baseBridgeReceiver.callStatic.proposalCount()) as BigNumber).toNumber()
-      console.log('beforeProposalCount', beforeProposalCount)
 
       const createProposalPayload: TenderlyPayload = {
         network_id: networkId as TenderlyPayload['network_id'],
         block_number: latestBlock.number,
-        from: '0x4200000000000000000000000000000000000007', // Use a default address or the actual message sender on the destination chain
-        to: ChainAddresses.L2BridgeReceiver[destinationChain] as string, // Assuming the first target is the contract to execute on the bridged chain
-        input: defaultAbiCoder.encode(
-          ['address[]', 'uint256[]', 'string[]', 'bytes[]'],
-          [targets, values, signatures, calldatas]
-        ),
+        from: payloadSender, // Use a default address or the actual message sender on the destination chain
+        to: ChainAddresses.L2BridgeReceiver[destinationChain] as string, 
+        input: input,
         gas: BLOCK_GAS_LIMIT,
         gas_price: '0', // Gas price can be adjusted based on chain requirements
         value: '0', // If the transaction sends ETH, adjust this field
@@ -692,7 +695,7 @@ async function simulateBridgedTransactions(
       const executeProposalPayload: TenderlyPayload = {
         network_id: networkId as TenderlyPayload['network_id'],
         block_number: latestBlock.number + 2,
-        from: '0x4200000000000000000000000000000000000007',
+        from: DEFAULT_FROM, // Use a default address because any address can execute the proposal
         to: ChainAddresses.L2BridgeReceiver[destinationChain],
         input: baseBridgeReceiver.interface.encodeFunctionData('executeProposal', [beforeProposalCount + 1]),
         gas: BLOCK_GAS_LIMIT,
@@ -737,9 +740,7 @@ async function sendBundleSimulation(payload: TenderlyPayload[], delay = 1000): P
   try {
     // Send simulation request
     const bundledSim = <TenderlyBundledSimulation>await fetchUrl(TENDERLY_SIM_BUNDLE_URL, fetchOptions)
-    console.log('sim in sendBundleSimulation', bundledSim)
     // Post-processing to ensure addresses we use are checksummed (since ethers returns checksummed addresses)
-
     bundledSim.simulation_results.forEach((sim) => {
       sim.transaction.addresses = sim.transaction.addresses.map(getAddress)
       sim.contracts.forEach((contract) => (contract.address = getAddress(contract.address)))

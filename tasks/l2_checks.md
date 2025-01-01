@@ -24,4 +24,8 @@ I will extract this to another function and will reuse that function for both ma
 # Making it work for every L2 supported. 
 - in `tenderly.ts` in `simulateBridgedTransactions` - I will check if the destination chain is scroll then skip the simulation
 - in `l2-utils.ts` in `getBridgeReceiverOverrides` - Add overrides for other supported L2s
-- in `tenderly.ts` in `simulateBridgedTransactions` - I will add a getter function to get the `from` for the payloads for each L2 chain.
+  - no such override for arbitrum and polygon, scroll has override but tenderly doesnt support it so 
+- in `tenderly.ts` in `simulateBridgedTransactions` - I will add a getter function to get the `from` for the create payload for each L2 chain.
+  - because for each chain, the sender would be different
+- in `tenderly.ts` in `simulateBridgedTransactions` - I will add a getter function to get the `input` for the payloads for each L2 chain.
+  - because for each chain, the input format would be different

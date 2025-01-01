@@ -49,8 +49,6 @@ export interface TransactionMessage {
   error?: string
 }
 
-export type TenderlySupportedL2Chain = CometChains.arbitrum | CometChains.polygon | CometChains.base | CometChains.optimism | CometChains.mantle
-
 export type TransactionFormatter = (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => Promise<string | ActionAnalysis>
 
 export interface ContractNameAndAbi {

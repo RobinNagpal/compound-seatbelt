@@ -1,5 +1,5 @@
 import { StateObject } from '@/types'
-import { AbiCoder } from '@ethersproject/abi'
+import { AbiCoder, defaultAbiCoder, Interface } from '@ethersproject/abi'
 import { BigNumber } from '@ethersproject/bignumber'
 import { getFunctionFragmentAndDecodedCalldata, getFunctionSignature } from './abi-utils'
 import { CometChains, ExecuteTransactionInfo, ExecuteTransactionsInfo, L2Chain } from './compound-types'
@@ -23,16 +23,46 @@ export const l2ChainIdMap: Record<L2Chain, string> = {
   [CometChains.mantle]: '5000',
 }
 
+export const l2ChainSenderMap: Record<L2Chain, string> = {
+  [CometChains.arbitrum]: '0x7ea13f6003cca6255d85cca4d3b5e5146dc34a36', //L2 Alias of Governor Timelock
+  [CometChains.optimism]: '0x4200000000000000000000000000000000000007', //L2CrossDomainMessenger
+  [CometChains.polygon]: '0x8397259c983751DAf40400790063935a11afa28a', //fxChild
+  [CometChains.base]: '0x4200000000000000000000000000000000000007', //L2CrossDomainMessenger
+  [CometChains.scroll]: '0x4dbd4fc535ac27206064b68ffcf827b0a60bab3f', //L2ScrollMessenger
+  [CometChains.mantle]: ''
+}
+
 export function getBridgeReceiverOverrides(chain: CometChains): Record<string, StateObject> | undefined {
   if (chain === CometChains.optimism || CometChains.base) {
     return {
+      // Setting CrossDomainMessenger.xDomainMessageSender to the Main Governor Timelock address
       '0x4200000000000000000000000000000000000007': {
         storage: {
           '0x00000000000000000000000000000000000000000000000000000000000000cc': '0x0000000000000000000000006d903f6003cca6255d85cca4d3b5e5146dc33925',
         },
       },
     }
+  } 
+}
+
+export function getBridgeReceiverInput(chain: CometChains, l2TransactionsInfo: ExecuteTransactionsInfo): string {
+  const { targets, values, signatures, calldatas } = l2TransactionsInfo
+  if (chain === CometChains.optimism || CometChains.base || CometChains.scroll || CometChains.arbitrum) {
+    return defaultAbiCoder.encode(
+              ['address[]', 'uint256[]', 'string[]', 'bytes[]'],
+              [targets, values, signatures, calldatas]
+            )
+  } else if (chain === CometChains.polygon) {
+    const iface = new Interface([
+      'function processMessageFromRoot(uint256 stateId, address rootMessageSender, bytes data) external'
+    ]);
+    const data = defaultAbiCoder.encode(
+      ['address[]', 'uint256[]', 'string[]', 'bytes[]'],
+      [targets, values, signatures, calldatas]
+    )
+    return iface.encodeFunctionData('processMessageFromRoot', [1, AllChainAddresses.MAINNET_GOVERNOR_TIMELOCK, data]);
   }
+  throw new Error(`${chain} chain is not supported`)
 }
 
 export const AllChainAddresses = {
