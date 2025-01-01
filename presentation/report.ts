@@ -68,7 +68,7 @@ function toCheckSummary({ result: { errors, warnings, info }, name }: AllCheckRe
   const status =
     errors.length === 0 ? (warnings.length === 0 ? '✅ Passed' : '❗❗ **Passed with warnings**') : '❌ **Failed**'
 
-  return `### ${name} ${status}
+  return `#### ${name} ${status}
 
 ${toMessageList('Errors', errors)}
 
@@ -76,6 +76,54 @@ ${toMessageList('Warnings', warnings)}
 
 ${toMessageList('Info', info)}
 `
+}
+
+function populateChecks(checks: AllCheckResults): string {
+  // Collect mainnet and bridged summaries separately
+  const mainnetSummaries: string[] = [];
+  const bridgedSummaries: Record<string, string[]> = {};
+
+  // Iterate through all checks and organize the summaries
+  Object.keys(checks).forEach((checkId) => {
+    const { result: { errors, warnings, info, bridgedCheckResults }, name } = checks[checkId];
+
+    // Add to mainnet summaries
+    mainnetSummaries.push(
+      toCheckSummary({
+        result: { errors, warnings, info },
+        name,
+      })
+    );
+
+    // Process bridged results if any
+    if (bridgedCheckResults) {
+      bridgedCheckResults.forEach(({ chain, checkResults }) => {
+        if (!bridgedSummaries[chain]) {
+          bridgedSummaries[chain] = [];
+        }
+        bridgedSummaries[chain].push(
+          toCheckSummary({
+            result: { ...checkResults, bridgedCheckResults: undefined },
+            name: `Reports all state changes from the bridged proposal`,
+          })
+        );
+      });
+    }
+  });
+
+  // Create the consolidated mainnet summary
+  const mainnetSummary = `### Mainnet Changes\n\n${mainnetSummaries.join('\n\n')}`;
+
+  // Create the consolidated bridged summaries for each chain
+  const bridgedSummary = Object.keys(bridgedSummaries)
+    .map(
+      (chain) =>
+        `### Bridge Changes of ${capitalizeWord(chain)}\n\n${bridgedSummaries[chain].join('\n\n')}`
+    )
+    .join('\n\n');
+
+  // Combine all summaries
+  return `${mainnetSummary}\n\n${bridgedSummary}`;
 }
 
 /**
@@ -242,9 +290,7 @@ This is filled in by remark-toc and this sentence will be removed.
 ${blockQuote(description.trim())}
 
 ## Checks\n
-${Object.keys(checks)
-  .map((checkId) => toCheckSummary(checks[checkId]))
-  .join('\n')}
+${populateChecks(checks)}
   
 ## Compound Checks\n
 ${toMessageList(
