@@ -79,39 +79,52 @@ ${toMessageList('Info', info)}
 }
 
 function populateChecks(checks: AllCheckResults): string {
-  const checksSummary = Object.keys(checks)
-    .map((checkId) => {
-      const { result: { errors, warnings, info, bridgedCheckResults }, name } = checks[checkId];
+  // Collect mainnet and bridged summaries separately
+  const mainnetSummaries: string[] = [];
+  const bridgedSummaries: Record<string, string[]> = {};
 
-      // Create the mainnet check summary
-      const mainnetSummary = toCheckSummary({
+  // Iterate through all checks and organize the summaries
+  Object.keys(checks).forEach((checkId) => {
+    const { result: { errors, warnings, info, bridgedCheckResults }, name } = checks[checkId];
+
+    // Add to mainnet summaries
+    mainnetSummaries.push(
+      toCheckSummary({
         result: { errors, warnings, info },
         name,
-      });
+      })
+    );
 
-      // If there are no bridged results, return the mainnet summary alone
-      if (!bridgedCheckResults || bridgedCheckResults.length === 0) return `### Mainnet Changes\n\n${mainnetSummary}`;
-
-      // Add summaries for each bridged chain
-      const bridgedSummaries = bridgedCheckResults
-        .map(({ chain, checkResults }) => {
-          const chainSummary = toCheckSummary({
+    // Process bridged results if any
+    if (bridgedCheckResults) {
+      bridgedCheckResults.forEach(({ chain, checkResults }) => {
+        if (!bridgedSummaries[chain]) {
+          bridgedSummaries[chain] = [];
+        }
+        bridgedSummaries[chain].push(
+          toCheckSummary({
             result: { ...checkResults, bridgedCheckResults: undefined },
             name: `Reports all state changes from the bridged proposal`,
-          });
-          return `### Bridge Changes of ${capitalizeWord(chain)}\n\n${chainSummary}`;
-        })
-        .join('\n');
+          })
+        );
+      });
+    }
+  });
 
-      // Combine mainnet and bridged summaries
-      return `### Mainnet Changes\n\n${mainnetSummary}\n\n${bridgedSummaries}`;
-    })
-    .join('\n');
+  // Create the consolidated mainnet summary
+  const mainnetSummary = `## Mainnet Changes\n\n${mainnetSummaries.join('\n\n')}`;
 
-  return `${checksSummary}`;
+  // Create the consolidated bridged summaries for each chain
+  const bridgedSummary = Object.keys(bridgedSummaries)
+    .map(
+      (chain) =>
+        `## Bridge Changes of ${capitalizeWord(chain)}\n\n${bridgedSummaries[chain].join('\n\n')}`
+    )
+    .join('\n\n');
+
+  // Combine all summaries
+  return `${mainnetSummary}\n\n${bridgedSummary}`;
 }
-
-
 
 /**
  * Pulls the title out of the markdown description, from the first markdown h1 line
