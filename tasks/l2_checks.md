@@ -17,3 +17,5 @@ be max of 5-10 of these bullet points which explain the changes. So we want to k
 
 - in `check-state-changes.ts` in `checkStateChanges` - the code corresponding to populating infos or warnings in same. 
 I will extract this to another function and will reuse that function for both mainnet and bridged simulations.
+
+- in `report.ts` in `toMarkdownProposalReport` - I will create a function that will create headings like `Mainnet Changes` and check if bridgedCheckResults are there, create heading `Bridge Changes of <chain name>` and them call `toCheckSummary` for each of them.
