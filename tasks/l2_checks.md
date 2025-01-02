@@ -7,6 +7,9 @@ Next tasks
 # Making it work for every L2 supported. 
 We might have to adjust the code a bit to update the state according to the L2 we are testing for.
 
+# Report transaction failures
+- we create a new check which will just check if transaction passed or not, on mainnet and on each L2 chain
+
 # Doing the same for other default checks
 
 
@@ -29,3 +32,12 @@ I will extract this to another function and will reuse that function for both ma
   - because for each chain, the sender would be different
 - in `tenderly.ts` in `simulateBridgedTransactions` - I will add a getter function to get the `input` for the payloads for each L2 chain.
   - because for each chain, the input format would be different
+
+# Report transaction failures
+- two cases:
+  - when we get a exeception from fetch call tenderly
+    - we can set `success` equal to `false` and `sim` would be `undefined` in this case
+    - send `sim` to generate report and check if `success` is false, if yes, then we can add a heading `Simulation` and under it we can add the error message that `Simulation Failed for <chain name>`
+  - when the transaction reverts
+    - we can look for the error message field in the `sim`
+    - send `sim` to generate report and check for `success`, if true, then we can get the error message from the `sim` and add a heading `Simulation` and under it we can add the error message that `Transaction Failed for <chain name> with reason <error message>`
