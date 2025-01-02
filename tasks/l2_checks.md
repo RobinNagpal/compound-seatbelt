@@ -37,8 +37,9 @@ I will extract this to another function and will reuse that function for both ma
 - two cases:
   - when we get a exeception from fetch call tenderly
     - we can set `success` equal to `false` and `sim` would be `undefined` in this case
-    - send `sim` to generate report and check if `success` is false, if yes, then we can add a heading `Simulation` and under it we can add the error message that `Simulation Failed for <chain name>`
   - when the transaction reverts
     - we can look for the error message field in the `sim`
-    - send `sim` to generate report and check for `success`, if true, then we can get the error message from the `sim` and add a heading `Simulation` and under it we can add the error message that `Transaction Failed for <chain name> with reason <error message>`
 - fix the types changes that are needed after making the `sim` optional
+- Add new check `check-sim-failure.ts` and record its entry in `checks/index.ts` which will check if the bridge simulation/transaction failed or not
+  - if `success` is false in `BridgedSimulation`, and `sim` doesnt exist then we can add the error message that `Simulation Failed for <chain name>`
+  - if `success` is false in `BridgedSimulation`, and `sim` exist, then we can get the error message from the `sim` and add the error message that `Transaction Failed for <chain name> with reason <error message>`
