@@ -43,4 +43,4 @@ I will extract this to another function and will reuse that function for both ma
 - Add new check `check-sim-failure.ts` and record its entry in `checks/index.ts` which will check if the bridge simulation/transaction failed or not
   - if `success` is false in `BridgedSimulation`, and `sim` doesnt exist then we can add the error message that `Simulation Failed for <chain name>`
   - if `success` is false in `BridgedSimulation`, and `sim` exist, then we can get the error message from the `sim` and add the error message that `Transaction Failed for <chain name> with reason <error message>`
-  - if `success` is true in `BridgedSimulation`, and `sim` exist, then we can add the message that `Transaction Passed for <chain name>`
+  - if `success` is true in `BridgedSimulation`, and `sim` exist, then we can add the info message that `Transaction Passed for <chain name>`
