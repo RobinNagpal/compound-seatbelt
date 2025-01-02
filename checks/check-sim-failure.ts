@@ -1,9 +1,9 @@
-import { bold } from '@/presentation/report'
 import {
   BridgedCheckResult,
   CheckResult,
   ProposalCheck,
 } from '../types'
+import { capitalizeWord } from './compound/formatters/helper'
 
 /**
  * Reports all simulation failures from the proposal
@@ -32,7 +32,7 @@ export const checkSimFailure: ProposalCheck = {
       const bridgeInfo: string[] = []
       const bridgeErrors: string[] = []
       if(b.success){
-        bridgeInfo.push(`Simulation for ${bold(b.chain)} was successful`)
+        bridgeInfo.push(`Simulation for ${capitalizeWord(b.chain)} was successful`)
       } else {
         if (b.sim) {
           b.sim.simulation_results.forEach((sr) => {
@@ -45,7 +45,7 @@ export const checkSimFailure: ProposalCheck = {
             }
           })
         } else {
-          bridgeErrors.push(`Simulation for ${bold(b.chain)} failed`)
+          bridgeErrors.push(`Simulation for ${capitalizeWord(b.chain)} failed`)
         }
       }
       
