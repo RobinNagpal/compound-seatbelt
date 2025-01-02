@@ -1,5 +1,5 @@
 import { StateObject } from '@/types'
-import { AbiCoder } from '@ethersproject/abi'
+import { AbiCoder, defaultAbiCoder, Interface } from '@ethersproject/abi'
 import { BigNumber } from '@ethersproject/bignumber'
 import { getFunctionFragmentAndDecodedCalldata, getFunctionSignature } from './abi-utils'
 import { CometChains, ExecuteTransactionInfo, ExecuteTransactionsInfo, L2Chain } from './compound-types'
@@ -23,16 +23,46 @@ export const l2ChainIdMap: Record<L2Chain, string> = {
   [CometChains.mantle]: '5000',
 }
 
+export const l2ChainSenderMap: Record<L2Chain, string> = {
+  [CometChains.arbitrum]: '0x7ea13f6003cca6255d85cca4d3b5e5146dc34a36', //L2 Alias of Governor Timelock
+  [CometChains.optimism]: '0x4200000000000000000000000000000000000007', //L2CrossDomainMessenger
+  [CometChains.polygon]: '0x8397259c983751DAf40400790063935a11afa28a', //fxChild
+  [CometChains.base]: '0x4200000000000000000000000000000000000007', //L2CrossDomainMessenger
+  [CometChains.scroll]: '0x4dbd4fc535ac27206064b68ffcf827b0a60bab3f', //L2ScrollMessenger
+  [CometChains.mantle]: '0x4200000000000000000000000000000000000007', //L2CrossDomainMessenger
+}
+
 export function getBridgeReceiverOverrides(chain: CometChains): Record<string, StateObject> | undefined {
-  if (chain === CometChains.optimism || CometChains.base) {
+  if (chain === CometChains.optimism || chain === CometChains.base || chain === CometChains.mantle) {
     return {
+      // Setting CrossDomainMessenger.xDomainMessageSender to the Main Governor Timelock address
       '0x4200000000000000000000000000000000000007': {
         storage: {
           '0x00000000000000000000000000000000000000000000000000000000000000cc': '0x0000000000000000000000006d903f6003cca6255d85cca4d3b5e5146dc33925',
         },
       },
     }
+  } 
+}
+
+export function getBridgeReceiverInput(chain: CometChains, l2TransactionsInfo: ExecuteTransactionsInfo): string {
+  const { targets, values, signatures, calldatas } = l2TransactionsInfo
+  if (chain === CometChains.optimism || chain === CometChains.base || chain === CometChains.scroll || chain === CometChains.arbitrum || chain === CometChains.mantle) {
+    return defaultAbiCoder.encode(
+              ['address[]', 'uint256[]', 'string[]', 'bytes[]'],
+              [targets, values, signatures, calldatas]
+            )
+  } else if (chain === CometChains.polygon) {
+    const iface = new Interface([
+      'function processMessageFromRoot(uint256 stateId, address rootMessageSender, bytes data) external'
+    ]);
+    const data = defaultAbiCoder.encode(
+      ['address[]', 'uint256[]', 'string[]', 'bytes[]'],
+      [targets, values, signatures, calldatas]
+    )
+    return iface.encodeFunctionData('processMessageFromRoot', [1, AllChainAddresses.MAINNET_GOVERNOR_TIMELOCK, data]);
   }
+  throw new Error(`${chain} chain is not supported`)
 }
 
 export const AllChainAddresses = {
@@ -88,6 +118,15 @@ export const AllChainAddresses = {
   OPTIMISM_MARKET_ADMIN: '0x7e14050080306cd36b47DE61ce604b3a1EC70c4e', // See - https://optimistic.etherscan.io/address/0x7e14050080306cd36b47DE61ce604b3a1EC70c4e
   OPTIMISM_MARKET_UPDATE_PAUSE_GUARDIAN: '0x3fFd6c073a4ba24a113B18C8F373569640916A45', // See - https://optimistic.etherscan.io/address/0xE36A30D249f7761327fd973001A32010b521b6Fd#readProxyContract
   OPTIMISM_MARKET_UPDATE_PROPOSAL_GUARDIAN: '0x3fFd6c073a4ba24a113B18C8F373569640916A45', // See - https://optimistic.etherscan.io/address/0xE36A30D249f7761327fd973001A32010b521b6Fd#readProxyContract
+  
+  MANTLE_LOCAL_TIMELOCK: '0x16C7B5C1b10489F4B111af11de2Bd607c9728107', // See - https://mantlescan.xyz/address/0x6d903f6003cca6255D85CcA4D3B5E5146dC33925
+  MANTLE_CONFIGURATOR_PROXY: '0xb77Cd4cD000957283D8BAf53cD782ECf029cF7DB', // See - https://mantlescan.xyz/address/0x4c8e3b3c4f3f1f6f4f1f4f4f4f4f4f4f4f4f4f4
+  MANTLE_COMET_PROXY_ADMIN: '0xe268B436E75648aa0639e2088fa803feA517a0c7', // See - https://mantlescan.xyz/address/0x4c8e3b3c4f3f1f6f4f1f4f4f4f4f4f4f4f4f4f4
+  MANTLE_BRIDGE_RECEIVER: '0xc91EcA15747E73d6dd7f616C49dAFF37b9F1B604', // See - https://mantlescan.xyz/address/0x4c8e3b3c4f3f1f6f4f1f4f4f4f4f4f4f4f4f4f4
+  
+  MANTLE_MARKET_ADMIN: '0x7e14050080306cd36b47DE61ce604b3a1EC70c4e', // See - https://mantlescan.xyz/address/0x7e14050080306cd36b47DE61ce604b3a1EC70c4e
+  MANTLE_MARKET_UPDATE_PAUSE_GUARDIAN: '0x3fFd6c073a4ba24a113B18C8F373569640916A45', // See - https://mantlescan.xyz/address/0xE36A30D249f7761327fd973001A32010b521b6Fd#readProxyContract
+  MANTLE_MARKET_UPDATE_PROPOSAL_GUARDIAN: '0x3fFd6c073a4ba24a113B18C8F373569640916A45', // See - https://mantlescan.xyz/address/0xE36A30D249f7761327fd973001A32010b521b6Fd#readProxyContract
 }
 
 export const ChainAddresses = {
@@ -97,7 +136,7 @@ export const ChainAddresses = {
     [CometChains.polygon]: AllChainAddresses.POLYGON_LOCAL_TIMELOCK,
     [CometChains.base]: AllChainAddresses.BASE_LOCAL_TIMELOCK,
     [CometChains.scroll]: AllChainAddresses.SCROLL_LOCAL_TIMELOCK,
-    [CometChains.mantle]: AllChainAddresses.BASE_LOCAL_TIMELOCK,
+    [CometChains.mantle]: AllChainAddresses.MANTLE_LOCAL_TIMELOCK,
   },
   L2BridgeReceiver: {
     [CometChains.arbitrum]: AllChainAddresses.ARBITRUM_BRIDGE_RECEIVER,
@@ -105,7 +144,7 @@ export const ChainAddresses = {
     [CometChains.polygon]: AllChainAddresses.POLYGON_BRIDGE_RECEIVER,
     [CometChains.base]: AllChainAddresses.BASE_BRIDGE_RECEIVER,
     [CometChains.scroll]: AllChainAddresses.SCROLL_BRIDGE_RECEIVER,
-    [CometChains.mantle]: AllChainAddresses.BASE_BRIDGE_RECEIVER,
+    [CometChains.mantle]: AllChainAddresses.MANTLE_BRIDGE_RECEIVER,
   },
 }
 export async function getDecodedBytesForChain(

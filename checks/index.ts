@@ -10,10 +10,12 @@ import { checkSolc } from './check-solc'
 import { checkStateChanges } from './check-state-changes'
 import { checkValueRequired } from './check-value-required'
 import { ProposalCheck } from '../types'
+import { checkSimFailure } from './check-sim-failure'
 
 const ALL_CHECKS: {
   [checkId: string]: ProposalCheck
 } = {
+  checkSimFailure,
   checkStateChanges,
   checkDecodeCalldata,
   checkLogs,

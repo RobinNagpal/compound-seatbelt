@@ -103,8 +103,8 @@ function populateChecks(checks: AllCheckResults): string {
         }
         bridgedSummaries[chain].push(
           toCheckSummary({
-            result: { ...checkResults, bridgedCheckResults: undefined },
-            name: `Reports all state changes from the bridged proposal`,
+            result: { ...checkResults },
+            name
           })
         );
       });
