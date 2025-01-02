@@ -655,9 +655,8 @@ async function simulateBridgedTransactions(
         BigNumber.from(proposalId).toNumber(),
         transactionInfo
       )
-      console.log('transaction info', l2TransactionsInfo)
+      
       // Create block and timestamp placeholders for the bridged chain
-
       const blockNumberToUse = (await getLatestBlock(networkId)) - 3 // subtracting a few blocks to ensure tenderly has the block
       const customChainProvider = customProvider(destinationChain)
       const latestBlock = await customChainProvider.getBlock(blockNumberToUse)
@@ -669,21 +668,22 @@ async function simulateBridgedTransactions(
       const stateOverrides = getBridgeReceiverOverrides(destinationChain)
       const payloadSender = l2ChainSenderMap[destinationChain]
       const input = getBridgeReceiverInput(destinationChain, l2TransactionsInfo)
-
-      // Construct the payload for the bridged chain simulation
       const beforeProposalCount = ((await baseBridgeReceiver.callStatic.proposalCount()) as BigNumber).toNumber()
-      console.log(`Before proposal count: ${beforeProposalCount}`)
+      // Mantle requires a higher gas limit
+      const gas = destinationChain === CometChains.mantle ? 3000000000000 : BLOCK_GAS_LIMIT
+      
+      // Construct the payload for the bridged chain simulation
       const createProposalPayload: TenderlyPayload = {
         network_id: networkId as TenderlyPayload['network_id'],
         block_number: latestBlock.number,
-        from: payloadSender, // Use a default address or the actual message sender on the destination chain
+        from: payloadSender,
         to: ChainAddresses.L2BridgeReceiver[destinationChain] as string, 
         input: input,
-        gas: BLOCK_GAS_LIMIT,
+        gas: gas,
         gas_price: '0', // Gas price can be adjusted based on chain requirements
         value: '0', // If the transaction sends ETH, adjust this field
         save_if_fails: true,
-        save: false,
+        save: true,
         generate_access_list: true,
         block_header: {
           number: hexStripZeros(BigNumber.from(latestBlock.number).toHexString()),
@@ -697,11 +697,11 @@ async function simulateBridgedTransactions(
         from: DEFAULT_FROM, // Use a default address because any address can execute the proposal
         to: ChainAddresses.L2BridgeReceiver[destinationChain],
         input: baseBridgeReceiver.interface.encodeFunctionData('executeProposal', [beforeProposalCount + 1]),
-        gas: BLOCK_GAS_LIMIT,
+        gas: gas,
         gas_price: '0',
         value: '0',
         save_if_fails: true,
-        save: false,
+        save: true,
         generate_access_list: true,
         block_header: {
           number: hexStripZeros(BigNumber.from(latestBlock.number + 2).toHexString()),
@@ -716,7 +716,7 @@ async function simulateBridgedTransactions(
       for (const sim of response.simulation_results) {
         if (!sim.transaction) {
           result = { chain: destinationChain, success: false };
-          break; // Exit on the failed transaction
+          break; // Exit on the failed simulation
         }
         if (!sim.transaction.status) {
           result = { chain: destinationChain, sim: response, success: false };
@@ -724,22 +724,6 @@ async function simulateBridgedTransactions(
         }
       }
       bridgedSims.push(result);
-
-      console.log(
-        'response.transaction',
-        JSON.stringify(
-          response.simulation_results.map((s) => {
-            const errorReason = s.transaction?.transaction_info?.call_trace?.error_reason
-            if (errorReason) {
-              console.log('error call trace', JSON.stringify(s.transaction?.transaction_info?.call_trace, null, 2))
-            }
-
-            return errorReason
-          }),
-          null,
-          2
-        )
-      )
     }
   }
 
