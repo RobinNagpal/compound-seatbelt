@@ -41,3 +41,4 @@ I will extract this to another function and will reuse that function for both ma
   - when the transaction reverts
     - we can look for the error message field in the `sim`
     - send `sim` to generate report and check for `success`, if true, then we can get the error message from the `sim` and add a heading `Simulation` and under it we can add the error message that `Transaction Failed for <chain name> with reason <error message>`
+- fix the types changes that are needed after making the `sim` optional
