@@ -35,7 +35,8 @@ export type SimulationConfig = SimulationConfigExecuted | SimulationConfigPropos
 
 export interface BridgedSimulation {
   chain: L2Chain
-  sim: TenderlyBundledSimulation
+  sim?: TenderlyBundledSimulation
+  success: boolean
 }
 export interface SimulationResult {
   sim: TenderlySimulation

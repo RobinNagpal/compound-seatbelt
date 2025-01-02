@@ -711,6 +711,20 @@ async function simulateBridgedTransactions(
       }
 
       const response = await sendBundleSimulation([createProposalPayload, executeProposalPayload])
+      let result: BridgedSimulation = { chain: destinationChain, sim: response, success: true }
+
+      for (const sim of response.simulation_results) {
+        if (!sim.transaction) {
+          result = { chain: destinationChain, success: false };
+          break; // Exit on the failed transaction
+        }
+        if (!sim.transaction.status) {
+          result = { chain: destinationChain, sim: response, success: false };
+          break; // Exit on the first failed transaction
+        }
+      }
+      bridgedSims.push(result);
+
       console.log(
         'response.transaction',
         JSON.stringify(
@@ -726,8 +740,6 @@ async function simulateBridgedTransactions(
           2
         )
       )
-
-      bridgedSims.push({ chain: destinationChain, sim: response })
     }
   }
 
@@ -741,8 +753,10 @@ async function sendBundleSimulation(payload: TenderlyPayload[], delay = 1000): P
     const bundledSim = <TenderlyBundledSimulation>await fetchUrl(TENDERLY_SIM_BUNDLE_URL, fetchOptions)
     // Post-processing to ensure addresses we use are checksummed (since ethers returns checksummed addresses)
     bundledSim.simulation_results.forEach((sim) => {
+      if(sim.transaction && sim.contracts.length > 0) {
       sim.transaction.addresses = sim.transaction.addresses.map(getAddress)
       sim.contracts.forEach((contract) => (contract.address = getAddress(contract.address)))
+      }
     })
     return bundledSim
   } catch (err: any) {
