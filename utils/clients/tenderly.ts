@@ -682,8 +682,8 @@ async function simulateBridgedTransactions(
         gas: gas,
         gas_price: '0', // Gas price can be adjusted based on chain requirements
         value: '0', // If the transaction sends ETH, adjust this field
-        save_if_fails: true,
-        save: true,
+        save_if_fails: false,
+        save: false,
         generate_access_list: true,
         block_header: {
           number: hexStripZeros(BigNumber.from(latestBlock.number).toHexString()),
@@ -700,8 +700,8 @@ async function simulateBridgedTransactions(
         gas: gas,
         gas_price: '0',
         value: '0',
-        save_if_fails: true,
-        save: true,
+        save_if_fails: false,
+        save: false,
         generate_access_list: true,
         block_header: {
           number: hexStripZeros(BigNumber.from(latestBlock.number + 2).toHexString()),
