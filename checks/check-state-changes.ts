@@ -43,9 +43,21 @@ export const checkStateChanges: ProposalCheck = {
 
     const bridgedCheckResults: BridgedCheckResult[] = []
     bridgedSimulations.forEach((b) => {
+      const errors = [] as string[]
+      b.sim.simulation_results.forEach((sr) => {
+        if (!sr.transaction.status) {
+          const txInfo = sr.transaction.transaction_info;
+          const reason = txInfo.stack_trace
+            ? txInfo.stack_trace[0]?.error_reason ?? txInfo.stack_trace[0]?.error
+            : 'unknown error';
+          errors.push(`Transaction reverted with reason: ${reason}`)
+          return; // Skip processing for this result
+        }
+      });
+      
       const bridgedStateDiffs = b.sim.simulation_results
         .map((sr) => {
-          return sr.transaction.transaction_info.state_diff.filter((sd) => {
+          return sr.transaction.transaction_info.state_diff?.filter((sd) => {
             if (
               sd.address?.toLowerCase() === ChainAddresses.L2Timelock[b.chain].toLowerCase() ||
               sd.address?.toLowerCase() === ChainAddresses.L2BridgeReceiver[b.chain].toLowerCase()
@@ -54,13 +66,13 @@ export const checkStateChanges: ProposalCheck = {
             }
 
             return true
-          })
+          }) || []
         })
         .flat()
       const bridgedContracts = b.sim.simulation_results.map((sr) => sr.contracts).flat()
 
       const bridgedStateResult = createStateDiffsResult(bridgedStateDiffs, deps, bridgedContracts)
-      bridgedCheckResults.push({ chain: b.chain, checkResults: bridgedStateResult })
+      bridgedCheckResults.push({ chain: b.chain, checkResults: {...bridgedStateResult, errors: errors} })
     })
 
     return { ...mainnetChecks, bridgedCheckResults }

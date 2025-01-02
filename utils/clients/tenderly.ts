@@ -631,9 +631,9 @@ async function simulateBridgedTransactions(
         .map((a) => a.toLowerCase())
         .includes(target.toLowerCase())
     ) {
-      console.log(`Detected bridged transaction targeting ${target} for proposalID#${proposalId}`)
-      
       const destinationChain = l2Bridges[target]
+      
+      console.log(`Detected bridged transaction targeting ${target} on ${destinationChain}`)
       
       if(destinationChain === CometChains.scroll) {
         console.log('Tenderly does not support simulating transactions on Scroll')
@@ -655,7 +655,7 @@ async function simulateBridgedTransactions(
         BigNumber.from(proposalId).toNumber(),
         transactionInfo
       )
-
+      console.log('transaction info', l2TransactionsInfo)
       // Create block and timestamp placeholders for the bridged chain
 
       const blockNumberToUse = (await getLatestBlock(networkId)) - 3 // subtracting a few blocks to ensure tenderly has the block
@@ -672,7 +672,7 @@ async function simulateBridgedTransactions(
 
       // Construct the payload for the bridged chain simulation
       const beforeProposalCount = ((await baseBridgeReceiver.callStatic.proposalCount()) as BigNumber).toNumber()
-
+      console.log(`Before proposal count: ${beforeProposalCount}`)
       const createProposalPayload: TenderlyPayload = {
         network_id: networkId as TenderlyPayload['network_id'],
         block_number: latestBlock.number,
@@ -682,7 +682,7 @@ async function simulateBridgedTransactions(
         gas: BLOCK_GAS_LIMIT,
         gas_price: '0', // Gas price can be adjusted based on chain requirements
         value: '0', // If the transaction sends ETH, adjust this field
-        save_if_fails: false,
+        save_if_fails: true,
         save: false,
         generate_access_list: true,
         block_header: {
@@ -691,7 +691,6 @@ async function simulateBridgedTransactions(
         },
         state_objects: stateOverrides, // Optionally add state overrides if required
       }
-
       const executeProposalPayload: TenderlyPayload = {
         network_id: networkId as TenderlyPayload['network_id'],
         block_number: latestBlock.number + 2,
@@ -702,7 +701,7 @@ async function simulateBridgedTransactions(
         gas_price: '0',
         value: '0',
         save_if_fails: true,
-        save: true,
+        save: false,
         generate_access_list: true,
         block_header: {
           number: hexStripZeros(BigNumber.from(latestBlock.number + 2).toHexString()),
