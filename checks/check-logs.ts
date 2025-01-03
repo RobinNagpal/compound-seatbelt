@@ -13,12 +13,7 @@ export const checkLogs: ProposalCheck = {
     const bridgedSimulations = sim.bridgedSimulations || []
     
     const simLogs = sim.transaction.transaction_info.logs
-    if (!simLogs) {
-      console.log('Logs is empty, printing sim response')
-      console.log(JSON.stringify(sim, null, 2))
-    }
-    const tenderlyContracts = sim.contracts
-    const mainnetLogs = createLogResult(simLogs ?? [], deps, tenderlyContracts)
+    const mainnetLogs = createLogResult(simLogs ?? [], deps, sim.contracts)
     
     const bridgedCheckResults: BridgedCheckResult[] = []
         bridgedSimulations.forEach((b) => {
@@ -46,11 +41,15 @@ export const checkLogs: ProposalCheck = {
 }
 
 function createLogResult(
-    simLogs: Log[] | [],
+    simLogs: Log[],
     deps: ProposalData,
     tenderlyContracts: TenderlyContract[]
 ){
   const info: string[] = []
+  
+  if (simLogs.length === 0) {
+    return { info: ['No logs emitted'], warnings: [], errors: [] };
+  }
 
   // Emitted logs in the simulation are an array, so first we organize them by address. We skip
   // recording logs for (1) the `queuedTransactions` mapping of the timelock, and
