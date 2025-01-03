@@ -53,7 +53,8 @@ It reports all the emitted events. Gets the events from the transaction info log
 
 ## Changes needed for bridge
 - Make sure logs were pushed into the bridge simulation array
-- Make a helper function `getLogs` in the `check-logs.ts` file to avoid duplication of the logic
-- Run the `getLogs` function for mainnet
-- Run the `getLogs` function for each bridge simulation and save them in an array and at last return them as check results alongwith mainnet check results
-- 
+- Make a helper function `getLogs()` in the `check-logs.ts` file to avoid duplication of the logic
+- in the `getLogs()` function, add filtering for bridge timelock/receiver as well just like we have them in `createStateDiffResult()` in `check-state-changes.ts`
+- Run the `getLogs()` function for mainnet
+- Run the `getLogs()` function for each bridge simulation and save them in an array and at last return them as check results alongwith mainnet check results
+  
