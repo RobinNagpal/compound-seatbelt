@@ -29,10 +29,6 @@ export const checkStateChanges: ProposalCheck = {
       return { info: [], warnings: [], errors: [error] }
     }
 
-    // State diffs in the simulation are an array, so first we organize them by address. We skip
-    // recording state changes for (1) the `queuedTransactions` mapping of the timelock, and
-    // (2) the `proposal.executed` change of the governor, because this will be consistent across
-    // all proposals and mainly add noise to the output
     const simStateDiffs = sim.transaction.transaction_info.state_diff
     if (!simStateDiffs) {
       console.log('State diff is empty, printing sim response')
@@ -74,6 +70,11 @@ function createStateDiffsResult(
 ): PlainCheckResult {
   const info = [] as string[]
   const warnings = [] as string[]
+  
+  // State diffs in the simulation are an array, so first we organize them by address. We skip
+  // recording state changes for (1) the `queuedTransactions` mapping of the timelock, and
+  // (2) the `proposal.executed` change of the governor, because this will be consistent across
+  // all proposals and mainly add noise to the output
   const stateDiffs = simStateDiffs.reduce((diffs, diff) => {
     const addr = getAddress(diff.raw[0].address)
     // Check if this is a diff that should be filtered out

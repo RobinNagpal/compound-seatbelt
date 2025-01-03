@@ -44,3 +44,17 @@ I will extract this to another function and will reuse that function for both ma
   - if `success` is false in `BridgedSimulation`, and `sim` doesnt exist then we can add the error message that `Simulation Failed for <chain name>`
   - if `success` is false in `BridgedSimulation`, and `sim` exist, then we can get the error message from the `sim` and add the error message that `Transaction Failed for <chain name> with reason <error message>`
   - if `success` is true in `BridgedSimulation`, and `sim` exist, then we can add the info message that `Transaction Passed for <chain name>`
+
+
+# Check logs
+
+## My understanding
+It reports all the emitted events. Gets the events from the transaction info logs, filters the queue transaction and proposal emitted events using the governor and timelock addresses. Then goes through the events and push into info array the contract name and its events
+
+## Changes needed for bridge
+- Make sure logs were pushed into the bridge simulation array
+- Make a helper function `getLogs()` in the `check-logs.ts` file to avoid duplication of the logic
+- in the `getLogs()` function, add filtering for bridge timelock/receiver as well just like we have them in `createStateDiffResult()` in `check-state-changes.ts`
+- Run the `getLogs()` function for mainnet
+- Run the `getLogs()` function for each bridge simulation and save them in an array and at last return them as check results alongwith mainnet check results
+  
