@@ -18,7 +18,7 @@ export const checkLogs: ProposalCheck = {
       console.log(JSON.stringify(sim, null, 2))
     }
     const tenderlyContracts = sim.contracts
-    const mainnetLogs = createLogResult(simLogs, deps, tenderlyContracts)
+    const mainnetLogs = createLogResult(simLogs ?? [], deps, tenderlyContracts)
     
     const bridgedCheckResults: BridgedCheckResult[] = []
         bridgedSimulations.forEach((b) => {
@@ -46,7 +46,7 @@ export const checkLogs: ProposalCheck = {
 }
 
 function createLogResult(
-    simLogs: Log[] | null,
+    simLogs: Log[] | [],
     deps: ProposalData,
     tenderlyContracts: TenderlyContract[]
 ){
@@ -57,7 +57,7 @@ function createLogResult(
   // (2) the `proposal.executed` change of the governor, because this will be consistent across
   // all proposals and mainly add noise to the output
   // TODO remove some logic currently duplicated in the checkStateChanges check?
-  const events = simLogs?.reduce((logs, log) => {
+  const events = simLogs.reduce((logs, log) => {
     const addr = getAddress(log.raw.address)
     // Check if this is a log that should be filtered out
     const isGovernor = getAddress(addr) == deps.governor.address
