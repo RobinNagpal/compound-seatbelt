@@ -35,6 +35,7 @@ export type SimulationConfig = SimulationConfigExecuted | SimulationConfigPropos
 
 export interface BridgedSimulation {
   chain: L2Chain
+  proposal?: ProposalEvent
   sim?: TenderlyBundledSimulation
   success: boolean
 }
@@ -658,7 +659,7 @@ interface PurpleSoltype {
 
 interface Input {
   soltype: SoltypeElement | null
-  value: boolean | string
+  value: boolean | string | array
 }
 
 interface CallTraceFunctionState {
