@@ -9,8 +9,6 @@ import { writeFileSync } from 'fs'
 import mftch, { FETCH_OPT } from 'micro-ftch'
 import {
   BridgedSimulation,
-  Input,
-  Log,
   ProposalEvent,
   ProposalStruct,
   SimulationConfig,
@@ -637,6 +635,7 @@ async function simulateBridgedTransactions(
       
       console.log(`Detected bridged transaction targeting ${target} on ${destinationChain}`)
       
+      // TODO: Remove this check after Tenderly add support for Scroll
       if(destinationChain === CometChains.scroll) {
         console.log('Tenderly does not support simulating transactions on Scroll')
         continue

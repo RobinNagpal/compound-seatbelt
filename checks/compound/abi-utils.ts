@@ -3,6 +3,7 @@ import fs from 'fs'
 import mftch from 'micro-ftch'
 import { CometChains, ContractNameAndAbi, ExecuteTransactionInfo } from './compound-types'
 import { diffString } from 'json-diff'
+import { ARBITRUMSCAN_API_KEY, BASESCAN_API_KEY, ETHERSCAN_API_KEY, MANTLESCAN_API_KEY, OPTIMISMIC_ETHERSCAN_API_KEY, POLYGONSCAN_API_KEY, SCROLLSCAN_API_KEY } from './../../utils/constants'
 
 // @ts-ignore
 const fetchUrl = mftch.default
@@ -82,19 +83,19 @@ function delay(ms: number) {
 
 export function getExplorerApiUrl(chain: CometChains, address: string) {
   if (chain === CometChains.mainnet) {
-    return `https://api.etherscan.io/api?module=contract&action=getsourcecode&address=${address}&apikey=${process.env.ETHERSCAN_API_KEY}`
+    return `https://api.etherscan.io/api?module=contract&action=getsourcecode&address=${address}&apikey=${ETHERSCAN_API_KEY}`
   } else if (chain === CometChains.polygon) {
-    return `https://api.polygonscan.com/api?module=contract&action=getsourcecode&address=${address}&apikey=${process.env.POLYGONSCAN_API_KEY}`
+    return `https://api.polygonscan.com/api?module=contract&action=getsourcecode&address=${address}&apikey=${POLYGONSCAN_API_KEY}`
   } else if (chain === CometChains.arbitrum) {
-    return `https://api.arbiscan.io/api?module=contract&action=getsourcecode&address=${address}&apikey=${process.env.ARBITRUMSCAN_API_KEY}`
+    return `https://api.arbiscan.io/api?module=contract&action=getsourcecode&address=${address}&apikey=${ARBITRUMSCAN_API_KEY}`
   } else if (chain === CometChains.base) {
-    return `https://api.basescan.org/api?module=contract&action=getsourcecode&address=${address}&apikey=${process.env.BASESCAN_API_KEY}`
+    return `https://api.basescan.org/api?module=contract&action=getsourcecode&address=${address}&apikey=${BASESCAN_API_KEY}`
   } else if (chain === CometChains.scroll) {
-    return `https://api.scrollscan.com/api?module=contract&action=getsourcecode&address=${address}&apikey=${process.env.SCROLL_API_KEY}`
+    return `https://api.scrollscan.com/api?module=contract&action=getsourcecode&address=${address}&apikey=${SCROLLSCAN_API_KEY}`
   } else if (chain === CometChains.optimism) {
-    return `https://api-optimistic.etherscan.io/api?module=contract&action=getsourcecode&address=${address}&apikey=${process.env.OPTIMISM_API_KEY}`
+    return `https://api-optimistic.etherscan.io/api?module=contract&action=getsourcecode&address=${address}&apikey=${OPTIMISMIC_ETHERSCAN_API_KEY}`
   } else if (chain === CometChains.mantle) {
-    return `https://api.mantlescan.xyz/api?module=contract&action=getsourcecode&address=${address}&apikey=${process.env.MANTLE_API_KEY}`
+    return `https://api.mantlescan.xyz/api?module=contract&action=getsourcecode&address=${address}&apikey=${MANTLESCAN_API_KEY}`
   } else {
     throw new Error('Unknown chain: ' + chain)
   }

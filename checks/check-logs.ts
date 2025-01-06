@@ -31,7 +31,7 @@ export const checkLogs: ProposalCheck = {
             })
             .flat() || []
             
-          const bridgedContracts : TenderlyContract[] = b.sim?.simulation_results.map((sr) => sr.contracts).flat() || []
+          const bridgedContracts : TenderlyContract[] = b.sim?.simulation_results.flatMap((sr) => sr.contracts) || []
           const bridgedLogResult = createLogResult(bridgedLogs, deps, bridgedContracts)
           bridgedCheckResults.push({ chain: b.chain, checkResults: bridgedLogResult })
         })

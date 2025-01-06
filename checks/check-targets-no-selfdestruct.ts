@@ -65,7 +65,7 @@ export const checkTouchedContractsNoSelfdestruct: ProposalCheck = {
         );
         bridgedCheckResults.push({ chain: b.chain, checkResults: { ...bridgeResults } });
       } else {
-        bridgedCheckResults.push({ chain: b.chain, checkResults: { info: [], warnings: [], errors: ['No proposal to check selfdestruct'] } });
+        bridgedCheckResults.push({ chain: b.chain, checkResults: { info: [], warnings: [], errors: ['No bridge simulation to check selfdestruct'] } });
       }
     }
     
