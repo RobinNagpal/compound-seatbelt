@@ -146,8 +146,6 @@ async function main() {
         ? { mainnetActionAnalysis: [], chainedProposalAnalysis: [] }
         : await analyzeProposal(proposal, sim, proposalData)
 
-    console.log(JSON.stringify(compProposalAnalysis, null, 2))
-
     // Generate markdown report.
     const [startBlock, endBlock] = await Promise.all([
       proposal.startBlock.toNumber() <= latestBlock.number ? provider.getBlock(proposal.startBlock.toNumber()) : null,

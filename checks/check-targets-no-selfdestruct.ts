@@ -1,6 +1,8 @@
 import { JsonRpcProvider } from '@ethersproject/providers'
 import { bullet, toAddressLink } from '../presentation/report'
-import { ProposalCheck } from '../types'
+import { BridgedCheckResult, ProposalCheck } from '../types'
+import { customProvider } from '../utils/clients/ethers'
+import { ChainAddresses } from './compound/l2-utils'
 
 /**
  * Check all targets with code if they contain selfdestruct.
@@ -9,12 +11,30 @@ export const checkTargetsNoSelfdestruct: ProposalCheck = {
   name: 'Check all targets do not contain selfdestruct',
   async checkProposal(proposal, sim, deps) {
     const uniqueTargets = proposal.targets.filter((addr, i, targets) => targets.indexOf(addr) === i)
-    const { info, warn, error } = await checkNoSelfdestructs(
+    const mainnetResults = await checkNoSelfdestructs(
       [deps.governor.address, deps.timelock.address],
       uniqueTargets,
       deps.provider
     )
-    return { info, warnings: warn, errors: error }
+    
+    const bridgedSimulations = sim.bridgedSimulations || []
+    const bridgedCheckResults: BridgedCheckResult[] = []
+    for (const b of bridgedSimulations) {
+      if (b.proposal) {
+        const uniqueBridgeTargets = b.proposal.targets.filter((addr, i, targets) => targets.indexOf(addr) === i);
+        const customChainProvider = customProvider(b.chain);
+        const bridgeResults = await checkNoSelfdestructs(
+          [ChainAddresses.L2BridgeReceiver[b.chain], ChainAddresses.L2Timelock[b.chain]],
+          uniqueBridgeTargets,
+          customChainProvider
+        );
+        bridgedCheckResults.push({ chain: b.chain, checkResults: { ...bridgeResults } });
+      } else {
+        bridgedCheckResults.push({ chain: b.chain, checkResults: { info: [], warnings: [], errors: ['No proposal to check selfdestruct'] } });
+      }
+    }
+    
+    return { ...mainnetResults, bridgedCheckResults }
   },
 }
 
@@ -24,12 +44,32 @@ export const checkTargetsNoSelfdestruct: ProposalCheck = {
 export const checkTouchedContractsNoSelfdestruct: ProposalCheck = {
   name: 'Check all touched contracts do not contain selfdestruct',
   async checkProposal(proposal, sim, deps) {
-    const { info, warn, error } = await checkNoSelfdestructs(
+    const mainnetResults = await checkNoSelfdestructs(
       [deps.governor.address, deps.timelock.address],
       sim.transaction.addresses,
       deps.provider
     )
-    return { info, warnings: warn, errors: error }
+
+    const bridgedSimulations = sim.bridgedSimulations || []
+    const bridgedCheckResults: BridgedCheckResult[] = []
+    for (const b of bridgedSimulations) {
+      if (b.sim) {
+        const customChainProvider = customProvider(b.chain);
+        const createAddresses = b.sim.simulation_results[0].transaction.addresses
+        const executeAddresses = b.sim.simulation_results[1].transaction.addresses
+        const uniqueAddresses = Array.from(new Set([...createAddresses, ...executeAddresses]));
+        const bridgeResults = await checkNoSelfdestructs(
+          [ChainAddresses.L2BridgeReceiver[b.chain], ChainAddresses.L2Timelock[b.chain]],
+          uniqueAddresses,
+          customChainProvider
+        );
+        bridgedCheckResults.push({ chain: b.chain, checkResults: { ...bridgeResults } });
+      } else {
+        bridgedCheckResults.push({ chain: b.chain, checkResults: { info: [], warnings: [], errors: ['No proposal to check selfdestruct'] } });
+      }
+    }
+    
+    return { ...mainnetResults, bridgedCheckResults }
   },
 }
 
@@ -40,21 +80,21 @@ async function checkNoSelfdestructs(
   trustedAddrs: string[],
   addresses: string[],
   provider: JsonRpcProvider
-): Promise<{ info: string[]; warn: string[]; error: string[] }> {
+): Promise<{ info: string[]; warnings: string[]; errors: string[] }> {
   const info: string[] = []
-  const warn: string[] = []
-  const error: string[] = []
+  const warnings: string[] = []
+  const errors: string[] = []
   for (const addr of addresses) {
     const status = await checkNoSelfdestruct(trustedAddrs, addr, provider)
     const address = toAddressLink(addr, false)
     if (status === 'eoa') info.push(bullet(`${address}: EOA`))
-    else if (status === 'empty') warn.push(bullet(`${address}: EOA (may have code later)`))
+    else if (status === 'empty') warnings.push(bullet(`${address}: EOA (may have code later)`))
     else if (status === 'safe') info.push(bullet(`${address}: Contract (looks safe)`))
-    else if (status === 'delegatecall') warn.push(bullet(`${address}: Contract (with DELEGATECALL)`))
+    else if (status === 'delegatecall') warnings.push(bullet(`${address}: Contract (with DELEGATECALL)`))
     else if (status === 'trusted') info.push(bullet(`${address}: Trusted contract (not checked)`))
-    else error.push(bullet(`${address}: Contract (with SELFDESTRUCT)`))
+    else errors.push(bullet(`${address}: Contract (with SELFDESTRUCT)`))
   }
-  return { info, warn, error }
+  return { info, warnings, errors }
 }
 
 const STOP = 0x00

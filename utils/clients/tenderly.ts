@@ -53,8 +53,10 @@ import {
   l2ChainIdMap,
   l2ChainSenderMap,
 } from './../../checks/compound/l2-utils'
-import { bridgeReceiver, l2Timelock } from './../contracts/baseBridgeReceiver'
+import { bridgeReceiver } from './../contracts/baseBridgeReceiver'
 import { provider } from './ethers'
+import { capitalizeWord } from './../../checks/compound/formatters/helper'
+import { Block } from '@ethersproject/abstract-provider'
 // @ts-ignore
 const fetchUrl = mftch.default
 
@@ -711,7 +713,8 @@ async function simulateBridgedTransactions(
       }
 
       const response = await sendBundleSimulation([createProposalPayload, executeProposalPayload])
-      let result: BridgedSimulation = { chain: destinationChain, sim: response, success: true }
+      const proposal = createBridgeProposal(response, destinationChain, latestBlock)
+      let result: BridgedSimulation = { chain: destinationChain, proposal, sim: response, success: true }
 
       for (const sim of response.simulation_results) {
         if (!sim.transaction) {
@@ -759,4 +762,73 @@ async function sendBundleSimulation(payload: TenderlyPayload[], delay = 1000): P
     await sleep(delay + randomInt(0, 1000))
     return await sendBundleSimulation(payload, delay * 2)
   }
+}
+
+function createBridgeProposal(
+  bundledSimulation: TenderlyBundledSimulation,
+  chain: CometChains,
+  block: Block
+): ProposalEvent | undefined {
+  // Extract logs from the first simulation result as the first payload creates the proposal
+  const proposalCreatedLogs = bundledSimulation.simulation_results[0]?.transaction?.transaction_info?.logs;
+
+  // If no logs exist, return undefined
+  if (!proposalCreatedLogs) {
+    console.error('No logs found in simulation results');
+    return undefined;
+  }
+
+  // Find the "ProposalCreated" event in the logs
+  const proposalCreatedEvent = proposalCreatedLogs.find((log) => log.name === 'ProposalCreated');
+
+  if (!proposalCreatedEvent) {
+    console.error('No ProposalCreated event found in logs');
+    return undefined;
+  }
+
+  // Initialize fields for ProposalEvent
+  let targets: string[] = [];
+  let values: BigNumber[] = [];
+  let signatures: string[] = [];
+  let calldatas: string[] = [];
+  let proposalId: BigNumber = BigNumber.from(0);
+  const description = `Proposal to ${capitalizeWord(chain)}`;
+
+  // Process the inputs of the "ProposalCreated" event
+  proposalCreatedEvent.inputs.forEach((input) => {
+    switch (input.soltype?.name) {
+      case 'id':
+        proposalId = BigNumber.from(input.value);
+        break;
+      case 'targets':
+        targets = input.value.map((target: string) => target.toString());
+        break;
+      case 'values':
+        values = input.value.map((value: string) => BigNumber.from(value));
+        break;
+      case 'signatures':
+        signatures = input.value.map((signature: string) => signature.toString());
+        break;
+      case 'calldatas':
+        calldatas = input.value.map((calldata: string) => calldata.toString());
+        break;
+    }
+  });
+
+  if (!proposalId || targets.length === 0 || values.length === 0 || signatures.length === 0 || calldatas.length === 0) {
+    console.error('Missing fields for ProposalEvent creation');
+    return undefined;
+  }
+
+  return {
+    id: proposalId,
+    proposer: '0x', // Replace with the actual proposer
+    targets,
+    values,
+    signatures,
+    calldatas,
+    description,
+    startBlock: BigNumber.from(block.number),
+    endBlock: BigNumber.from(block.number+2),
+  };
 }
