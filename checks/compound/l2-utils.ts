@@ -44,7 +44,7 @@ export const apiKeyFlagMap: Record<CometChains, apiKeyFlagConfig> = {
   [CometChains.arbitrum]: { flag: '--arbiscan-apikey', key: ARBITRUMSCAN_API_KEY, prefix: 'arbi' },
   [CometChains.optimism]: { flag: '--optim-apikey', key: OPTIMISMIC_ETHERSCAN_API_KEY, prefix: 'optim' },
   [CometChains.polygon]: { flag: '--polygonscan-apikey', key: POLYGONSCAN_API_KEY, prefix: 'poly' },
-  // TODO - Add correct Base Flag slither supports Base
+  // TODO - Add correct Base Flag after slither supports Base
   [CometChains.base]: { flag: '--base-apikey', key: BASESCAN_API_KEY, prefix: 'base' },
   // TODO - Add correct Scroll Flag after crytic-compile/slither supports Scroll
   [CometChains.scroll]: { flag: '--scroll-apikey', key: SCROLLSCAN_API_KEY, prefix: 'scroll' },
