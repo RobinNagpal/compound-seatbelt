@@ -3,6 +3,7 @@ import { bullet, toAddressLink } from '../presentation/report'
 import { BridgedCheckResult, ProposalCheck } from '../types'
 import { customProvider } from '../utils/clients/ethers'
 import { ChainAddresses } from './compound/l2-utils'
+import { CometChains } from './compound/compound-types'
 
 /**
  * Check all targets with code if they contain selfdestruct.
@@ -14,7 +15,8 @@ export const checkTargetsNoSelfdestruct: ProposalCheck = {
     const mainnetResults = await checkNoSelfdestructs(
       [deps.governor.address, deps.timelock.address],
       uniqueTargets,
-      deps.provider
+      deps.provider,
+      CometChains.mainnet
     )
     
     const bridgedSimulations = sim.bridgedSimulations || []
@@ -26,7 +28,8 @@ export const checkTargetsNoSelfdestruct: ProposalCheck = {
         const bridgeResults = await checkNoSelfdestructs(
           [ChainAddresses.L2BridgeReceiver[b.chain], ChainAddresses.L2Timelock[b.chain]],
           uniqueBridgeTargets,
-          customChainProvider
+          customChainProvider,
+          b.chain
         );
         bridgedCheckResults.push({ chain: b.chain, checkResults: { ...bridgeResults } });
       } else {
@@ -47,7 +50,8 @@ export const checkTouchedContractsNoSelfdestruct: ProposalCheck = {
     const mainnetResults = await checkNoSelfdestructs(
       [deps.governor.address, deps.timelock.address],
       sim.transaction.addresses,
-      deps.provider
+      deps.provider,
+      CometChains.mainnet
     )
 
     const bridgedSimulations = sim.bridgedSimulations || []
@@ -61,7 +65,8 @@ export const checkTouchedContractsNoSelfdestruct: ProposalCheck = {
         const bridgeResults = await checkNoSelfdestructs(
           [ChainAddresses.L2BridgeReceiver[b.chain], ChainAddresses.L2Timelock[b.chain]],
           uniqueAddresses,
-          customChainProvider
+          customChainProvider,
+          b.chain
         );
         bridgedCheckResults.push({ chain: b.chain, checkResults: { ...bridgeResults } });
       } else {
@@ -79,14 +84,15 @@ export const checkTouchedContractsNoSelfdestruct: ProposalCheck = {
 async function checkNoSelfdestructs(
   trustedAddrs: string[],
   addresses: string[],
-  provider: JsonRpcProvider
+  provider: JsonRpcProvider,
+  chain: CometChains
 ): Promise<{ info: string[]; warnings: string[]; errors: string[] }> {
   const info: string[] = []
   const warnings: string[] = []
   const errors: string[] = []
   for (const addr of addresses) {
     const status = await checkNoSelfdestruct(trustedAddrs, addr, provider)
-    const address = toAddressLink(addr, false)
+    const address = toAddressLink(addr, false, chain)
     if (status === 'eoa') info.push(bullet(`${address}: EOA`))
     else if (status === 'empty') warnings.push(bullet(`${address}: EOA (may have code later)`))
     else if (status === 'safe') info.push(bullet(`${address}: Contract (looks safe)`))

@@ -15,7 +15,8 @@ import { capitalizeWord, checkforumPost, iconLookupTable, tab } from '../checks/
 import { pushChecksSummaryToDiscordAsEmbeds } from '../checks/compound/formatters/push-to-discord'
 import { AllCheckResults, GovernorType, ProposalEvent } from '../types'
 import { formatProposalId } from '../utils/contracts/governor'
-import { GovernanceProposalAnalysis } from './../checks/compound/compound-types'
+import { CometChains, GovernanceProposalAnalysis } from './../checks/compound/compound-types'
+import { getExplorerBaseUrl } from './../checks/compound/abi-utils'
 
 // --- Markdown helpers ---
 
@@ -44,12 +45,13 @@ export function blockQuote(str: string): string {
 }
 
 /**
- * Turns a plaintext address into a link to etherscan page of that address
+ * Turns a plaintext address into a link to explorer page of that address
  * @param address to be linked
  * @param code whether to link to the code tab
+ * @param chain to be used
  */
-export function toAddressLink(address: string, code: boolean = false): string {
-  return `[\`${address}\`](https://etherscan.io/address/${address}${code ? '#code' : ''})`
+export function toAddressLink(address: string, code: boolean = false, chain: CometChains = CometChains.mainnet): string {
+  return `[\`${address}\`](${getExplorerBaseUrl(chain)}/${address}${code ? '#code' : ''})`
 }
 
 // -- Report formatters ---
