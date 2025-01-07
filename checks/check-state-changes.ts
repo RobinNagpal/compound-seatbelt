@@ -53,8 +53,8 @@ export const checkStateChanges: ProposalCheck = {
           }) || []
         })
         .flat() || []
-      const bridgedContracts : TenderlyContract[] = b.sim?.simulation_results.map((sr) => sr.contracts).flat() || []
-
+        
+      const bridgedContracts : TenderlyContract[] = b.sim?.simulation_results.flatMap((sr) => sr.contracts) || []
       const bridgedStateResult = createStateDiffsResult(bridgedStateDiffs, deps, bridgedContracts)
       bridgedCheckResults.push({ chain: b.chain, checkResults: bridgedStateResult })
     })

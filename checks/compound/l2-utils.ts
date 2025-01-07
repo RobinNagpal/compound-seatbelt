@@ -3,6 +3,7 @@ import { AbiCoder, defaultAbiCoder, Interface } from '@ethersproject/abi'
 import { BigNumber } from '@ethersproject/bignumber'
 import { getFunctionFragmentAndDecodedCalldata, getFunctionSignature } from './abi-utils'
 import { CometChains, ExecuteTransactionInfo, ExecuteTransactionsInfo, L2Chain } from './compound-types'
+import { ARBITRUMSCAN_API_KEY, BASESCAN_API_KEY, ETHERSCAN_API_KEY, MANTLESCAN_API_KEY, OPTIMISMIC_ETHERSCAN_API_KEY, POLYGONSCAN_API_KEY, SCROLLSCAN_API_KEY } from './../../utils/constants'
 
 export const l2Bridges: { [address: string]: L2Chain } = {
   '0x4dbd4fc535ac27206064b68ffcf827b0a60bab3f': CometChains.arbitrum,
@@ -31,6 +32,26 @@ export const l2ChainSenderMap: Record<L2Chain, string> = {
   [CometChains.scroll]: '0x4dbd4fc535ac27206064b68ffcf827b0a60bab3f', //L2ScrollMessenger
   [CometChains.mantle]: '0x4200000000000000000000000000000000000007', //L2CrossDomainMessenger
 }
+
+export interface apiKeyFlagConfig {
+  flag: string
+  key: string
+  prefix: string
+}
+
+export const apiKeyFlagMap: Record<CometChains, apiKeyFlagConfig> = {
+  [CometChains.mainnet]: { flag: '--etherscan-apikey', key: ETHERSCAN_API_KEY, prefix: 'mainet' },
+  [CometChains.arbitrum]: { flag: '--arbiscan-apikey', key: ARBITRUMSCAN_API_KEY, prefix: 'arbi' },
+  [CometChains.optimism]: { flag: '--optim-apikey', key: OPTIMISMIC_ETHERSCAN_API_KEY, prefix: 'optim' },
+  [CometChains.polygon]: { flag: '--polygonscan-apikey', key: POLYGONSCAN_API_KEY, prefix: 'poly' },
+  // TODO - Add correct Base Flag after slither supports Base
+  [CometChains.base]: { flag: '--base-apikey', key: BASESCAN_API_KEY, prefix: 'base' },
+  // TODO - Add correct Scroll Flag after crytic-compile/slither supports Scroll
+  [CometChains.scroll]: { flag: '--scroll-apikey', key: SCROLLSCAN_API_KEY, prefix: 'scroll' },
+  // TODO - Add correct Mantle Flag after crytic-compile/slither supports Mantle
+  [CometChains.mantle]: { flag: '--mantle-apikey', key: MANTLESCAN_API_KEY, prefix: 'mantle' },
+};
+
 
 export function getBridgeReceiverOverrides(chain: CometChains): Record<string, StateObject> | undefined {
   if (chain === CometChains.optimism || chain === CometChains.base || chain === CometChains.mantle) {
@@ -112,7 +133,7 @@ export const AllChainAddresses = {
 
   OPTIMISM_LOCAL_TIMELOCK: '0xd98Be00b5D27fc98112BdE293e487f8D4cA57d07', // See - https://optimistic.etherscan.io/address/0xd98Be00b5D27fc98112BdE293e487f8D4cA57d07
   OPTIMISM_CONFIGURATOR_PROXY: '0x84E93EC6170ED630f5ebD89A1AAE72d4F63f2713', // See - https://optimistic.etherscan.io/address/0x84E93EC6170ED630f5ebD89A1AAE72d4F63f2713
-  OPTIMISM_COMET_PROXY_ADMIN: '0x3C30B5a5A04656565686f800481580Ac4E7ed178', // See - https://optimistic.etherscan.io/address/0x3C30B5a5A04656565686f800481580Ac4E7ed178
+  OPTIMISM_COMET_PROXY_ADMIN: '0x24D86Da09C4Dd64e50dB7501b0f695d030f397aF', // See - https://optimistic.etherscan.io/address/0x24D86Da09C4Dd64e50dB7501b0f695d030f397aF
   OPTIMISM_BRIDGE_RECEIVER: '0xC3a73A70d1577CD5B02da0bA91C0Afc8fA434DAF', // See - https://optimistic.etherscan.io/address/0x18281dfC4d00905DA1aaA6731414EABa843c468A
 
   OPTIMISM_MARKET_ADMIN: '0x7e14050080306cd36b47DE61ce604b3a1EC70c4e', // See - https://optimistic.etherscan.io/address/0x7e14050080306cd36b47DE61ce604b3a1EC70c4e

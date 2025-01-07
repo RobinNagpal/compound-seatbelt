@@ -9,8 +9,6 @@ import { writeFileSync } from 'fs'
 import mftch, { FETCH_OPT } from 'micro-ftch'
 import {
   BridgedSimulation,
-  Input,
-  Log,
   ProposalEvent,
   ProposalStruct,
   SimulationConfig,
@@ -637,6 +635,7 @@ async function simulateBridgedTransactions(
       
       console.log(`Detected bridged transaction targeting ${target} on ${destinationChain}`)
       
+      // TODO: Remove this check after Tenderly add support for Scroll
       if(destinationChain === CometChains.scroll) {
         console.log('Tenderly does not support simulating transactions on Scroll')
         continue
@@ -741,8 +740,8 @@ async function sendBundleSimulation(payload: TenderlyPayload[], delay = 1000): P
     // Post-processing to ensure addresses we use are checksummed (since ethers returns checksummed addresses)
     bundledSim.simulation_results.forEach((sim) => {
       if(sim.transaction && sim.contracts.length > 0) {
-      sim.transaction.addresses = sim.transaction.addresses.map(getAddress)
-      sim.contracts.forEach((contract) => (contract.address = getAddress(contract.address)))
+        sim.transaction.addresses = sim.transaction.addresses.map(getAddress)
+        sim.contracts.forEach((contract) => (contract.address = getAddress(contract.address)))
       }
     })
     return bundledSim
