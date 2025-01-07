@@ -740,8 +740,8 @@ async function sendBundleSimulation(payload: TenderlyPayload[], delay = 1000): P
     // Post-processing to ensure addresses we use are checksummed (since ethers returns checksummed addresses)
     bundledSim.simulation_results.forEach((sim) => {
       if(sim.transaction && sim.contracts.length > 0) {
-      sim.transaction.addresses = sim.transaction.addresses.map(getAddress)
-      sim.contracts.forEach((contract) => (contract.address = getAddress(contract.address)))
+        sim.transaction.addresses = sim.transaction.addresses.map(getAddress)
+        sim.contracts.forEach((contract) => (contract.address = getAddress(contract.address)))
       }
     })
     return bundledSim
