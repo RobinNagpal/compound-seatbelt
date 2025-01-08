@@ -79,6 +79,7 @@ jobs:
           RPC_URL_ARBITRUM: ${{ secrets.RPC_URL_ARBITRUM }}
           RPC_URL_SCROLL: ${{ secrets.RPC_URL_SCROLL }}
           RPC_URL_OPTIMISM: ${{ secrets.RPC_URL_OPTIMISM }}
+          RPC_URL_MANTLE: ${{ secrets.RPC_URL_MANTLE }}
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
