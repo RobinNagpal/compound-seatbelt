@@ -176,6 +176,14 @@ export const changeThresholds = {
     // 200% can be the critical threshold
     
     
+    // Another way
+    // Get the market cap (cap x price)
+    // compare it with the daily trading volume of the asset
+    // then decide the threshold
+    // for example: lets say market cap of WBTC is increased from 100M to 200M and daily trading volume is 1B
+    // so 20% change
+    // and now we can decide the threshold 
+    
     // Add example of values we get in the proposal
 
     // Proposal No. 197
