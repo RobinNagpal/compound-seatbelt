@@ -27,7 +27,7 @@ export async function generateAISummary(chain: CometChains, target: string, sign
     const prompt = `
 I want to write a one-line non-technical summary of the action performed by the following function call. I will also provide the source of the contract with its dependencies. Please give me the summary in this format:
 
-[USDT - 0x371DB...E02](${baseExplorerUrl}0x371DB45c7ee248dAFf4Dc1FFB67A20faa0ecFE02) transferred from [EOA Wallet - 0x81Bc6...eC6](${baseExplorerUrl}0x81Bc6016Fa365bfE929a51Eec9217B441B598eC6) to a [Safe Wallet - 0xB6Ef3...5F9](${baseExplorerUrl}0xB6Ef3AC71E9baCF1F4b9426C149d855Bfc4415F9).
+[USDT - 0x371DB...E02](${baseExplorerUrl}/0x371DB45c7ee248dAFf4Dc1FFB67A20faa0ecFE02) transferred from [EOA Wallet - 0x81Bc6...eC6](${baseExplorerUrl}0x81Bc6016Fa365bfE929a51Eec9217B441B598eC6) to a [Safe Wallet - 0xB6Ef3...5F9](${baseExplorerUrl}0xB6Ef3AC71E9baCF1F4b9426C149d855Bfc4415F9).
 
 This is the summary for this call:
 0x81Bc6016Fa365bfE929a51Eec9217B441B598eC6.transfer(address, address) called with (0x371DB45c7ee248dAFf4Dc1FFB67A20faa0ecFE02, 0xB6Ef3AC71E9baCF1F4b9426C149d855Bfc4415F9)

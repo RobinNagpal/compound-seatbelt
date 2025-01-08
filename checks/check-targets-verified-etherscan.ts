@@ -95,7 +95,7 @@ async function checkVerificationStatus(
   provider: JsonRpcProvider
 ): Promise<'verified' | 'eoa' | 'unverified'> {
   // If an address exists in the contracts array, it's verified on the Explorer
-  const contract = simContracts.find((item) => item.address === addr)
+  const contract = simContracts.find((item) => item.address.toLowerCase() === addr.toLowerCase())
   if (contract) return 'verified'
   // Otherwise, check if there's code at the address. Addresses with code not in the contracts array are not verified
   const code = await provider.getCode(addr)
