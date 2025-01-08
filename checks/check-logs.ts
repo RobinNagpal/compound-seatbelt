@@ -74,7 +74,7 @@ function createLogResult(
   // Parse each event
   for (const [address, logs] of Object.entries(events)) {
     // Use contracts array to get contract name of address
-    const contract = tenderlyContracts.find((c) => c.address === address)
+    const contract = tenderlyContracts.find((c) => c.address.toLowerCase() === address.toLowerCase())
     info.push(bullet(contract ? getContractName(contract) : address))
     // Format log data for report
     logs.forEach((log) => {
