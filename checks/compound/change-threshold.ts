@@ -89,6 +89,13 @@ export const changeThresholds = {
   },
 
   V3: {
+    // Supply kink: is the point where the rules change about how much suppliers earn (interest rate slope changes).
+    // Value can be between 0 and 100%
+    // Avg change range is 2-5% so this can be the normal range
+    // 7% can be the warning threshold
+    // 10% can be the critical threshold
+    
+    
     // Add example of values we get in the proposal
 
     // Proposal No. 205
@@ -117,6 +124,13 @@ export const changeThresholds = {
     supplyKinkWarningThreshold: 7,
     supplyKinkCriticalThreshold: 15,
 
+    // Borrow kink: is the point where the rules change about how much borrowers pay (interest rate slope changes).
+    // Value can be between 0 and 100%
+    // Avg change range is 2-5% so this can be the normal range
+    // 7% can be the warning threshold
+    // 10% can be the critical threshold
+    
+    
     // Add example of values we get in the proposal
 
     // Proposal No. 205
@@ -151,6 +165,17 @@ export const changeThresholds = {
     borrowKinkWarningThreshold: 7,
     borrowKinkCriticalThreshold: 15,
 
+    // Asset supply cap: maximum amount of an asset that can be supplied to the protocol. Supply transactions will revert if the total supply would be greater than this number as a result.
+    // change range is 50-100% for WBTC, WETH
+    // so 50% can be normal range
+    // 100% can be the warning threshold
+    // 150% can be the critical threshold
+    // change range is 100-200% for UNI, ARB, LINK
+    // so 100% can be normal range
+    // 150% can be the warning threshold
+    // 200% can be the critical threshold
+    
+    
     // Add example of values we get in the proposal
 
     // Proposal No. 197
