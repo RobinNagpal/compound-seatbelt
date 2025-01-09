@@ -103,19 +103,19 @@ export function getExplorerApiUrl(chain: CometChains, address: string) {
 
 export function getExplorerBaseUrl(chain: CometChains) {
   if (chain === CometChains.mainnet) {
-    return `https://etherscan.io/address/`
+    return `https://etherscan.io/address`
   } else if (chain === CometChains.polygon) {
-    return `https://polygonscan.com/address/`
+    return `https://polygonscan.com/address`
   } else if (chain === CometChains.arbitrum) {
-    return `https://arbiscan.io/address/`
+    return `https://arbiscan.io/address`
   } else if (chain === CometChains.base) {
-    return `https://basescan.org/address/`
+    return `https://basescan.org/address`
   } else if (chain === CometChains.scroll) {
-    return `https://scrollscan.com/address/`
+    return `https://scrollscan.com/address`
   } else if (chain === CometChains.optimism) {
-    return `https://optimistic.etherscan.io/address/`
+    return `https://optimistic.etherscan.io/address`
   } else if (chain === CometChains.mantle) {
-    return `https://mantlescan.xyz/address/`
+    return `https://mantlescan.xyz/address`
   } else {
     throw new Error('Unknown chain: ' + chain)
   }

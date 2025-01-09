@@ -108,7 +108,7 @@ function createStateDiffsResult(
   for (const [address, diffs] of Object.entries(stateDiffs)) {
     // Use contracts array to get contract name of address
 
-    const contract = tenderlyContracts.find((c) => c.address === address)
+    const contract = tenderlyContracts.find((c) => c.address.toLowerCase() === address.toLowerCase())
     info.push(bullet(contract ? getContractName(contract) : address))
 
     // Parse each diff. A single diff may involve multiple storage changes, e.g. a proposal that

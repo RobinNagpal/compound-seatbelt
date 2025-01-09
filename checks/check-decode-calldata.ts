@@ -1,9 +1,10 @@
 import { FunctionFragment, Interface } from '@ethersproject/abi'
 import { getAddress } from '@ethersproject/address'
 import { formatUnits } from '@ethersproject/units'
-import { ProposalCheck, FluffyCall } from '../types'
+import { ProposalCheck, FluffyCall, ProposalEvent, TenderlySimulation, CallTraceCall, BridgedCheckResult } from '../types'
 import { ERC20_ABI, fetchTokenMetadata } from '../utils/contracts/erc20'
 import { bullet } from '../presentation/report'
+import { ChainAddresses } from './compound/l2-utils'
 
 const ierc20 = new Interface(ERC20_ABI)
 
@@ -13,35 +14,58 @@ const ierc20 = new Interface(ERC20_ABI)
 export const checkDecodeCalldata: ProposalCheck = {
   name: 'Decodes target calldata into a human-readable format',
   async checkProposal(proposal, sim, deps) {
-    let warnings: string[] = []
-    // Generate the raw calldata for each proposal action
-    const calldatas = proposal.signatures.map((sig, i) => {
-      return sig ? `${selectorFromSig(sig)}${proposal.calldatas[i].slice(2)}` : proposal.calldatas[i]
-    })
-
-    // Find the call with that calldata and parse it
-    const calls = sim.transaction.transaction_info.call_trace.calls
-    const descriptions = await Promise.all(
-      calldatas.map(async (calldata, i) => {
-        // Find the first matching call
-        let call = findMatchingCall(getAddress(deps.timelock.address), calldata, calls)
-        if (!call) {
-          const msg = `This transaction may have reverted: Could not find matching call for calldata ${calldata}`
-          warnings.push(msg)
-          return null
-        }
-        // Now look for any subcalls that have the same input data, since if present these are the
-        // decoded calls. This often happens with proxies which aren't always decoded nicely, and
-        // will show the function name as `fallback`. Therefore, we look for the deepest function
-        // in the callstack with the same input data and use that to decode/prettify calldata
-        call = returnCallOrMatchingSubcall(calldata, call)
-        return prettifyCalldata(call, proposal.targets[i])
-      })
-    )
-
-    const info = descriptions.filter((d) => d !== null).map((d) => bullet(d as string))
-    return { info, warnings, errors: [] }
+    const mainnetResult = await createDecodedCalldataResult(proposal,sim.transaction.transaction_info.call_trace.calls,deps.timelock.address)
+    
+    const bridgedSimulations = sim.bridgedSimulations || []
+    const bridgedCheckResults: BridgedCheckResult[] = []
+    for (const b of bridgedSimulations) {
+      if (b.sim && b.proposal) {
+        const bridgeResults = await createDecodedCalldataResult(
+          b.proposal, 
+          b.sim.simulation_results[1].transaction.transaction_info.call_trace.calls, // using `1` because second simulation is the one associated with `execute` call
+          ChainAddresses.L2Timelock[b.chain]
+        )
+        bridgedCheckResults.push({ chain: b.chain, checkResults: { ...bridgeResults } });
+      } else {
+        bridgedCheckResults.push({ chain: b.chain, checkResults: { info: [], warnings: [], errors: ['No bridge proposal/simulation to decode the target calldata'] } });
+      }
+    }
+        
+    return { ...mainnetResult, bridgedCheckResults }
+    
   },
+}
+
+async function createDecodedCalldataResult(
+  proposal: ProposalEvent,
+  calls: CallTraceCall[],
+  timelockAddress: string
+){
+  let warnings: string[] = []
+  // Generate the raw calldata for each proposal action
+  const calldatas = proposal.signatures.map((sig, i) => {
+    return sig ? `${selectorFromSig(sig)}${proposal.calldatas[i].slice(2)}` : proposal.calldatas[i]
+  })
+  // Find the call with that calldata and parse it
+  const descriptions = await Promise.all(
+    calldatas.map(async (calldata, i) => {
+      // Find the first matching call
+      let call = findMatchingCall(getAddress(timelockAddress), calldata, calls)
+      if (!call) {
+        const msg = `This transaction may have reverted: Could not find matching call for calldata ${calldata}`
+        warnings.push(msg)
+        return null
+      }
+      // Now look for any subcalls that have the same input data, since if present these are the
+      // decoded calls. This often happens with proxies which aren't always decoded nicely, and
+      // will show the function name as `fallback`. Therefore, we look for the deepest function
+      // in the callstack with the same input data and use that to decode/prettify calldata
+      call = returnCallOrMatchingSubcall(calldata, call)
+      return prettifyCalldata(call, proposal.targets[i])
+    })
+  )
+  const info = descriptions.filter((d) => d !== null).map((d) => bullet(d as string))
+  return { info, warnings, errors: [] }
 }
 
 // --- Helper methods ---
