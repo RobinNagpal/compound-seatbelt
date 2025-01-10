@@ -21,6 +21,10 @@ export function multiplyFn(number1: string, number2: string) {
   return Decimal.mul(new Decimal(number1), new Decimal(number2)).toFixed()
 }
 
+export function divideFn(number1: string, number2: string) {
+  return Decimal.div(new Decimal(number1), new Decimal(number2)).toFixed()
+}
+
 export function annualizeFn(number: string, secondsPerYear = '31536000') {
   return defactorFn(multiplyFn(number, secondsPerYear))
 }
@@ -35,4 +39,10 @@ export function toYearsFn(seconds: string, secondsPerYear = '31536000') {
 
 export function percentageFn(value: string) {
   return Decimal.mul(new Decimal(value), new Decimal(100)).toFixed()
+}
+
+export function getPowerOfTen(value: string): string {
+  const valueDecimal = new Decimal(value)
+  const power = valueDecimal.logarithm(10).floor()
+  return power.toFixed()
 }

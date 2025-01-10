@@ -183,9 +183,11 @@ export const changeThresholds = {
     // 4000000000000000000000000
 
     // How we have chosen that threshold
-    //avg change is around 200000
-    supplyCapWarningThreshold: 200000,
-    supplyCapCriticalThreshold: 300000,
+    // avg change is around 200000
+    // get market percentage change
+    // change shouldnt be more than 10%
+    supplyCapWarningThreshold: 10,
+    supplyCapCriticalThreshold: 15,
 
     // Add example of values we get in the proposal
 
@@ -245,15 +247,15 @@ export const changeThresholds = {
     // Increase baseBorrowMin from 1e-18 to 1e-6
 
     // How we normalize that value
-    // defactor by base token decimals
+    // defactor by base token decimals and then multiple with asset's current USD price
 
     // Proposal No. 195
     // 1000000000000
 
     // How we have chosen that threshold
-    //
-    baseBorrowMinWarningThreshold: 0.0000001,
-    baseBorrowMinCriticalThreshold: 0.000001,
+    // change shouldnt be more than $200
+    baseBorrowMinWarningThreshold: 200,
+    baseBorrowMinCriticalThreshold: 300,
 
     // Add example of values we get in the proposal
     // Proposal No. 204
@@ -274,8 +276,8 @@ export const changeThresholds = {
 
     // How we have chosen that threshold
     // avg change is 150
-    baseTrackingBorrowSpeedWarningThreshold: 200,
-    baseTrackingBorrowSpeedCriticalThreshold: 400,
+    baseTrackingBorrowSpeedWarningThreshold: 100,
+    baseTrackingBorrowSpeedCriticalThreshold: 200,
 
     // Add example of values we get in the proposal
 
@@ -319,9 +321,14 @@ export const changeThresholds = {
 
     // How we have chosen that threshold
     // avg change is 0.005
-    borrowPerYearInterestRateBaseWarningThreshold: 0.01,
-    borrowPerYearInterestRateBaseCriticalThreshold: 0.1,
-
+    // convert into percentage
+    // interest shouldnt be more than 1%
+    borrowPerYearInterestRateBaseWarningThreshold: 1,
+    borrowPerYearInterestRateBaseCriticalThreshold: 2,
+    
+    supplyPerYearInterestRateBaseWarningThreshold: 1,
+    supplyPerYearInterestRateBaseCriticalThreshold: 2,
+    
     // Add example of values we get in the proposal
 
     // Proposal No. 211
@@ -343,8 +350,10 @@ export const changeThresholds = {
 
     // How we have chosen that threshold
     // avg change is 0.0125
-    supplyPerYearInterestRateSlopeLowWarningThreshold: 0.03,
-    supplyPerYearInterestRateSlopeLowCriticalThreshold: 0.1,
+    // convert into percentage
+    // interest shouldnt be more than 1.5%
+    supplyPerYearInterestRateSlopeLowWarningThreshold: 1.5,
+    supplyPerYearInterestRateSlopeLowCriticalThreshold: 3,
 
     // Add example of values we get in the proposal
 
@@ -373,8 +382,10 @@ export const changeThresholds = {
 
     // How we have chosen that threshold
     // avg change is 0.01536
-    borrowPerYearInterestRateSlopeLowWarningThreshold: 0.03,
-    borrowPerYearInterestRateSlopeLowCriticalThreshold: 0.1,
+    // convert into percentage
+    // interest shouldnt be more than 1.5%
+    borrowPerYearInterestRateSlopeLowWarningThreshold: 1.5,
+    borrowPerYearInterestRateSlopeLowCriticalThreshold: 3,
 
     // Add example of values we get in the proposal
 
@@ -397,8 +408,10 @@ export const changeThresholds = {
 
     // How we have chosen that threshold
     // avg change is 1.35
-    supplyPerYearInterestRateSlopeHighWarningThreshold: 2,
-    supplyPerYearInterestRateSlopeHighCriticalThreshold: 5,
+    // convert into percentage
+    // change shouldnt be more than 150%
+    supplyPerYearInterestRateSlopeHighWarningThreshold: 150,
+    supplyPerYearInterestRateSlopeHighCriticalThreshold: 200,
 
     // Add example of values we get in the proposal
 
@@ -421,7 +434,9 @@ export const changeThresholds = {
 
     // How we have chosen that threshold
     // avg change is 5.05
-    borrowPerYearInterestRateSlopeHighWarningThreshold: 7,
-    borrowPerYearInterestRateSlopeHighCriticalThreshold: 10,
+    // convert into percentage
+    // change shouldnt be more than 150%
+    borrowPerYearInterestRateSlopeHighWarningThreshold: 150,
+    borrowPerYearInterestRateSlopeHighCriticalThreshold: 200,
   },
 }

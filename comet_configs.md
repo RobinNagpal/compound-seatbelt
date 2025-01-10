@@ -230,7 +230,7 @@ Thresholds
       ```
       meaning `storeFrontPriceFactor` must be `<= 1e18`.
     - This ensures you don’t have a discount factor that is more than 100% or produce negative/invalid prices.
-
+100% or 1000000000000000000 is the maximum value so the change should not be more than 30% at a time. So thresholds can be 30% and 50%.
 ---
 
 ## 10. `trackingIndexScale`
@@ -245,7 +245,7 @@ Thresholds
       trackingIndexScale = config.trackingIndexScale;
       ```
       There is no explicit revert if it’s too large or too small. However, it must be consistent with the logic in the rest of the contract so that index accumulations do not overflow.
-
+This is not going to change ever
 ---
 
 ## 11. `baseTrackingSupplySpeed`
@@ -262,7 +262,7 @@ Thresholds
       }
       ```
     - Must be carefully set so that the total rate of reward distribution is not unbounded. No direct revert is shown, but you typically set it to something that fits the token supply.
-
+After defactoring it by trackingIndexScale, and multiply by 86400 to get the daily COMP reward and so daily Comp change should not be more than 50 at a time. So thresholds can be 50 and 100.
 ---
 
 ## 12. `baseTrackingBorrowSpeed`
@@ -343,7 +343,7 @@ Thresholds
       ```
       meaning your “borrow collateral factor” can’t exceed your “liquidateCollateralFactor.”
     - On top of that, it also does a separate “descaling” check to ensure the 16-bit storage can handle it.
-
+This is a percentage value that is used to to check for the limit of borrowing. Should be less than liquidateCollateralFactor. The change should not be more than 5% at a time. So thresholds can be 5% and 10%.
 ---
 
 ## 17. `liquidateCollateralFactor`
@@ -358,7 +358,7 @@ Thresholds
       if (assetConfig.liquidateCollateralFactor > MAX_COLLATERAL_FACTOR) revert LiquidateCFTooLarge();
       ```
     - Also, as noted, must be strictly greater than `borrowCollateralFactor`.
-
+This is a percentage value that is used to to check for liquidation. Should be more than borrowCollateralFactor. The change should not be more than 5% at a time. So thresholds can be 5% and 10%.
 ---
 
 ## 18. `liquidationFactor`
@@ -370,7 +370,7 @@ Thresholds
 - **Checks**:
     - Similarly stored as a scaled factor, must fit within the 16-bit slice after “descaling.”
     - No direct revert if liquidationFactor is too large (besides the normal bounding logic with `liquidateCollateralFactor`), but the discount must make sense (usually well under 1e18, e.g. 5–10% discount).
-
+This is the discounted price of the collateral during liquidation. The change should not be more than 5% at a time. So thresholds can be 5% and 10%.
 ---
 
 ## 19. `supplyCap`
