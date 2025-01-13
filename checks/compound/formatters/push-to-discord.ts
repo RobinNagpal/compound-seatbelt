@@ -72,7 +72,7 @@ export async function pushChecksSummaryToDiscordAsEmbeds(
     color: 16711680, // Red color for failed checks
   }))
 
-  const warningEmbeds = (failedChecks || []).map((m) => ({
+  const warningEmbeds = (warningChecks || []).map((m) => ({
     description: m,
     color: 16776960, // Yellow color for warning checks
   }))

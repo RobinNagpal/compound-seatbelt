@@ -13,7 +13,7 @@ import { provider } from './utils/clients/ethers'
 import { simulate } from './utils/clients/tenderly'
 import { AllCheckResults, GovernorType, SimulationConfig, SimulationConfigBase, SimulationData } from './types'
 import ALL_CHECKS from './checks'
-import { generateAndSaveReports, pushCompoundChecksToDiscord } from './presentation/report'
+import { generateAndSaveReports, pushCompoundChecksToDiscord, pushCompoundChecksToEmail } from './presentation/report'
 import { PROPOSAL_STATES } from './utils/contracts/governor-bravo'
 import {
   formatProposalId,
@@ -176,6 +176,8 @@ async function main() {
     await uploadFileToS3(`${s3ReportsFolder}/${proposal.id}.md`, `${reportPath}.md`)
     await uploadFileToS3(`${s3ReportsFolder}/${proposal.id}.pdf`, `${reportPath}.pdf`)
     await uploadFileToS3(`${s3ReportsFolder}/${proposal.id}.html`, `${reportPath}.html`)
+    
+    await pushCompoundChecksToEmail(proposal.id!.toString(), compProposalAnalysis)
   }
   console.log('Done!')
 }
