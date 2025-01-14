@@ -145,7 +145,8 @@ export function getChangeTextFn(
   criticalityChange?: string
 ): string {
   const percentageSign = isPercentage ? '%' : ''
-  const absoluteChange = Math.abs(parseFloat(change)).toString()
+  const isNegative = change.startsWith('-')
+  const absoluteChange = isNegative ? change.substring(1) : change
 
   // Use the criticality change for sign if provided
   const criticalitySign =

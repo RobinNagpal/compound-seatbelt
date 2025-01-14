@@ -204,7 +204,10 @@ export async function generateAndSaveReports(
     fsp.writeFile(`${path}.md`, markdownReport),
     mdToPdf(
       { content: markdownReport },
-      { dest: `${path}.pdf`, launch_options: { args: ['--no-sandbox', '--disable-setuid-sandbox'] } }
+      { dest: `${path}.pdf`, 
+        launch_options: { args: ['--no-sandbox', '--disable-setuid-sandbox'] },
+        css: 'body { word-wrap: break-word; overflow-wrap: break-word; hyphens: auto;}'
+      }
     ),
   ])
 }
@@ -275,14 +278,6 @@ _Updated as of block [${blocks.current.number}](https://etherscan.io/block/${blo
 
 ${checkforumPost(description.trim(), proposalID)} 
 
-## Legend
-
-| Icon | Description |
-|------|-------------|
-${Object.values(iconLookupTable)
-  .map(({ icon, description }) => `| ${icon} | ${description} |`)
-  .join('\n')}
-
 ## Table of contents
 
 This is filled in by remark-toc and this sentence will be removed.
@@ -295,6 +290,15 @@ ${blockQuote(description.trim())}
 ${populateChecks(checks)}
   
 ## Compound Checks\n
+
+### Legend
+
+| Icon | Description |
+|------|-------------|
+${Object.values(iconLookupTable)
+  .map(({ icon, description }) => `| ${icon} | ${description} |`)
+  .join('\n')}
+
 ${toMessageList(
   'Mainnet Actions',
   compProposalAnalysis.mainnetActionAnalysis.map((a) => a.details)
