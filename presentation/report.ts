@@ -17,6 +17,7 @@ import { AllCheckResults, GovernorType, ProposalEvent } from '../types'
 import { formatProposalId } from '../utils/contracts/governor'
 import { CometChains, GovernanceProposalAnalysis } from './../checks/compound/compound-types'
 import { getExplorerBaseUrl } from './../checks/compound/abi-utils'
+import { sendEmails } from '../checks/compound/formatters/push-to-email'
 
 // --- Markdown helpers ---
 
@@ -238,6 +239,34 @@ export async function pushCompoundChecksToDiscord(
     )
 
   await pushChecksSummaryToDiscordAsEmbeds(failedChecks, warningChecks, compProposalAnalysis, proposal.id!.toString())
+}
+
+
+export async function pushCompoundChecksToEmail(
+  proposalNo: string, 
+  compoundChecks: GovernanceProposalAnalysis,
+  folderPath: string
+) {
+  
+  const content = `
+  ## Summary of Compound Checks - Proposal#[${proposalNo}](https://compound.finance/governance/proposals/${proposalNo})
+  See the Full Report [here](https://compound-governance-proposals.s3.amazonaws.com/${folderPath}/${proposalNo}.pdf).
+  
+  ${toMessageList(
+    'Mainnet Actions',
+    compoundChecks.mainnetActionAnalysis.map((a) => a.summary)
+  )}
+  \n\n
+  ${compoundChecks.chainedProposalAnalysis
+    .map((cp) =>
+      toMessageList(
+        `Bridge wrapped actions to ${capitalizeWord(cp.chain)}`,
+        cp.actionAnalysis.map((a) => a.summary)
+      )
+    )
+    .join('\n\n')}
+  `
+  await sendEmails(proposalNo, content);
 }
 
 /**
