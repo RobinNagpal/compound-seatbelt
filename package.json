@@ -1,8 +1,8 @@
 {
-  "name": "@uniswap/governance-seatbelt",
+  "name": "@compound/governance-seatbelt",
   "version": "1.0.0-alpha.0",
   "engines": {
-    "node": ">=14.16"
+    "node": ">=18.0"
   },
   "type": "module",
   "description": "Make governance safer",
@@ -54,6 +54,6 @@
   },
   "devDependencies": {
     "@types/json-diff": "^1.0.3",
-    "prettier": "^2.3.2"
+    "prettier": "^3.4.2"
   }
 }
