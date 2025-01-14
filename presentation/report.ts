@@ -239,28 +239,31 @@ export async function pushCompoundChecksToDiscord(
 }
 
 
-export async function pushCompoundChecksToEmail(proposalNo: string, compoundChecks: GovernanceProposalAnalysis) {
-  const s3ReportsFolder = process.env.AWS_BUCKET_BASE_PATH || 'all-proposals'
+export async function pushCompoundChecksToEmail(
+  proposalNo: string, 
+  compoundChecks: GovernanceProposalAnalysis,
+  folderPath: string
+) {
   
   const content = `
-  ## Summary of Compound Checks - [${proposalNo}](https://compound.finance/governance/proposals/${proposalNo})
-  [Full Report](https://compound-governance-proposals.s3.amazonaws.com/${s3ReportsFolder}/${proposalNo}.pdf)
+  ## Summary of Compound Checks - Proposal#[${proposalNo}](https://compound.finance/governance/proposals/${proposalNo})
+  See the Full Report [here](https://compound-governance-proposals.s3.amazonaws.com/${folderPath}/${proposalNo}.pdf).
   
   ${toMessageList(
     'Mainnet Actions',
-    compoundChecks.mainnetActionAnalysis.map((a) => a.details)
+    compoundChecks.mainnetActionAnalysis.map((a) => a.summary)
   )}
   \n\n
   ${compoundChecks.chainedProposalAnalysis
     .map((cp) =>
       toMessageList(
         `Bridge wrapped actions to ${capitalizeWord(cp.chain)}`,
-        cp.actionAnalysis.map((a) => a.details)
+        cp.actionAnalysis.map((a) => a.summary)
       )
     )
     .join('\n\n')}
   `
-  await sendEmails(content, proposalNo);
+  await sendEmails(proposalNo, content);
 }
 
 /**

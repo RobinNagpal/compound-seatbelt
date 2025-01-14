@@ -177,7 +177,7 @@ async function main() {
     await uploadFileToS3(`${s3ReportsFolder}/${proposal.id}.pdf`, `${reportPath}.pdf`)
     await uploadFileToS3(`${s3ReportsFolder}/${proposal.id}.html`, `${reportPath}.html`)
     
-    await pushCompoundChecksToEmail(proposal.id!.toString(), compProposalAnalysis)
+    await pushCompoundChecksToEmail(proposal.id!.toString(), compProposalAnalysis, s3ReportsFolder)
   }
   console.log('Done!')
 }
