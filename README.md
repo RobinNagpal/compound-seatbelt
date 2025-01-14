@@ -83,3 +83,5 @@ The `reports/` folder is gitignored, so when searching for reports in this direc
 You can run specific checks by setting the `CHECKS_ENABLED` environment variable to a comma-separated list of checks to run.
 
 
+### Register for Email Alerts
+https://jidiu32obg.execute-api.us-east-1.amazonaws.com/email-subscription

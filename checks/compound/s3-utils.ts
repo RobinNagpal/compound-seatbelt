@@ -6,7 +6,7 @@ import * as fs from 'fs'
 const s3Client = new S3Client({ region: 'us-east-1' })
 
 // Specify the name of your bucket
-const bucketName = process.env.AWS_BUCKET
+const bucketName = process.env.AWS_BUCKET || 'compound-governance-proposals'
 
 // Method to list all files in the specified folder
 // This function lists all files in a specified folder
