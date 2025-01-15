@@ -1,0 +1,26 @@
+{
+  "0x5d3a1ff2b6bab83b63cd9ad0787074081a52ef34": {
+    "symbol": "USDe",
+    "decimals": "18"
+  },
+  "0xcda86a272531e8640cd7f1a92c01839911b90bb0": {
+    "symbol": "mETH",
+    "decimals": "18"
+  },
+  "0xdeaddeaddeaddeaddeaddeaddeaddeaddead1111": {
+    "symbol": "WETH",
+    "decimals": "18"
+  },
+  "0xc96de26018a54d51c097160568752c4e3bd6c364": {
+    "symbol": "FBTC",
+    "decimals": "8"
+  },
+  "0x52b7d8851d6ccbc6342ba0855be65f7b82a3f17f": {
+    "symbol": "COMP",
+    "decimals": "18"
+  },
+  "0x201eba5cc46d216ce6dc03f6a759e8e766e956ae": {
+    "symbol": "USDT",
+    "decimals": "6"
+  }
+}
