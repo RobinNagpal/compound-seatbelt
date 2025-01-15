@@ -30,6 +30,12 @@ export interface TargetLookupData {
   }
 }
 
+export interface TargetRegistryData {
+  [chain: string]: {
+    [address: string]: string
+  };
+}
+
 export interface ContractTypeFormattingInfo {
   transactionFormatter: string
   functions: {

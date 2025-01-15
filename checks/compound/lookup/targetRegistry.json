@@ -1,0 +1,17 @@
+{
+  "mainnet": {
+    "0x3d9819210a31b4961b30ef54be2aed79b9c9cd3b": "Comptroller",
+    "0xc00e94cb662c3520282e6f5717214004a7f26888": "Comp",
+    "0x3154cf16ccdb4c6d922629664174b904d80f2c35": "L1StandardBridge",
+    "0x316f9708bb98af7da9c68c1c3b5e79039cd336e3": "Configurator",
+    "0x1ec63b5883c3481134fd50d5daebc83ecd2e8779": "CometProxyAdmin"
+  },
+  "optimism": {
+    "0x84e93ec6170ed630f5ebd89a1aae72d4f63f2713": "Configurator",
+    "0x24d86da09c4dd64e50db7501b0f695d030f397af": "CometProxyAdmin"
+  },
+  "base": {
+    "0x45939657d1ca34a8fa39a924b71d28fe8431e581": "Configurator",
+    "0xbde8f31d2ddda895264e27dd990fab3dc87b372d": "CometProxyAdmin"
+  }
+}
