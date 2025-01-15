@@ -1,7 +1,6 @@
 {
   "ts-node": {
-    "esm": true,
-    "experimentalSpecifierResolution": "node"
+    "esm": true
   },
   "compilerOptions": {
     /* Visit https://aka.ms/tsconfig.json to read more about this file */
