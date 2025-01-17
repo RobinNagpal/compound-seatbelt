@@ -1,6 +1,6 @@
 import fs from 'fs'
 import { ProposalData, ProposalEvent, TenderlySimulation } from './../../types'
-import { ActionAnalysis, ChainedProposalAnalysis, GovernanceProposalAnalysis, ProposalActionResponse } from './compound-types'
+import { ActionAnalysis, ChainedProposalAnalysis, GovernanceProposalAnalysis, ProposalActionResponse, TargetLookupData, TargetRegistryData } from './compound-types'
 import { defactorFn } from './../../utils/roundingUtils'
 import { getContractNameAndAbiFromFile, getFunctionFragmentAndDecodedCalldata, getFunctionSignature } from './abi-utils'
 import {
@@ -121,9 +121,91 @@ function getFormatterForContract(contractNameAndAbi: ContractNameAndAbi): Contra
   return contractFormatters
 }
 
+function storeTargetRegistryData(
+  chain: string,
+  address: string,
+  contractName: string
+) {
+  const targetRegistryFilePath = `./checks/compound/lookup/targetRegistry.json`
+  
+  let registryData: TargetRegistryData = {};
+
+  if (fs.existsSync(targetRegistryFilePath)) {
+    const fileContent = fs.readFileSync(targetRegistryFilePath, 'utf-8');
+    registryData = JSON.parse(fileContent || '{}');
+  }
+
+  if (!registryData[chain]) {
+    registryData[chain] = {};
+  }
+
+  registryData[chain][address] = contractName;
+
+  fs.writeFileSync(
+    targetRegistryFilePath,
+    JSON.stringify(registryData, null, 2),
+    'utf-8'
+  );
+}
+
+function storeTargetLookupData(
+  chain: string,
+  addr: string,
+  functionName: string,
+  transactionFormatter: string,
+  proposalNumber: string,
+  decodedCalldata: string[],
+  contractName: string
+) {
+  const targetLookupFilePath = `./checks/compound/lookup/target/${chain}TargetLookup.json`
+
+  let lookupData: TargetLookupData = {};
+
+  if (fs.existsSync(targetLookupFilePath)) {
+    const fileContent = fs.readFileSync(targetLookupFilePath, 'utf-8');
+    lookupData = JSON.parse(fileContent || '{}');
+  } else {
+    console.log(`File for chain ${chain} does not exist. Creating a new one.`);
+    fs.writeFileSync(targetLookupFilePath, JSON.stringify(lookupData, null, 2), 'utf-8');
+  }
+
+  if (!lookupData[addr]) {
+    lookupData[addr] = {
+      contractName,
+      functions: {},
+      proposals: [],
+    };
+  }
+
+  if (!lookupData[addr].functions[functionName]) {
+    lookupData[addr].functions[functionName] = {
+      description: functionName,
+      transactionFormatter: transactionFormatter,
+      proposals: {},
+    };
+  }
+
+  const functionProposals = lookupData[addr].functions[functionName].proposals;
+  
+  functionProposals[proposalNumber] = [...decodedCalldata];
+
+  if (!lookupData[addr].proposals.includes(Number(proposalNumber))) {
+    lookupData[addr].proposals.push(Number(proposalNumber));
+  }
+
+  fs.writeFileSync(
+    targetLookupFilePath,
+    JSON.stringify(lookupData, null, 2),
+    'utf-8'
+  );
+}
+
 async function getTransactionMessages(chain: CometChains, proposalId: number, transactionInfo: ExecuteTransactionInfo): Promise<ActionAnalysis> {
+  console.log('Transaction info: ', transactionInfo)
   const { target, value, signature } = transactionInfo
   const contractNameAndAbi = await getContractNameAndAbiFromFile(chain, target)
+  storeTargetRegistryData(chain, target, contractNameAndAbi.contractName);
+  
   if (value?.toString() && value?.toString() !== '0') {
     const platform = getPlatform(chain)
     if (!signature) {
@@ -168,6 +250,13 @@ async function getTransactionMessages(chain: CometChains, proposalId: number, tr
       const aiSummary = await generateAISummary(chain, target, functionSignature, decodedCalldata)
       return toActionAnalysis(aiSummary)
     }
+    storeTargetLookupData(
+      chain,
+      target.toLowerCase(),
+      functionSignature,
+      transactionFormatter,
+      proposalId.toString(),
+      decodedCalldata.map((data: any) => data.toString()),contractNameAndAbi.contractName)
 
     const [contractName, formatterName] = transactionFormatter.split('.')
     console.log(`GetFormatter: ContractName - ${contractName} and FormatterName - ${formatterName}`)
