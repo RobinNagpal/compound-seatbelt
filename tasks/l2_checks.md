@@ -34,8 +34,8 @@ Next tasks
           ]
   ```
 
-
-
-
-  
-  
+# Registry check
+- create a new check named `check-target-names`
+- use the targets as key and get contract names from the `targetRegistry.json` if they exist
+- if they exist, return the contract name, otherwise return `Contract not in the registry`
+- do it for both mainnet and bridge targets
