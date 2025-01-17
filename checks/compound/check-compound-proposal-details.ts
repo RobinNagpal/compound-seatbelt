@@ -186,11 +186,8 @@ function storeTargetLookupData(
   }
 
   const functionProposals = lookupData[addr].functions[functionName].proposals;
-  if (!functionProposals[proposalNumber]) {
-    functionProposals[proposalNumber] = [];
-  }
-
-  functionProposals[proposalNumber] = functionProposals[proposalNumber].concat(decodedCalldata);
+  
+  functionProposals[proposalNumber] = [...decodedCalldata];
 
   if (!lookupData[addr].proposals.includes(Number(proposalNumber))) {
     lookupData[addr].proposals.push(Number(proposalNumber));
@@ -201,13 +198,14 @@ function storeTargetLookupData(
     JSON.stringify(lookupData, null, 2),
     'utf-8'
   );
-  storeTargetRegistryData(chain, addr, contractName);
 }
 
 async function getTransactionMessages(chain: CometChains, proposalId: number, transactionInfo: ExecuteTransactionInfo): Promise<ActionAnalysis> {
   console.log('Transaction info: ', transactionInfo)
   const { target, value, signature } = transactionInfo
   const contractNameAndAbi = await getContractNameAndAbiFromFile(chain, target)
+  storeTargetRegistryData(chain, target, contractNameAndAbi.contractName);
+  
   if (value?.toString() && value?.toString() !== '0') {
     const platform = getPlatform(chain)
     if (!signature) {

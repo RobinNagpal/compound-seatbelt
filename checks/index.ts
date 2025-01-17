@@ -11,11 +11,13 @@ import { checkStateChanges } from './check-state-changes'
 import { checkValueRequired } from './check-value-required'
 import { ProposalCheck } from '../types'
 import { checkSimFailure } from './check-sim-failure'
+import { checkTargetsNames } from './check-targets-names'
 
 const ALL_CHECKS: {
   [checkId: string]: ProposalCheck
 } = {
   checkSimFailure,
+  checkTargetsNames,
   checkStateChanges,
   checkDecodeCalldata,
   checkLogs,
