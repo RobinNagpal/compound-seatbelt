@@ -187,8 +187,30 @@ function storeTargetLookupData(
 
   const functionProposals = lookupData[addr].functions[functionName].proposals;
   
-  functionProposals[proposalNumber] = [...decodedCalldata];
+  if (!functionProposals[proposalNumber]) {
+    functionProposals[proposalNumber] = [];
+  }
 
+  // Compare group by group
+  const existingGroups: string[][] = [];
+  const proposalCalldata = functionProposals[proposalNumber];
+
+  // Group the existing calldata into chunks of the same size as the new calldata
+  for (let i = 0; i < proposalCalldata.length; i += decodedCalldata.length) {
+    const group = proposalCalldata.slice(i, i + decodedCalldata.length);
+    existingGroups.push(group);
+  }
+
+  // Check if the new group already exists
+  const groupExists = existingGroups.some(
+    (group) => JSON.stringify(group) === JSON.stringify(decodedCalldata)
+  );
+
+  // Only push the new group if it doesn't already exist
+  if (!groupExists) {
+    proposalCalldata.push(...decodedCalldata);
+  }
+  
   if (!lookupData[addr].proposals.includes(Number(proposalNumber))) {
     lookupData[addr].proposals.push(Number(proposalNumber));
   }
@@ -204,7 +226,6 @@ async function getTransactionMessages(chain: CometChains, proposalId: number, tr
   console.log('Transaction info: ', transactionInfo)
   const { target, value, signature } = transactionInfo
   const contractNameAndAbi = await getContractNameAndAbiFromFile(chain, target)
-  storeTargetRegistryData(chain, target, contractNameAndAbi.contractName);
   
   if (value?.toString() && value?.toString() !== '0') {
     const platform = getPlatform(chain)

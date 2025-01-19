@@ -190,5 +190,21 @@
   "0x18084fba666a33d37592fa2633fd49a74dd93a88": {
     "symbol": "tBTC",
     "decimals": "18"
+  },
+  "0xdc035d45d973e3ec169d2276ddab16f1e407384f": {
+    "symbol": "USDS",
+    "decimals": "18"
+  },
+  "0x0000000000085d4780b73119b644ae5ecd22b376": {
+    "symbol": "TUSD",
+    "decimals": "18"
+  },
+  "0x8e870d67f660d95d5be530380d0ec0bd388289e1": {
+    "symbol": "USDP",
+    "decimals": "18"
+  },
+  "0xf1c9acdc66974dfb6decb12aa385b9cd01190e38": {
+    "symbol": "osETH",
+    "decimals": "18"
   }
 }

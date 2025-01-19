@@ -1,0 +1,95 @@
+{
+  "0xb77cd4cd000957283d8baf53cd782ecf029cf7db": {
+    "contractName": "Configurator",
+    "functions": {
+      "setConfiguration(address,tuple)": {
+        "description": "setConfiguration(address,tuple)",
+        "transactionFormatter": "Configurator.setConfiguration(address,tuple)",
+        "proposals": {
+          "357": [
+            "0x606174f62cd968d8e684c645080fa694c1D7786E",
+            "0x16C7B5C1b10489F4B111af11de2Bd607c9728107,0x2127338F0ff71Ecc779dce407D95C7D32f7C5F45,0x5d3a1Ff2b6BAb83b63cd9AD0787074081a52ef34,0xE5dB8474880459F6fd189F8282518443a8b39Aa5,0xf528B4bCAc12dad0bFa114282b219ad706bA7f18,900000000000000000,39000000000000000,3600000000000000000,0,900000000000000000,33300000000000004,4000000000000000000,15000000000000000,600000000000000000,1000000000000000,46296296296,46296296296,1000000000000000000000,100000000000000000000,5000000000000000000000000,0xcDA86A272531e8640cD7F1a92c01839911B90bb0,0xfB8fF12f19b21e2Af98Fd422118e2f4B3ef3d1ed,18,800000000000000000,850000000000000000,900000000000000000,3000000000000000000000,0xdEAddEaDdeadDEadDEADDEAddEADDEAddead1111,0x75Adb8E5D093598D6893d1e0F5f4222BD2B510fc,18,820000000000000000,870000000000000000,930000000000000000,2800000000000000000000,0xC96dE26018A54D51c097160568752c4E3BD6C364,0xdEdD2f82711dbe4afdc2d8d5b7ab849234Db267e,8,780000000000000000,830000000000000000,880000000000000000,12000000000"
+          ]
+        }
+      }
+    },
+    "proposals": [
+      357
+    ]
+  },
+  "0xe268b436e75648aa0639e2088fa803fea517a0c7": {
+    "contractName": "CometProxyAdmin",
+    "functions": {
+      "deployAndUpgradeTo(address,address)": {
+        "description": "deployAndUpgradeTo(address,address)",
+        "transactionFormatter": "CometProxyAdmin.deployAndUpgradeTo(address,address)",
+        "proposals": {
+          "357": [
+            "0xb77Cd4cD000957283D8BAf53cD782ECf029cF7DB",
+            "0x606174f62cd968d8e684c645080fa694c1D7786E"
+          ]
+        }
+      }
+    },
+    "proposals": [
+      357
+    ]
+  },
+  "0xcd83cbbfce149d141a5171c3d6a0f0fccee225ab": {
+    "contractName": "CometRewards",
+    "functions": {
+      "setRewardConfig(address,address)": {
+        "description": "setRewardConfig(address,address)",
+        "transactionFormatter": "CometRewards.setRewardConfig(address,address)",
+        "proposals": {
+          "357": [
+            "0x606174f62cd968d8e684c645080fa694c1D7786E",
+            "0x52b7D8851d6CcBC6342ba0855Be65f7B82A3F17f"
+          ]
+        }
+      }
+    },
+    "proposals": [
+      357
+    ]
+  },
+  "0x201eba5cc46d216ce6dc03f6a759e8e766e956ae": {
+    "contractName": "USDT",
+    "functions": {
+      "approve(address,uint256)": {
+        "description": "approve(address,uint256)",
+        "transactionFormatter": "ERC20.approve(address,uint256)",
+        "proposals": {
+          "357": [
+            "0xAFb85a12Babfafabfe1a518594492d5a830e782a",
+            "78858450960"
+          ]
+        }
+      }
+    },
+    "proposals": [
+      357
+    ]
+  },
+  "0xafb85a12babfafabfe1a518594492d5a830e782a": {
+    "contractName": "LBRouter",
+    "functions": {
+      "swapTokensForExactTokens(uint256,uint256,tuple,address,uint256)": {
+        "description": "swapTokensForExactTokens(uint256,uint256,tuple,address,uint256)",
+        "transactionFormatter": "LBRouter.swapTokensForExactTokens(uint256,uint256,tuple,address,uint256)",
+        "proposals": {
+          "357": [
+            "75000000000000000000000",
+            "78858450960",
+            "1,2,0x201EBa5CC46D216Ce6DC03F6a759e8E766e956aE,0x5d3a1Ff2b6BAb83b63cd9AD0787074081a52ef34",
+            "0x606174f62cd968d8e684c645080fa694c1D7786E",
+            "1000000000000000000"
+          ]
+        }
+      }
+    },
+    "proposals": [
+      357
+    ]
+  }
+}

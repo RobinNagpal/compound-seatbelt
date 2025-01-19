@@ -226,7 +226,7 @@ export async function pushCompoundChecksToDiscord(
     .filter(([_, { result }]) => result.errors.length > 0)
     .map(
       ([_, { name, result }]) =>
-        `- ${bold(`${name} ❌ Failed`)} \n${result.errors.map((error) => `${tab}- ${error}`).join('\n')}`
+        `- ${bold(`${name} ❌ Failed`)} \n${result.errors.map((error) => `${tab}${error}`).join('\n')}`
     )
 
   const warningChecks = Object.entries(checks)
@@ -234,7 +234,7 @@ export async function pushCompoundChecksToDiscord(
     .map(
       ([_, { name, result }]) =>
         `- ${bold(`${name} ❗❗ Passed with warnings`)} \n${result.warnings
-          .map((warning) => `${tab}- ${warning}`)
+          .map((warning) => `${tab}${warning}`)
           .join('\n')}`
     )
 

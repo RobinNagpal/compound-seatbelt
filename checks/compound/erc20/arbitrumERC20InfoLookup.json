@@ -46,5 +46,9 @@
   "0x4186bfc76e2e237523cbc30fd220fe055156b41f": {
     "symbol": "rsETH",
     "decimals": "18"
+  },
+  "0xec70dcb4a1efa46b8f2d97c310c9c4790ba5ffa8": {
+    "symbol": "rETH",
+    "decimals": "18"
   }
 }
