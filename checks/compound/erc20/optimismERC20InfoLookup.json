@@ -26,5 +26,21 @@
   "0x2416092f143378750bb29b79ed961ab195cceea5": {
     "symbol": "ezETH",
     "decimals": "18"
+  },
+  "0x5a7facb970d094b6c7ff1df0ea68d99e6e73cbff": {
+    "symbol": "weETH",
+    "decimals": "18"
+  },
+  "0x87eee96d50fb761ad85b1c982d28a042169d61b1": {
+    "symbol": "wrsETH",
+    "decimals": "18"
+  },
+  "0x1f32b1c2345538c0c6f582fcb022739c4a194ebb": {
+    "symbol": "wstETH",
+    "decimals": "18"
+  },
+  "0x9bcef72be871e61ed4fbbc7630889bee758eb81d": {
+    "symbol": "rETH",
+    "decimals": "18"
   }
 }

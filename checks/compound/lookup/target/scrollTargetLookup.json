@@ -1,0 +1,235 @@
+{
+  "0xecab0beea3e5dea0c35d3e69468eac20098032d7": {
+    "contractName": "Configurator",
+    "functions": {
+      "setConfiguration(address,tuple)": {
+        "description": "setConfiguration(address,tuple)",
+        "transactionFormatter": "Configurator.setConfiguration(address,tuple)",
+        "proposals": {
+          "221": [
+            "0xB2f97c1Bd3bf02f5e74d13f02E3e26F93D77CE44",
+            "0xF6013e80E9e6AC211Cc031ad1CE98B3Aa20b73E4,0x0747a435b8a60070A7a111D015046d765098e4cc,0x06eFdBFf2a14a7c8E15944D1F4A48F9F95F663A4,0x43d12Fb3AfCAd5347fA764EeAB105478337b7200,0x27E24C49f95DfF7E231eF1C2849F760cDF25a5Ad,850000000000000000,48000000000000000,1600000000000000000,0,850000000000000000,53000000000000000,1800000000000000000,15000000000000000,600000000000000000,1000000000000000,0,0,1000000000,1000,1000000000000,0x5300000000000000000000000000000000000004,0x6bF14CB0A831078629D993FDeBcB182b21A8774C,18,800000000000000000,850000000000000000,900000000000000000,300000000000000000000,0xf610A9dfB7C89644979b4A0f27063E9e7d7Cda32,0x709cef91Dd5d162d7047b678334d1Be41fe92843,18,750000000000000000,800000000000000000,850000000000000000,50000000000000000000"
+          ],
+          "233": [
+            "0xB2f97c1Bd3bf02f5e74d13f02E3e26F93D77CE44",
+            "0xF6013e80E9e6AC211Cc031ad1CE98B3Aa20b73E4,0x0747a435b8a60070A7a111D015046d765098e4cc,0x06eFdBFf2a14a7c8E15944D1F4A48F9F95F663A4,0x43d12Fb3AfCAd5347fA764EeAB105478337b7200,0x27E24C49f95DfF7E231eF1C2849F760cDF25a5Ad,850000000000000000,48000000000000000,1600000000000000000,0,850000000000000000,53000000000000000,1800000000000000000,15000000000000000,600000000000000000,1000000000000000,0,0,1000000000,1000,1000000000000,0x5300000000000000000000000000000000000004,0x6bF14CB0A831078629D993FDeBcB182b21A8774C,18,800000000000000000,850000000000000000,900000000000000000,300000000000000000000,0xf610A9dfB7C89644979b4A0f27063E9e7d7Cda32,0x709cef91Dd5d162d7047b678334d1Be41fe92843,18,750000000000000000,800000000000000000,850000000000000000,50000000000000000000"
+          ]
+        }
+      },
+      "updateAssetSupplyCap(address,address,uint128)": {
+        "description": "updateAssetSupplyCap(address,address,uint128)",
+        "transactionFormatter": "Configurator.updateAssetSupplyCap(address,address,uint128)",
+        "proposals": {
+          "266": [
+            "0xB2f97c1Bd3bf02f5e74d13f02E3e26F93D77CE44",
+            "0x5300000000000000000000000000000000000004",
+            "600000000000000000000",
+            "0xB2f97c1Bd3bf02f5e74d13f02E3e26F93D77CE44",
+            "0xf610A9dfB7C89644979b4A0f27063E9e7d7Cda32",
+            "100000000000000000000"
+          ],
+          "270": [
+            "0xB2f97c1Bd3bf02f5e74d13f02E3e26F93D77CE44",
+            "0x5300000000000000000000000000000000000004",
+            "600000000000000000000",
+            "0xB2f97c1Bd3bf02f5e74d13f02E3e26F93D77CE44",
+            "0xf610A9dfB7C89644979b4A0f27063E9e7d7Cda32",
+            "100000000000000000000"
+          ],
+          "272": [
+            "0xB2f97c1Bd3bf02f5e74d13f02E3e26F93D77CE44",
+            "0x5300000000000000000000000000000000000004",
+            "2000000000000000000000",
+            "0xB2f97c1Bd3bf02f5e74d13f02E3e26F93D77CE44",
+            "0xf610A9dfB7C89644979b4A0f27063E9e7d7Cda32",
+            "250000000000000000000"
+          ],
+          "349": [
+            "0xB2f97c1Bd3bf02f5e74d13f02E3e26F93D77CE44",
+            "0x5300000000000000000000000000000000000004",
+            "4000000000000000000000",
+            "0xB2f97c1Bd3bf02f5e74d13f02E3e26F93D77CE44",
+            "0xf610A9dfB7C89644979b4A0f27063E9e7d7Cda32",
+            "1000000000000000000000"
+          ]
+        }
+      },
+      "setBorrowPerYearInterestRateSlopeLow(address,uint64)": {
+        "description": "setBorrowPerYearInterestRateSlopeLow(address,uint64)",
+        "transactionFormatter": "Configurator.setBorrowPerYearInterestRateSlopeLow(address,uint64)",
+        "proposals": {
+          "272": [
+            "0xB2f97c1Bd3bf02f5e74d13f02E3e26F93D77CE44",
+            "50000000000000000"
+          ],
+          "317": [
+            "0xB2f97c1Bd3bf02f5e74d13f02E3e26F93D77CE44",
+            "33300000000000000"
+          ]
+        }
+      },
+      "setSupplyPerYearInterestRateSlopeLow(address,uint64)": {
+        "description": "setSupplyPerYearInterestRateSlopeLow(address,uint64)",
+        "transactionFormatter": "Configurator.setSupplyPerYearInterestRateSlopeLow(address,uint64)",
+        "proposals": {
+          "272": [
+            "0xB2f97c1Bd3bf02f5e74d13f02E3e26F93D77CE44",
+            "36000000000000000"
+          ],
+          "287": [
+            "0xB2f97c1Bd3bf02f5e74d13f02E3e26F93D77CE44",
+            "52000000000000000"
+          ],
+          "317": [
+            "0xB2f97c1Bd3bf02f5e74d13f02E3e26F93D77CE44",
+            "39000000000000000"
+          ]
+        }
+      },
+      "setBorrowKink(address,uint64)": {
+        "description": "setBorrowKink(address,uint64)",
+        "transactionFormatter": "Configurator.setBorrowKink(address,uint64)",
+        "proposals": {
+          "287": [
+            "0xB2f97c1Bd3bf02f5e74d13f02E3e26F93D77CE44",
+            "900000000000000000"
+          ]
+        }
+      },
+      "setBorrowPerYearInterestRateSlopeHigh(address,uint64)": {
+        "description": "setBorrowPerYearInterestRateSlopeHigh(address,uint64)",
+        "transactionFormatter": "Configurator.setBorrowPerYearInterestRateSlopeHigh(address,uint64)",
+        "proposals": {
+          "287": [
+            "0xB2f97c1Bd3bf02f5e74d13f02E3e26F93D77CE44",
+            "4000000000000000000"
+          ],
+          "317": [
+            "0xB2f97c1Bd3bf02f5e74d13f02E3e26F93D77CE44",
+            "4000000000000000000"
+          ]
+        }
+      },
+      "setSupplyKink(address,uint64)": {
+        "description": "setSupplyKink(address,uint64)",
+        "transactionFormatter": "Configurator.setSupplyKink(address,uint64)",
+        "proposals": {
+          "287": [
+            "0xB2f97c1Bd3bf02f5e74d13f02E3e26F93D77CE44",
+            "900000000000000000"
+          ]
+        }
+      },
+      "setSupplyPerYearInterestRateSlopeHigh(address,uint64)": {
+        "description": "setSupplyPerYearInterestRateSlopeHigh(address,uint64)",
+        "transactionFormatter": "Configurator.setSupplyPerYearInterestRateSlopeHigh(address,uint64)",
+        "proposals": {
+          "287": [
+            "0xB2f97c1Bd3bf02f5e74d13f02E3e26F93D77CE44",
+            "3600000000000000000"
+          ],
+          "317": [
+            "0xB2f97c1Bd3bf02f5e74d13f02E3e26F93D77CE44",
+            "3600000000000000000"
+          ]
+        }
+      },
+      "setBorrowPerYearInterestRateBase(address,uint64)": {
+        "description": "setBorrowPerYearInterestRateBase(address,uint64)",
+        "transactionFormatter": "Configurator.setBorrowPerYearInterestRateBase(address,uint64)",
+        "proposals": {
+          "317": [
+            "0xB2f97c1Bd3bf02f5e74d13f02E3e26F93D77CE44",
+            "15000000000000000"
+          ]
+        }
+      }
+    },
+    "proposals": [
+      221,
+      233,
+      266,
+      270,
+      272,
+      287,
+      317,
+      349
+    ]
+  },
+  "0x87a27b91f4130a25e9634d23a5b8e05e342bac50": {
+    "contractName": "CometProxyAdmin",
+    "functions": {
+      "deployAndUpgradeTo(address,address)": {
+        "description": "deployAndUpgradeTo(address,address)",
+        "transactionFormatter": "CometProxyAdmin.deployAndUpgradeTo(address,address)",
+        "proposals": {
+          "221": [
+            "0xECAB0bEEa3e5DEa0c35d3E69468EAC20098032D7",
+            "0xB2f97c1Bd3bf02f5e74d13f02E3e26F93D77CE44"
+          ],
+          "233": [
+            "0xECAB0bEEa3e5DEa0c35d3E69468EAC20098032D7",
+            "0xB2f97c1Bd3bf02f5e74d13f02E3e26F93D77CE44"
+          ],
+          "266": [
+            "0xECAB0bEEa3e5DEa0c35d3E69468EAC20098032D7",
+            "0xB2f97c1Bd3bf02f5e74d13f02E3e26F93D77CE44"
+          ],
+          "270": [
+            "0xECAB0bEEa3e5DEa0c35d3E69468EAC20098032D7",
+            "0xB2f97c1Bd3bf02f5e74d13f02E3e26F93D77CE44"
+          ],
+          "272": [
+            "0xECAB0bEEa3e5DEa0c35d3E69468EAC20098032D7",
+            "0xB2f97c1Bd3bf02f5e74d13f02E3e26F93D77CE44"
+          ],
+          "287": [
+            "0xECAB0bEEa3e5DEa0c35d3E69468EAC20098032D7",
+            "0xB2f97c1Bd3bf02f5e74d13f02E3e26F93D77CE44"
+          ],
+          "317": [
+            "0xECAB0bEEa3e5DEa0c35d3E69468EAC20098032D7",
+            "0xB2f97c1Bd3bf02f5e74d13f02E3e26F93D77CE44"
+          ],
+          "349": [
+            "0xECAB0bEEa3e5DEa0c35d3E69468EAC20098032D7",
+            "0xB2f97c1Bd3bf02f5e74d13f02E3e26F93D77CE44"
+          ]
+        }
+      }
+    },
+    "proposals": [
+      221,
+      233,
+      266,
+      270,
+      272,
+      287,
+      317,
+      349
+    ]
+  },
+  "0x70167d30964cbfdc315ecae02441af747be0c5ee": {
+    "contractName": "CometRewards",
+    "functions": {
+      "setRewardConfig(address,address)": {
+        "description": "setRewardConfig(address,address)",
+        "transactionFormatter": "CometRewards.setRewardConfig(address,address)",
+        "proposals": {
+          "221": [
+            "0xB2f97c1Bd3bf02f5e74d13f02E3e26F93D77CE44",
+            "0x643e160a3C3E2B7eae198f0beB1BfD2441450e86"
+          ],
+          "233": [
+            "0xB2f97c1Bd3bf02f5e74d13f02E3e26F93D77CE44",
+            "0x643e160a3C3E2B7eae198f0beB1BfD2441450e86"
+          ]
+        }
+      }
+    },
+    "proposals": [
+      221,
+      233
+    ]
+  }
+}
