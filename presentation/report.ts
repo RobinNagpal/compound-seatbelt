@@ -2,22 +2,16 @@ import { Block } from '@ethersproject/abstract-provider'
 import { BigNumber } from 'ethers'
 import fs, { promises as fsp } from 'fs'
 import { mdToPdf } from 'md-to-pdf'
-import rehypeSanitize from 'rehype-sanitize'
-import rehypeSlug from 'rehype-slug'
-import rehypeStringify from 'rehype-stringify'
 import { remark } from 'remark'
-import remarkParse from 'remark-parse'
-import remarkRehype from 'remark-rehype'
 import remarkToc from 'remark-toc'
-import { unified } from 'unified'
-import { visit } from 'unist-util-visit'
 import { capitalizeWord, checkforumPost, iconLookupTable, tab } from '../checks/compound/formatters/helper'
 import { pushChecksSummaryToDiscordAsEmbeds } from '../checks/compound/formatters/push-to-discord'
+import { sendEmails } from '../checks/compound/formatters/push-to-email'
 import { AllCheckResults, GovernorType, ProposalEvent } from '../types'
 import { formatProposalId } from '../utils/contracts/governor'
-import { CometChains, GovernanceProposalAnalysis } from './../checks/compound/compound-types'
 import { getExplorerBaseUrl } from './../checks/compound/abi-utils'
-import { sendEmails } from '../checks/compound/formatters/push-to-email'
+import { CometChains, GovernanceProposalAnalysis } from './../checks/compound/compound-types'
+import { toMarkdownAndHTML } from './toMarkdownAndHTML'
 
 // --- Markdown helpers ---
 
@@ -51,13 +45,17 @@ export function blockQuote(str: string): string {
  * @param code whether to link to the code tab
  * @param chain to be used
  */
-export function toAddressLink(address: string, code: boolean = false, chain: CometChains = CometChains.mainnet): string {
+export function toAddressLink(
+  address: string,
+  code: boolean = false,
+  chain: CometChains = CometChains.mainnet,
+): string {
   return `[\`${address}\`](${getExplorerBaseUrl(chain)}/${address}${code ? '#code' : ''})`
 }
 
 // -- Report formatters ---
 
-function toMessageList(header: string, text: string[]): string {
+export function toMessageList(header: string, text: string[]): string {
   return text.length > 0 ? `${bold(header)}:\n\n` + text.map((msg) => `${msg}`).join('\n') : ''
 }
 
@@ -67,7 +65,7 @@ function toMessageList(header: string, text: string[]): string {
  * @param warnings the warnings returned by the check
  * @param name the descriptive name of the check
  */
-function toCheckSummary({ result: { errors, warnings, info }, name }: AllCheckResults[string]): string {
+export function toCheckSummary({ result: { errors, warnings, info }, name }: AllCheckResults[string]): string {
   const status =
     errors.length === 0 ? (warnings.length === 0 ? '✅ Passed' : '❗❗ **Passed with warnings**') : '❌ **Failed**'
 
@@ -83,50 +81,50 @@ ${toMessageList('Info', info)}
 
 function populateChecks(checks: AllCheckResults): string {
   // Collect mainnet and bridged summaries separately
-  const mainnetSummaries: string[] = [];
-  const bridgedSummaries: Record<string, string[]> = {};
+  const mainnetSummaries: string[] = []
+  const bridgedSummaries: Record<string, string[]> = {}
 
   // Iterate through all checks and organize the summaries
   Object.keys(checks).forEach((checkId) => {
-    const { result: { errors, warnings, info, bridgedCheckResults }, name } = checks[checkId];
+    const {
+      result: { errors, warnings, info, bridgedCheckResults },
+      name,
+    } = checks[checkId]
 
     // Add to mainnet summaries
     mainnetSummaries.push(
       toCheckSummary({
         result: { errors, warnings, info },
         name,
-      })
-    );
+      }),
+    )
 
     // Process bridged results if any
     if (bridgedCheckResults) {
       bridgedCheckResults.forEach(({ chain, checkResults }) => {
         if (!bridgedSummaries[chain]) {
-          bridgedSummaries[chain] = [];
+          bridgedSummaries[chain] = []
         }
         bridgedSummaries[chain].push(
           toCheckSummary({
             result: { ...checkResults },
-            name
-          })
-        );
-      });
+            name,
+          }),
+        )
+      })
     }
-  });
+  })
 
   // Create the consolidated mainnet summary
-  const mainnetSummary = `### Mainnet Changes\n\n${mainnetSummaries.join('\n\n')}`;
+  const mainnetSummary = `### Mainnet Changes\n\n${mainnetSummaries.join('\n\n')}`
 
   // Create the consolidated bridged summaries for each chain
   const bridgedSummary = Object.keys(bridgedSummaries)
-    .map(
-      (chain) =>
-        `### Bridge Changes of ${capitalizeWord(chain)}\n\n${bridgedSummaries[chain].join('\n\n')}`
-    )
-    .join('\n\n');
+    .map((chain) => `### Bridge Changes of ${capitalizeWord(chain)}\n\n${bridgedSummaries[chain].join('\n\n')}`)
+    .join('\n\n')
 
   // Combine all summaries
-  return `${mainnetSummary}\n\n${bridgedSummary}`;
+  return `${mainnetSummary}\n\n${bridgedSummary}`
 }
 
 /**
@@ -173,7 +171,7 @@ export async function generateAndSaveReports(
   proposal: ProposalEvent,
   checks: AllCheckResults,
   dir: string,
-  compProposalAnalysis: GovernanceProposalAnalysis
+  compProposalAnalysis: GovernanceProposalAnalysis,
 ) {
   // Prepare the output folder and filename.
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
@@ -182,22 +180,7 @@ export async function generateAndSaveReports(
 
   // Generate the base markdown proposal report. This is the markdown report which is translated into other file types.
   const baseReport = await toMarkdownProposalReport(governorType, blocks, proposal, checks, compProposalAnalysis)
-
-  // The table of contents' links in the baseReport work when converted to HTML, but do not work as Markdown
-  // or PDF links, since the emojis in the header titles cause issues. We apply the remarkFixEmojiLinks plugin
-  // to fix this, and use this updated version when generating the Markdown and PDF reports.
-  const markdownReport = String(await remark().use(remarkFixEmojiLinks).process(baseReport))
-
-  // Generate the HTML report string using the `baseReport`.
-  const htmlReport = String(
-    await unified()
-      .use(remarkParse)
-      .use(remarkRehype)
-      .use(rehypeSanitize)
-      .use(rehypeStringify)
-      .use(rehypeSlug)
-      .process(baseReport)
-  )
+  const { markdownReport, htmlReport } = await toMarkdownAndHTML(baseReport)
 
   // Save off all reports. The Markdown and PDF reports use the `markdownReport`.
   await Promise.all([
@@ -205,28 +188,21 @@ export async function generateAndSaveReports(
     fsp.writeFile(`${path}.md`, markdownReport),
     mdToPdf(
       { content: markdownReport },
-      { dest: `${path}.pdf`, 
+      {
+        dest: `${path}.pdf`,
         launch_options: { args: ['--no-sandbox', '--disable-setuid-sandbox'] },
-        css: 'body { word-wrap: break-word; overflow-wrap: break-word; hyphens: auto;}'
-      }
+        css: 'body { word-wrap: break-word; overflow-wrap: break-word; hyphens: auto;}',
+      },
     ),
   ])
 }
 
-export async function pushCompoundChecksToDiscord(
-  governorType: GovernorType,
-  blocks: { current: Block; start: Block | null; end: Block | null },
-  proposal: ProposalEvent,
-  checks: AllCheckResults,
-  compProposalAnalysis: GovernanceProposalAnalysis
-) {
-  const compoundChecks = checks['checkCompoundProposalDetails']
-
+function getFailedChecksAndWarnings(checks: AllCheckResults) {
   const failedChecks = Object.entries(checks)
     .filter(([_, { result }]) => result.errors.length > 0)
     .map(
       ([_, { name, result }]) =>
-        `- ${bold(`${name} ❌ Failed`)} \n${result.errors.map((error) => `${tab}${error}`).join('\n')}`
+        `- ${bold(`${name} ❌ Failed`)} \n${result.errors.map((error) => `${tab}${error}`).join('\n')}`,
     )
 
   const warningChecks = Object.entries(checks)
@@ -235,38 +211,60 @@ export async function pushCompoundChecksToDiscord(
       ([_, { name, result }]) =>
         `- ${bold(`${name} ❗❗ Passed with warnings`)} \n${result.warnings
           .map((warning) => `${tab}${warning}`)
-          .join('\n')}`
+          .join('\n')}`,
     )
+  return { failedChecks, warningChecks }
+}
+
+export async function pushCompoundChecksToDiscord(
+  governorType: GovernorType,
+  blocks: { current: Block; start: Block | null; end: Block | null },
+  proposal: ProposalEvent,
+  checks: AllCheckResults,
+  compProposalAnalysis: GovernanceProposalAnalysis,
+) {
+  const { failedChecks, warningChecks } = getFailedChecksAndWarnings(checks)
 
   await pushChecksSummaryToDiscordAsEmbeds(failedChecks, warningChecks, compProposalAnalysis, proposal.id!.toString())
 }
 
-
 export async function pushCompoundChecksToEmail(
-  proposalNo: string, 
+  proposalNo: string,
+  checks: AllCheckResults,
   compoundChecks: GovernanceProposalAnalysis,
-  folderPath: string
+  folderPath: string,
 ) {
-  
-  const content = `
-  ## Summary of Compound Checks - Proposal#[${proposalNo}](https://compound.finance/governance/proposals/${proposalNo})
-  See the Full Report [here](https://compound-governance-proposals.s3.amazonaws.com/${folderPath}/${proposalNo}.pdf).
-  
-  ${toMessageList(
-    'Mainnet Actions',
-    compoundChecks.mainnetActionAnalysis.map((a) => a.summary)
-  )}
-  \n\n
-  ${compoundChecks.chainedProposalAnalysis
-    .map((cp) =>
-      toMessageList(
-        `Bridge wrapped actions to ${capitalizeWord(cp.chain)}`,
-        cp.actionAnalysis.map((a) => a.summary)
+  const { failedChecks } = getFailedChecksAndWarnings(checks)
+
+  const hasMarketUpdates =
+    compoundChecks.mainnetActionAnalysis.length > 0 || compoundChecks.chainedProposalAnalysis.length > 0
+  let marketUpdates = '**No market updates in this proposal.**'
+  if (hasMarketUpdates) {
+    marketUpdates = `${toMessageList(
+      'Mainnet Actions',
+      compoundChecks.mainnetActionAnalysis.map((a) => a.details),
+    )}
+    \n\n
+    ${compoundChecks.chainedProposalAnalysis
+      .map((cp) =>
+        toMessageList(
+          `Bridge wrapped actions to ${capitalizeWord(cp.chain)}`,
+          cp.actionAnalysis.map((a) => a.details),
+        ),
       )
-    )
-    .join('\n\n')}
+      .join('\n\n')}`
+  }
+
+  const content = `
+  ## Summary of Compound Checks - Proposal #[${proposalNo}](https://compound.finance/governance/proposals/${proposalNo})
+  
+  ${toMessageList('Errors', failedChecks) || '**No errors found simulating this proposal.**'}
+  
+  ${marketUpdates} 
+  
+  See the full report [here](https://compound-governance-proposals.s3.amazonaws.com/${folderPath}/${proposalNo}.pdf) for all updates.
   `
-  await sendEmails(proposalNo, content);
+  await sendEmails(proposalNo, content)
 }
 
 /**
@@ -280,7 +278,7 @@ async function toMarkdownProposalReport(
   blocks: { current: Block; start: Block | null; end: Block | null },
   proposal: ProposalEvent,
   checks: AllCheckResults,
-  compProposalAnalysis: GovernanceProposalAnalysis
+  compProposalAnalysis: GovernanceProposalAnalysis,
 ): Promise<string> {
   const { id, proposer, targets, endBlock, startBlock, description } = proposal
   const proposalID = formatProposalId(governorType, id!)
@@ -290,7 +288,7 @@ async function toMarkdownProposalReport(
 # ${getProposalTitle(description.trim())}
 
 _Updated as of block [${blocks.current.number}](https://etherscan.io/block/${blocks.current.number}) at ${formatTime(
-    blocks.current.timestamp
+    blocks.current.timestamp,
   )}_
 
 - ID: ${proposalID}
@@ -330,45 +328,19 @@ ${Object.values(iconLookupTable)
 
 ${toMessageList(
   'Mainnet Actions',
-  compProposalAnalysis.mainnetActionAnalysis.map((a) => a.details)
+  compProposalAnalysis.mainnetActionAnalysis.map((a) => a.details),
 )}
 \n\n
 ${compProposalAnalysis.chainedProposalAnalysis
   .map((cp) =>
     toMessageList(
       `Bridge wrapped actions to ${capitalizeWord(cp.chain)}`,
-      cp.actionAnalysis.map((a) => a.details)
-    )
+      cp.actionAnalysis.map((a) => a.details),
+    ),
   )
   .join('\n\n')}
 `
 
   // Add table of contents and return report.
   return (await remark().use(remarkToc, { tight: true }).process(report)).toString()
-}
-
-/**
- * Intra-doc links are broken if the header has emojis, so we fix that here.
- * @dev This is a remark plugin, see the remark docs for more info on how it works.
- */
-function remarkFixEmojiLinks() {
-  return (tree: any) => {
-    visit(tree, (node) => {
-      if (node.type === 'link') {
-        // @ts-ignore node.url does exist, the typings just aren't correct
-        const url: string = node.url
-        const isInternalLink = url.startsWith('#')
-        if (isInternalLink && url.endsWith('--passed-with-warnings')) {
-          // @ts-ignore node.url does exist, the typings just aren't correct
-          node.url = node.url.replace('--passed-with-warnings', '-❗❗-passed-with-warnings')
-        } else if (isInternalLink && url.endsWith('--passed')) {
-          // @ts-ignore node.url does exist, the typings just aren't correct
-          node.url = node.url.replace('--passed', '-✅-passed')
-        } else if (isInternalLink && url.endsWith('--failed')) {
-          // @ts-ignore node.url does exist, the typings just aren't correct
-          node.url = node.url.replace('--failed', '-❌-failed')
-        }
-      }
-    })
-  }
 }

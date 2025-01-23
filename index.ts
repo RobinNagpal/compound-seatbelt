@@ -85,7 +85,7 @@ async function main() {
     console.log(
       `Simulating ${numProposals} ${DAO_NAME} proposals: IDs of ${simProposalsIds
         .map((id) => formatProposalId(governorType, id))
-        .join(', ')}`
+        .join(', ')}`,
     )
 
     for (const simProposal of simProposals) {
@@ -137,8 +137,8 @@ async function main() {
             name: ALL_CHECKS[checkId].name,
             result: await ALL_CHECKS[checkId].checkProposal(proposal, sim, proposalData),
           },
-        ])
-      )
+        ]),
+      ),
     )
 
     const compProposalAnalysis =
@@ -161,7 +161,7 @@ async function main() {
       proposal,
       checkResults,
       dir,
-      compProposalAnalysis
+      compProposalAnalysis,
     )
 
     await pushCompoundChecksToDiscord(
@@ -169,15 +169,15 @@ async function main() {
       { start: startBlock, end: endBlock, current: latestBlock },
       proposal,
       checkResults,
-      compProposalAnalysis
+      compProposalAnalysis,
     )
 
     const reportPath = `reports/${config.daoName}/${config.governorAddress}/${proposal.id}`
     await uploadFileToS3(`${s3ReportsFolder}/${proposal.id}.md`, `${reportPath}.md`)
     await uploadFileToS3(`${s3ReportsFolder}/${proposal.id}.pdf`, `${reportPath}.pdf`)
     await uploadFileToS3(`${s3ReportsFolder}/${proposal.id}.html`, `${reportPath}.html`)
-    
-    await pushCompoundChecksToEmail(proposal.id!.toString(), compProposalAnalysis, s3ReportsFolder)
+
+    await pushCompoundChecksToEmail(proposal.id!.toString(), checkResults, compProposalAnalysis, s3ReportsFolder)
   }
   console.log('Done!')
 }

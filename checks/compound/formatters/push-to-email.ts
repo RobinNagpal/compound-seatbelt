@@ -1,12 +1,7 @@
-import { S3Client, GetObjectCommand, GetObjectCommandInput } from '@aws-sdk/client-s3'
-import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
+import { toMarkdownAndHTML } from './../../../presentation/toMarkdownAndHTML'
+import { GetObjectCommand, GetObjectCommandInput, S3Client } from '@aws-sdk/client-s3'
+import { SendEmailCommand, SESClient } from '@aws-sdk/client-ses'
 import { Readable } from 'stream'
-import remarkParse from 'remark-parse'
-import remarkRehype from 'remark-rehype'
-import { unified } from 'unified'
-import rehypeSanitize from 'rehype-sanitize'
-import rehypeSlug from 'rehype-slug'
-import rehypeStringify from 'rehype-stringify'
 
 const s3Client = new S3Client({ region: 'us-east-1' })
 const sesClient = new SESClient({ region: 'us-east-1' })
@@ -35,20 +30,25 @@ export async function sendEmails(proposalNo: string, content: string) {
     Key: emailFileKey,
   }
 
-  try {
-    const file = await s3Client.send(new GetObjectCommand(params))
+  if (process.env.TEST_EMAIL) {
+    console.log('Using test email:', process.env.TEST_EMAIL)
+    emails = [process.env.TEST_EMAIL]
+  } else {
+    try {
+      const file = await s3Client.send(new GetObjectCommand(params))
 
-    if (file.Body instanceof Readable) {
-      const fileContent = await streamToString(file.Body)
-      emails = fileContent
-        .split('\n') // Split by newline
-        .map((email) => email.trim()) // Remove extra whitespace
-        .filter((email) => email) // Filter out empty lines
-      console.log('Fetched email list:', emails)
+      if (file.Body instanceof Readable) {
+        const fileContent = await streamToString(file.Body)
+        emails = fileContent
+          .split('\n') // Split by newline
+          .map((email) => email.trim()) // Remove extra whitespace
+          .filter((email) => email) // Filter out empty lines
+        console.log('Fetched email list:', emails)
+      }
+    } catch (error) {
+      console.error('Error fetching email list:', error)
+      return { statusCode: 500, body: 'Failed to fetch email list.' }
     }
-  } catch (error) {
-    console.error('Error fetching email list:', error)
-    return { statusCode: 500, body: 'Failed to fetch email list.' }
   }
 
   const emailBody = await generateHtmlReport(content)
@@ -61,15 +61,15 @@ export async function sendEmails(proposalNo: string, content: string) {
         Source: senderEmail,
         Destination: { ToAddresses: [email] },
         Message: {
-          Subject: { Data: `Compound Proposal#${proposalNo} - Checks Summary` },
+          Subject: { Data: `Compound Proposal #${proposalNo} - Checks Summary` },
           Body: {
             Html: {
               Data: emailBody,
             },
           },
         },
-      })
-    )
+      }),
+    ),
   )
 
   try {
@@ -83,7 +83,7 @@ export async function sendEmails(proposalNo: string, content: string) {
 }
 
 async function generateHtmlReport(content: string): Promise<string> {
-  const htmlReport = String(await unified().use(remarkParse).use(remarkRehype).use(rehypeSanitize).use(rehypeStringify).use(rehypeSlug).process(content))
+  const { htmlReport } = await toMarkdownAndHTML(content)
 
   const emailBody = `
     <!DOCTYPE html>
@@ -120,11 +120,8 @@ async function generateHtmlReport(content: string): Promise<string> {
         <div class="container">
             ${htmlReport}
             <div class="footer">
-                <p>&copy; 
-                <a href='https://dodao.io/' class="link">
-                  DoDAO
-                </a>
-                . All rights reserved.</p>
+                
+                <p>Report created by <a href='https://dodao.io/' class="link" target='_blank'>DoDAO</a></p>
             </div>
         </div>
     </body>

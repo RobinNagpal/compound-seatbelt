@@ -137,7 +137,7 @@ async function simulateNew(config: SimulationConfigNew): Promise<SimulationResul
   const txHashes = targets.map((target, i) => {
     const [val, sig, calldata] = [values[i], signatures[i], calldatas[i]]
     return keccak256(
-      defaultAbiCoder.encode(['address', 'uint256', 'string', 'bytes', 'uint256'], [target, val, sig, calldata, eta])
+      defaultAbiCoder.encode(['address', 'uint256', 'string', 'bytes', 'uint256'], [target, val, sig, calldata, eta]),
     )
   })
 
@@ -333,7 +333,7 @@ async function simulateProposed(config: SimulationConfigProposed): Promise<Simul
   const txHashes = targets.map((target, i) => {
     const [val, sig, calldata] = [values[i], sigs[i], calldatas[i]]
     return keccak256(
-      defaultAbiCoder.encode(['address', 'uint256', 'string', 'bytes', 'uint256'], [target, val, sig, calldata, eta])
+      defaultAbiCoder.encode(['address', 'uint256', 'string', 'bytes', 'uint256'], [target, val, sig, calldata, eta]),
     )
   })
 
@@ -607,7 +607,7 @@ async function sendSimulation(payload: TenderlyPayload, delay = 1000): Promise<T
     }
     console.warn(err)
     console.warn(
-      `Simulation request failed with the above error, retrying in ~${delay} milliseconds. See request payload below`
+      `Simulation request failed with the above error, retrying in ~${delay} milliseconds. See request payload below`,
     )
     console.log(JSON.stringify(payload))
     await sleep(delay + randomInt(0, 1000))
@@ -617,7 +617,7 @@ async function sendSimulation(payload: TenderlyPayload, delay = 1000): Promise<T
 
 async function simulateBridgedTransactions(
   proposalId: BigNumberish,
-  proposalEvent: ProposalEvent
+  proposalEvent: ProposalEvent,
 ): Promise<BridgedSimulation[]> {
   const bridgedSims: BridgedSimulation[] = []
 
@@ -632,15 +632,15 @@ async function simulateBridgedTransactions(
         .includes(target.toLowerCase())
     ) {
       const destinationChain = l2Bridges[target]
-      
+
       console.log(`Detected bridged transaction targeting ${target} on ${destinationChain}`)
-      
+
       // TODO: Remove this check after Tenderly add support for Scroll
-      if(destinationChain === CometChains.scroll) {
+      if (destinationChain === CometChains.scroll) {
         console.log('Tenderly does not support simulating transactions on Scroll')
         continue
       }
-      
+
       const transactionInfo: ExecuteTransactionInfo = {
         target: proposalEvent.targets[i],
         signature: proposalEvent.signatures[i],
@@ -650,20 +650,19 @@ async function simulateBridgedTransactions(
 
       const networkId = l2ChainIdMap[destinationChain]
 
-
       const l2TransactionsInfo = await getDecodedBytesForChain(
         destinationChain,
         BigNumber.from(proposalId).toNumber(),
-        transactionInfo
+        transactionInfo,
       )
-      
+
       // Create block and timestamp placeholders for the bridged chain
       const blockNumberToUse = (await getLatestBlock(networkId)) - 3 // subtracting a few blocks to ensure tenderly has the block
       const customChainProvider = customProvider(destinationChain)
       const latestBlock = await customChainProvider.getBlock(blockNumberToUse)
       const baseBridgeReceiver = bridgeReceiver(
         ChainAddresses.L2BridgeReceiver[destinationChain],
-        customProvider(destinationChain)
+        customProvider(destinationChain),
       )
 
       const stateOverrides = getBridgeReceiverOverrides(destinationChain)
@@ -672,13 +671,13 @@ async function simulateBridgedTransactions(
       const beforeProposalCount = ((await baseBridgeReceiver.callStatic.proposalCount()) as BigNumber).toNumber()
       // Mantle requires a higher gas limit
       const gas = destinationChain === CometChains.mantle ? 3000000000000 : BLOCK_GAS_LIMIT
-      
+
       // Construct the payload for the bridged chain simulation
       const createProposalPayload: TenderlyPayload = {
         network_id: networkId as TenderlyPayload['network_id'],
         block_number: latestBlock.number,
         from: payloadSender,
-        to: ChainAddresses.L2BridgeReceiver[destinationChain] as string, 
+        to: ChainAddresses.L2BridgeReceiver[destinationChain] as string,
         input: input,
         gas: gas,
         gas_price: '0', // Gas price can be adjusted based on chain requirements
@@ -717,15 +716,15 @@ async function simulateBridgedTransactions(
 
       for (const sim of response.simulation_results) {
         if (!sim.transaction) {
-          result = { chain: destinationChain, success: false };
-          break; // Exit on the failed simulation
+          result = { chain: destinationChain, success: false }
+          break // Exit on the failed simulation
         }
         if (!sim.transaction.status) {
-          result = { chain: destinationChain, sim: response, success: false };
-          break; // Exit on the first failed transaction
+          result = { chain: destinationChain, sim: response, success: false }
+          break // Exit on the first failed transaction
         }
       }
-      bridgedSims.push(result);
+      bridgedSims.push(result)
     }
   }
 
@@ -739,7 +738,7 @@ async function sendBundleSimulation(payload: TenderlyPayload[], delay = 1000): P
     const bundledSim = <TenderlyBundledSimulation>await fetchUrl(TENDERLY_SIM_BUNDLE_URL, fetchOptions)
     // Post-processing to ensure addresses we use are checksummed (since ethers returns checksummed addresses)
     bundledSim.simulation_results.forEach((sim) => {
-      if(sim.transaction && sim.contracts.length > 0) {
+      if (sim.transaction && sim.contracts.length > 0) {
         sim.transaction.addresses = sim.transaction.addresses.map(getAddress)
         sim.contracts.forEach((contract) => (contract.address = getAddress(contract.address)))
       }
@@ -755,7 +754,7 @@ async function sendBundleSimulation(payload: TenderlyPayload[], delay = 1000): P
     }
     console.warn(err)
     console.warn(
-      `Simulation request failed with the above error, retrying in ~${delay} milliseconds. See request payload below`
+      `Simulation request failed with the above error, retrying in ~${delay} milliseconds. See request payload below`,
     )
     console.log(JSON.stringify(payload))
     await sleep(delay + randomInt(0, 1000))
@@ -766,57 +765,57 @@ async function sendBundleSimulation(payload: TenderlyPayload[], delay = 1000): P
 function createBridgeProposal(
   bundledSimulation: TenderlyBundledSimulation,
   chain: CometChains,
-  block: Block
+  block: Block,
 ): ProposalEvent | undefined {
   // Extract logs from the first simulation result as the first payload creates the proposal
-  const proposalCreatedLogs = bundledSimulation.simulation_results[0]?.transaction?.transaction_info?.logs;
+  const proposalCreatedLogs = bundledSimulation.simulation_results[0]?.transaction?.transaction_info?.logs
 
   // If no logs exist, return undefined
   if (!proposalCreatedLogs) {
-    console.error('No logs found in simulation results');
-    return undefined;
+    console.error('No logs found in simulation results')
+    return undefined
   }
 
   // Find the "ProposalCreated" event in the logs
-  const proposalCreatedEvent = proposalCreatedLogs.find((log) => log.name === 'ProposalCreated');
+  const proposalCreatedEvent = proposalCreatedLogs.find((log) => log.name === 'ProposalCreated')
 
   if (!proposalCreatedEvent) {
-    console.error('No ProposalCreated event found in logs');
-    return undefined;
+    console.error('No ProposalCreated event found in logs')
+    return undefined
   }
 
   // Initialize fields for ProposalEvent
-  let targets: string[] = [];
-  let values: BigNumber[] = [];
-  let signatures: string[] = [];
-  let calldatas: string[] = [];
-  let proposalId: BigNumber = BigNumber.from(0);
-  const description = `Proposal to ${capitalizeWord(chain)}`;
+  let targets: string[] = []
+  let values: BigNumber[] = []
+  let signatures: string[] = []
+  let calldatas: string[] = []
+  let proposalId: BigNumber = BigNumber.from(0)
+  const description = `Proposal to ${capitalizeWord(chain)}`
 
   // Process the inputs of the "ProposalCreated" event
   proposalCreatedEvent.inputs.forEach((input) => {
     switch (input.soltype?.name) {
       case 'id':
-        proposalId = BigNumber.from(input.value);
-        break;
+        proposalId = BigNumber.from(input.value)
+        break
       case 'targets':
-        targets = input.value.map((target: string) => target.toString());
-        break;
+        targets = input.value.map((target: string) => target.toString())
+        break
       case 'values':
-        values = input.value.map((value: string) => BigNumber.from(value));
-        break;
+        values = input.value.map((value: string) => BigNumber.from(value))
+        break
       case 'signatures':
-        signatures = input.value.map((signature: string) => signature.toString());
-        break;
+        signatures = input.value.map((signature: string) => signature.toString())
+        break
       case 'calldatas':
-        calldatas = input.value.map((calldata: string) => calldata.toString());
-        break;
+        calldatas = input.value.map((calldata: string) => calldata.toString())
+        break
     }
-  });
+  })
 
   if (!proposalId || targets.length === 0 || values.length === 0 || signatures.length === 0 || calldatas.length === 0) {
-    console.error('Missing fields for ProposalEvent creation');
-    return undefined;
+    console.error('Missing fields for ProposalEvent creation')
+    return undefined
   }
 
   return {
@@ -828,6 +827,6 @@ function createBridgeProposal(
     calldatas,
     description,
     startBlock: BigNumber.from(block.number),
-    endBlock: BigNumber.from(block.number+2),
-  };
+    endBlock: BigNumber.from(block.number + 2),
+  }
 }
