@@ -124,6 +124,11 @@ export function getExplorerBaseUrl(chain: CometChains) {
 export async function getFunctionFragmentAndDecodedCalldata(proposalId: number, chain: CometChains, transactionInfo: ExecuteTransactionInfo): Promise<FunctionFragmentAndDecodedCalldata> {
   const { target, signature, calldata } = transactionInfo
   const contractNameAndAbi = await getContractNameAndAbiFromFile(chain, target)
+  
+  if (contractNameAndAbi.abi.toString() === 'Contract source code not verified') {
+    console.log(`Contract at address ${target} is not verified.`)
+    throw new Error(`Contract at address ${target} is not verified.`)
+  }
 
   if (!contractNameAndAbi.abi) {
     console.log('No ABI found for address:', target)

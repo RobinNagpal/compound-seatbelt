@@ -38,13 +38,13 @@ async function checkTargetRegistry(
   chain: CometChains
 ) {
   const info: string[] = [];
-  const errors: string[] = [];
+  const warnings: string[] = [];
 
   // Fetch the registry data for the specified chain once
   const registryData = getTargetRegistryData(chain);
   if (!registryData) {
     console.error(`Failed to fetch registry data for chain: ${chain}`);
-    return { info, warnings: [], errors: [`Registry data for ${chain} not found`] };
+    return { info, warnings: [`Registry data for ${chain} not found`], errors: [] };
   }
 
   // Check each address against the registry data
@@ -55,11 +55,11 @@ async function checkTargetRegistry(
     if (contractName) {
       info.push(bullet(`${address}: ${contractName}`));
     } else {
-      errors.push(bullet(`${address}: Contract not in the Target Registry`));
+      warnings.push(bullet(`${address}: Contract not in the Target Registry`));
     }
   }
 
-  return { info, warnings: [], errors };
+  return { info, warnings, errors: [] };
 }
 
 /**
