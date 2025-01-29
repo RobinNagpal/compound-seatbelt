@@ -141,7 +141,7 @@ async function getContractNamesList(chain: CometChains, target: string, argument
 
 function formatAISummary(summary: string) {
   console.log("No function formatter found. Generating summary using AI...");
-  return 'No function formatter found. AI Generated: \n' + summary
+  return 'AI Generated: \n' + summary
 }
 
 async function defaultFormatter(chain: CometChains, target: string, functionSignature: string, decodedCalldata: Result) {
