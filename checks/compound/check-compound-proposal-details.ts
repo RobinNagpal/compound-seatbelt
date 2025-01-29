@@ -303,7 +303,7 @@ async function getTransactionMessages(chain: CometChains, proposalId: number, tr
     console.error(`Error in decoding transaction ${JSON.stringify(transactionInfo)}`)
     console.error(error)
     return toActionAnalysis(
-      `Error in decoding transaction: **${transactionInfo.target}.${transactionInfo.signature} called with:** (${transactionInfo.calldata})`
+      `**${transactionInfo.target}.${transactionInfo.signature} called with:** (${transactionInfo.calldata})`
     )
   }
 }
