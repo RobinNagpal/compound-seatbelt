@@ -75,7 +75,9 @@
     "0x7102a09b55a6e39b75ded6073a2e0337255abf02": "Comptroller",
     "0x234b619b4f4e405665f7d94f2ce60c24256032b5": "Comptroller",
     "0x041171993284df560249b57358f931d9eb7b925d": "CErc20Delegate",
-    "0x944dd1c7ce133b75880cee913d513f8c07312393": "CErc20Delegator"
+    "0x944dd1c7ce133b75880cee913d513f8c07312393": "CErc20Delegator",
+    "0xdC035D45d973E3EC169d2276DDab16f1e407384F": "USDS",
+    "0xaeFd31c2e593Dc971f9Cb42cBbD5d4AD7F1970b6": "SkyLinkBridge"
   },
   "optimism": {
     "0x84e93ec6170ed630f5ebd89a1aae72d4f63f2713": "Configurator",

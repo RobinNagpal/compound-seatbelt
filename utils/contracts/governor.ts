@@ -34,7 +34,7 @@ export function getGovernor(governorType: GovernorType, address: string) {
 export async function getProposal(
   governorType: GovernorType,
   address: string,
-  proposalId: BigNumberish
+  proposalId: BigNumberish,
 ): Promise<ProposalStruct> {
   const governor = getGovernor(governorType, address)
   if (governorType === 'bravo') return governor.proposals(proposalId)
@@ -88,7 +88,7 @@ export function getGovSlots(governorType: GovernorType, proposalId: BigNumberish
 export async function getProposalIds(
   governorType: GovernorType,
   address: string,
-  latestBlockNum: number
+  latestBlockNum: number,
 ): Promise<BigNumber[]> {
   if (governorType === 'bravo') {
     // Fetch all proposal IDs
@@ -127,7 +127,7 @@ export async function generateProposalId(
     values: [],
     calldatas: [],
     description: '',
-  }
+  },
 ): Promise<BigNumber> {
   // Fetch proposal count from the contract and increment it by 1.
   if (governorType === 'bravo') {
@@ -140,9 +140,9 @@ export async function generateProposalId(
     keccak256(
       defaultAbiCoder.encode(
         ['address[]', 'uint256[]', 'bytes[]', 'bytes32'],
-        [targets, values, calldatas, keccak256(toUtf8Bytes(description))]
-      )
-    )
+        [targets, values, calldatas, keccak256(toUtf8Bytes(description))],
+      ),
+    ),
   )
 }
 
@@ -154,15 +154,15 @@ export function hashOperationOz(
   value: BigNumberish,
   calldata: string,
   predecessor: string,
-  salt: string
+  salt: string,
 ): BigNumber {
   return BigNumber.from(
     keccak256(
       defaultAbiCoder.encode(
         ['address', 'uint256', 'bytes', 'bytes32', 'bytes32'],
-        [target, value, calldata, predecessor, salt]
-      )
-    )
+        [target, value, calldata, predecessor, salt],
+      ),
+    ),
   )
 }
 
@@ -174,15 +174,15 @@ export function hashOperationBatchOz(
   values: BigNumberish[],
   calldatas: string[],
   predecessor: string,
-  salt: string
+  salt: string,
 ): BigNumber {
   return BigNumber.from(
     keccak256(
       defaultAbiCoder.encode(
         ['address[]', 'uint256[]', 'bytes[]', 'bytes32', 'bytes32'],
-        [targets, values, calldatas, predecessor, salt]
-      )
-    )
+        [targets, values, calldatas, predecessor, salt],
+      ),
+    ),
   )
 }
 
@@ -207,7 +207,7 @@ export async function getImplementation(address: string, blockTag: number) {
 }
 
 export function formatProposalId(governorType: GovernorType, id: BigNumberish) {
-  if (governorType === 'oz') return BigNumber.from(id).toHexString()
+  if (governorType === 'oz') return BigNumber.from(id).toString()
   return BigNumber.from(id).toString()
 }
 

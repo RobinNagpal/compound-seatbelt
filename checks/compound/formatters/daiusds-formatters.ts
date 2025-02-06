@@ -9,25 +9,18 @@ export const daiusdsFormatters: { [functionName: string]: TransactionFormatter }
   'daiToUsds(address,uint256)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {
     const { abi: targetAbi } = await getContractNameAndAbiFromFile(chain, transaction.target)
     const targetInstance = new Contract(transaction.target, targetAbi, customProvider(chain))
-    
+
     const daiToken = await targetInstance.callStatic.dai()
     const { abi: daiAbi } = await getContractNameAndAbiFromFile(chain, daiToken)
     const daiInstance = new Contract(daiToken, daiAbi, customProvider(chain))
-    
-    const { decimals: daiDecimals} = await getContractSymbolAndDecimalsFromFile(daiToken, daiInstance, chain)
 
-    
-    const { abi: contractAbi } = await getContractNameAndAbiFromFile(chain, decodedParams[0])
-    const contractInstance = new Contract(decodedParams[0], contractAbi, customProvider(chain))
-    
-    const baseToken = await contractInstance.callStatic.baseToken()
-    const { abi: baseTokenAbi } = await getContractNameAndAbiFromFile(chain, baseToken)
-    const baseTokenInstance = new Contract(baseToken, baseTokenAbi, customProvider(chain))
-    const { symbol } = await getContractSymbolAndDecimalsFromFile(baseToken, baseTokenInstance, chain)
-    
+    const { decimals: daiDecimals } = await getContractSymbolAndDecimalsFromFile(daiToken, daiInstance, chain)
+
+    console.log(`Chain: ${chain}, daiToken: ${daiToken}, decodedParams[0]: ${decodedParams[0]}`)
+
     const defactoredAmount = defactorFn(decodedParams[1], `${daiDecimals}`)
-    
-    const details = `${getIcon(IconType.Convert)} Convert ${addCommas(defactoredAmount)} DAI to USDS with 1:1 ratio and transfer USDS to ${addressFormatter(decodedParams[0], chain, symbol)} market.`
-    return {summary: details  , details}
+
+    const details = `${getIcon(IconType.Convert)} Convert ${addCommas(defactoredAmount)} DAI to USDS with 1:1 ratio and transfer USDS to ${addressFormatter(decodedParams[0], chain)} market.`
+    return { summary: details, details }
   },
 }

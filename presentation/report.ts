@@ -240,30 +240,33 @@ export async function pushCompoundChecksToEmail(
     compoundChecks.mainnetActionAnalysis.length > 0 || compoundChecks.chainedProposalAnalysis.length > 0
   let marketUpdates = '**No market updates in this proposal.**'
   if (hasMarketUpdates) {
-    marketUpdates = `${toMessageList(
+    marketUpdates = toMessageList(
       'Mainnet Actions',
-      compoundChecks.mainnetActionAnalysis.map((a) => a.details),
-    )}
-    \n\n
-    ${compoundChecks.chainedProposalAnalysis
+      compoundChecks.mainnetActionAnalysis.map((a) => a.summary),
+    )
+
+    marketUpdates += '\n\n'
+
+    marketUpdates += compoundChecks.chainedProposalAnalysis
       .map((cp) =>
         toMessageList(
           `Bridge wrapped actions to ${capitalizeWord(cp.chain)}`,
-          cp.actionAnalysis.map((a) => a.details),
+          cp.actionAnalysis.map((a) => a.summary),
         ),
       )
-      .join('\n\n')}`
+      .join('\n\n')
   }
 
-  const content = `
-  ## Summary of Compound Checks - Proposal #[${proposalNo}](https://compound.finance/governance/proposals/${proposalNo})
+  const content =
+    `## Summary of Compound Checks - Proposal #[${proposalNo}](https://compound.finance/governance/proposals/${proposalNo})
   
-  ${toMessageList('Errors', failedChecks) || '**No errors found simulating this proposal.**'}
+${toMessageList('Errors', failedChecks) || '**No errors found simulating this proposal.**'}
   
-  ${marketUpdates} 
+${marketUpdates} 
   
-  See the full report [here](https://compound-governance-proposals.s3.amazonaws.com/${folderPath}/${proposalNo}.pdf) for all updates.
-  `
+See the full report [here](https://compound-governance-proposals.s3.amazonaws.com/${folderPath}/${proposalNo}.pdf) for all updates.
+`.trim()
+
   await sendEmails(proposalNo, content)
 }
 

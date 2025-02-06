@@ -38,5 +38,13 @@
   "0x2416092f143378750bb29b79ed961ab195cceea5": {
     "symbol": "ezETH",
     "decimals": "18"
+  },
+  "0x820c137fa70c8691f0e44dc420a5e53c168921dc": {
+    "symbol": "USDS",
+    "decimals": "18"
+  },
+  "0x5875eee11cf8398102fdad704c9e96607675467a": {
+    "symbol": "sUSDS",
+    "decimals": "18"
   }
 }

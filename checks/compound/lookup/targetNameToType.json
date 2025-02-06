@@ -9,8 +9,8 @@
   "Fei": "ERC20",
   "Uni": "ERC20",
   "WBTC": "ERC20",
+  "Usds": "ERC20",
   "CEther": "CErc20Delegate",
   "CErc20": "CErc20Delegate",
   "CErc20Delegator": "CErc20Delegate"
-
 }

@@ -1,6 +1,13 @@
 import fs from 'fs'
 import { ProposalData, ProposalEvent, TenderlySimulation } from './../../types'
-import { ActionAnalysis, ChainedProposalAnalysis, GovernanceProposalAnalysis, ProposalActionResponse, TargetLookupData, TargetRegistryData } from './compound-types'
+import {
+  ActionAnalysis,
+  ChainedProposalAnalysis,
+  GovernanceProposalAnalysis,
+  ProposalActionResponse,
+  TargetLookupData,
+  TargetRegistryData,
+} from './compound-types'
 import { defactorFn } from './../../utils/roundingUtils'
 import { getContractNameAndAbiFromFile, getFunctionFragmentAndDecodedCalldata, getFunctionSignature } from './abi-utils'
 import {
@@ -121,31 +128,23 @@ function getFormatterForContract(contractNameAndAbi: ContractNameAndAbi): Contra
   return contractFormatters
 }
 
-function storeTargetRegistryData(
-  chain: string,
-  address: string,
-  contractName: string
-) {
+function storeTargetRegistryData(chain: string, address: string, contractName: string) {
   const targetRegistryFilePath = `./checks/compound/lookup/targetRegistry.json`
-  
-  let registryData: TargetRegistryData = {};
+
+  let registryData: TargetRegistryData = {}
 
   if (fs.existsSync(targetRegistryFilePath)) {
-    const fileContent = fs.readFileSync(targetRegistryFilePath, 'utf-8');
-    registryData = JSON.parse(fileContent || '{}');
+    const fileContent = fs.readFileSync(targetRegistryFilePath, 'utf-8')
+    registryData = JSON.parse(fileContent || '{}')
   }
 
   if (!registryData[chain]) {
-    registryData[chain] = {};
+    registryData[chain] = {}
   }
 
-  registryData[chain][address] = contractName;
+  registryData[chain][address] = contractName
 
-  fs.writeFileSync(
-    targetRegistryFilePath,
-    JSON.stringify(registryData, null, 2),
-    'utf-8'
-  );
+  fs.writeFileSync(targetRegistryFilePath, JSON.stringify(registryData, null, 2), 'utf-8')
 }
 
 function storeTargetLookupData(
@@ -155,18 +154,18 @@ function storeTargetLookupData(
   transactionFormatter: string,
   proposalNumber: string,
   decodedCalldata: string[],
-  contractName: string
+  contractName: string,
 ) {
   const targetLookupFilePath = `./checks/compound/lookup/target/${chain}TargetLookup.json`
 
-  let lookupData: TargetLookupData = {};
+  let lookupData: TargetLookupData = {}
 
   if (fs.existsSync(targetLookupFilePath)) {
-    const fileContent = fs.readFileSync(targetLookupFilePath, 'utf-8');
-    lookupData = JSON.parse(fileContent || '{}');
+    const fileContent = fs.readFileSync(targetLookupFilePath, 'utf-8')
+    lookupData = JSON.parse(fileContent || '{}')
   } else {
-    console.log(`File for chain ${chain} does not exist. Creating a new one.`);
-    fs.writeFileSync(targetLookupFilePath, JSON.stringify(lookupData, null, 2), 'utf-8');
+    console.log(`File for chain ${chain} does not exist. Creating a new one.`)
+    fs.writeFileSync(targetLookupFilePath, JSON.stringify(lookupData, null, 2), 'utf-8')
   }
 
   if (!lookupData[addr]) {
@@ -174,7 +173,7 @@ function storeTargetLookupData(
       contractName,
       functions: {},
       proposals: [],
-    };
+    }
   }
 
   if (!lookupData[addr].functions[functionName]) {
@@ -182,51 +181,45 @@ function storeTargetLookupData(
       description: functionName,
       transactionFormatter: transactionFormatter,
       proposals: {},
-    };
+    }
   }
 
-  const functionProposals = lookupData[addr].functions[functionName].proposals;
-  
+  const functionProposals = lookupData[addr].functions[functionName].proposals
+
   if (!functionProposals[proposalNumber]) {
-    functionProposals[proposalNumber] = [];
+    functionProposals[proposalNumber] = []
   }
 
   // Compare group by group
-  const existingGroups: string[][] = [];
-  const proposalCalldata = functionProposals[proposalNumber];
+  const existingGroups: string[][] = []
+  const proposalCalldata = functionProposals[proposalNumber]
 
   // Group the existing calldata into chunks of the same size as the new calldata
   for (let i = 0; i < proposalCalldata.length; i += decodedCalldata.length) {
-    const group = proposalCalldata.slice(i, i + decodedCalldata.length);
-    existingGroups.push(group);
+    const group = proposalCalldata.slice(i, i + decodedCalldata.length)
+    existingGroups.push(group)
   }
 
   // Check if the new group already exists
-  const groupExists = existingGroups.some(
-    (group) => JSON.stringify(group) === JSON.stringify(decodedCalldata)
-  );
+  const groupExists = existingGroups.some((group) => JSON.stringify(group) === JSON.stringify(decodedCalldata))
 
   // Only push the new group if it doesn't already exist
   if (!groupExists) {
-    proposalCalldata.push(...decodedCalldata);
-  }
-  
-  if (!lookupData[addr].proposals.includes(Number(proposalNumber))) {
-    lookupData[addr].proposals.push(Number(proposalNumber));
+    proposalCalldata.push(...decodedCalldata)
   }
 
-  fs.writeFileSync(
-    targetLookupFilePath,
-    JSON.stringify(lookupData, null, 2),
-    'utf-8'
-  );
+  if (!lookupData[addr].proposals.includes(Number(proposalNumber))) {
+    lookupData[addr].proposals.push(Number(proposalNumber))
+  }
+
+  fs.writeFileSync(targetLookupFilePath, JSON.stringify(lookupData, null, 2), 'utf-8')
 }
 
 async function getTransactionMessages(chain: CometChains, proposalId: number, transactionInfo: ExecuteTransactionInfo): Promise<ActionAnalysis> {
   console.log('Transaction info: ', transactionInfo)
   const { target, value, signature } = transactionInfo
   const contractNameAndAbi = await getContractNameAndAbiFromFile(chain, target)
-  
+
   if (value?.toString() && value?.toString() !== '0') {
     const platform = getPlatform(chain)
     if (!signature) {
@@ -237,7 +230,7 @@ async function getTransactionMessages(chain: CometChains, proposalId: number, tr
         return toActionAnalysis(`Wrap **${defactorFn(value.toString())} ETH** to **[WETH](https://${platform}/address/${target})**.`)
       }
       return toActionAnalysis(
-        `${target}.${signature.split('(')[0]}(${decodedCalldata.join(',')}) and Transfer ${defactorFn(value.toString())} ETH to ${target}`
+        `${target}.${signature.split('(')[0]}(${decodedCalldata.join(',')}) and Transfer ${defactorFn(value.toString())} ETH to ${target}`,
       )
     }
   }
@@ -255,7 +248,7 @@ async function getTransactionMessages(chain: CometChains, proposalId: number, tr
       contractFormatters = getFormatterForContract(contractNameAndAbi)
     } catch (err) {
       // If no contract formatters are found at all, fallback to AI summary
-      console.error(`No contract formatters found for ${contractNameAndAbi.contractName}`, err)
+      console.error(`No contract formatters found for ${chain}:${target}:${contractNameAndAbi.contractName}`, err)
       const aiSummary = await generateAISummary(chain, target, functionSignature, decodedCalldata)
       return toActionAnalysis(aiSummary)
     }
@@ -266,7 +259,7 @@ async function getTransactionMessages(chain: CometChains, proposalId: number, tr
 
     if (!functions || !functionMapping || !transactionFormatter) {
       console.error(
-        `No functions found for ContractName - ${contractNameAndAbi.contractName}. FunctionSignature - ${functionSignature}. TransactionFormatter - ${transactionFormatter}. FunctionMapping - ${functionMapping}`
+        `No functions found for ContractName - ${contractNameAndAbi.contractName}. FunctionSignature - ${functionSignature}. TransactionFormatter - ${transactionFormatter}. FunctionMapping - ${functionMapping}`,
       )
       const aiSummary = await generateAISummary(chain, target, functionSignature, decodedCalldata)
       return toActionAnalysis(aiSummary)
@@ -277,10 +270,12 @@ async function getTransactionMessages(chain: CometChains, proposalId: number, tr
       functionSignature,
       transactionFormatter,
       proposalId.toString(),
-      decodedCalldata.map((data: any) => data.toString()),contractNameAndAbi.contractName)
+      decodedCalldata.map((data: any) => data.toString()),
+      contractNameAndAbi.contractName,
+    )
 
     const [contractName, formatterName] = transactionFormatter.split('.')
-    console.log(`GetFormatter: ContractName - ${contractName} and FormatterName - ${formatterName}`)
+    console.log(`GetFormatter: Contract - ${chain}:${target.toLowerCase()}  ContractName - ${contractName} and FormatterName - ${formatterName}`)
     const formattersLookupElement = formattersLookup[contractName]?.[formatterName]
 
     if (!formattersLookupElement) {
@@ -290,7 +285,7 @@ async function getTransactionMessages(chain: CometChains, proposalId: number, tr
       const formattedResponse: string | ActionAnalysis = await formattersLookupElement(
         chain,
         transactionInfo,
-        decodedCalldata.map((data: any) => data.toString())
+        decodedCalldata.map((data: any) => data.toString()),
       )
 
       if (typeof formattedResponse === 'string') {
@@ -302,9 +297,7 @@ async function getTransactionMessages(chain: CometChains, proposalId: number, tr
   } catch (error) {
     console.error(`Error in decoding transaction ${JSON.stringify(transactionInfo)}`)
     console.error(error)
-    return toActionAnalysis(
-      `**${transactionInfo.target}.${transactionInfo.signature} called with:** (${transactionInfo.calldata})`
-    )
+    return toActionAnalysis(`**${transactionInfo.target}.${transactionInfo.signature} called with:** (${transactionInfo.calldata})`)
   }
 }
 
