@@ -28,6 +28,8 @@ import { getAddress } from '@ethersproject/address'
  * @notice Simulate governance proposals and run proposal checks against them
  */
 async function main() {
+  console.log('Starting main function with GOVERNOR_ADDRESS: ', GOVERNOR_ADDRESS)
+
   const s3ReportsFolder = process.env.AWS_BUCKET_BASE_PATH || 'all-proposals'
   // --- Run simulations ---
   // Prepare array to store all simulation outputs
