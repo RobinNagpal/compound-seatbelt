@@ -17,7 +17,7 @@ jobs:
       matrix:
         include:
           - DAO_NAME: 'Compound'
-            GOVERNOR_ADDRESS: '0xc0Da02939E1441F497fd74F78cE7Decb17B66529'
+            GOVERNOR_ADDRESS: '0x309a862bbC1A00e45506cB8A802D1ff10004c8C0'
 
     name: Check all live proposals
     runs-on: ubuntu-latest

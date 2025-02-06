@@ -1457,6 +1457,9 @@
           ],
           "394": [
             "100000000000000000000000"
+          ],
+          "395": [
+            "100000000000000000000000"
           ]
         }
       },
@@ -1487,7 +1490,8 @@
       348,
       350,
       353,
-      394
+      394,
+      395
     ]
   },
   "0x6b175474e89094c44da98b954eedeac495271d0f": {
@@ -1520,6 +1524,10 @@
           "394": [
             "0x3225737a9Bbb6473CB4a45b7244ACa2BeFdB276A",
             "100000000000000000000000"
+          ],
+          "395": [
+            "0x3225737a9Bbb6473CB4a45b7244ACa2BeFdB276A",
+            "100000000000000000000000"
           ]
         }
       },
@@ -1541,7 +1549,8 @@
       348,
       350,
       353,
-      394
+      394,
+      395
     ]
   },
   "0x0634ca1d878a050eb525ed08852cc3bad7f5a1dc": {
@@ -4503,6 +4512,11 @@
             "0x7dcf87198fd673716e5a32b206d9379c4fcbad8875073f52bfd0656759bf89ed",
             "v3-official-markets",
             "{\"1\":[{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0xc3d688B66703497DAA19211EEdff47f25384cdc3\"},{\"baseSymbol\":\"WETH\",\"cometAddress\":\"0xA17581A9E3356d9A858b789D68B4d866e593aE94\"},{\"baseSymbol\":\"USDT\",\"cometAddress\":\"0x3Afdc9BCA9213A35503b077a6072F3D0d5AB0840\"},{\"baseSymbol\":\"wstETH\",\"cometAddress\":\"0x3D0bb1ccaB520A66e607822fC55BC921738fAFE3\"},{\"baseSymbol\":\"USDS\",\"cometAddress\":\"0x5D409e56D886231aDAf00c8775665AD0f9897b56\"}],\"10\":[{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0x2e44e174f7D53F0212823acC11C01A11d58c5bCB\"},{\"baseSymbol\":\"USDT\",\"cometAddress\":\"0x995E394b8B2437aC8Ce61Ee0bC610D617962B214\"},{\"baseSymbol\":\"WETH\",\"cometAddress\":\"0xE36A30D249f7761327fd973001A32010b521b6Fd\"}],\"137\":[{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0xF25212E676D1F7F89Cd72fFEe66158f541246445\"},{\"baseSymbol\":\"USDT\",\"cometAddress\":\"0xaeB318360f27748Acb200CE616E389A6C9409a07\"}],\"5000\":[{\"baseSymbol\":\"USDe\",\"cometAddress\":\"0x606174f62cd968d8e684c645080fa694c1D7786E\"}],\"8453\":[{\"baseSymbol\":\"USDbC\",\"cometAddress\":\"0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf\"},{\"baseSymbol\":\"WETH\",\"cometAddress\":\"0x46e6b214b524310239732D51387075E0e70970bf\"},{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0xb125E6687d4313864e53df431d5425969c15Eb2F\"},{\"baseSymbol\":\"AERO\",\"cometAddress\":\"0x784efeB622244d2348d4F2522f8860B96fbEcE89\"},{\"baseSymbol\":\"USDS\",\"cometAddress\":\"0x1Ad4CEBa9f8135A557bBe317DB62Aa125C330F26\"}],\"42161\":[{\"baseSymbol\":\"USDC.e\",\"cometAddress\":\"0xA5EDBDD9646f8dFF606d7448e414884C7d905dCA\"},{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf\"},{\"baseSymbol\":\"WETH\",\"cometAddress\":\"0x6f7D514bbD4aFf3BcD1140B7344b32f063dEe486\"},{\"baseSymbol\":\"USDT\",\"cometAddress\":\"0xd98Be00b5D27fc98112BdE293e487f8D4cA57d07\"}],\"534352\":[{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0xB2f97c1Bd3bf02f5e74d13f02E3e26F93D77CE44\"}]}"
+          ],
+          "395": [
+            "0x7dcf87198fd673716e5a32b206d9379c4fcbad8875073f52bfd0656759bf89ed",
+            "v3-official-markets",
+            "{\"1\":[{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0xc3d688B66703497DAA19211EEdff47f25384cdc3\"},{\"baseSymbol\":\"WETH\",\"cometAddress\":\"0xA17581A9E3356d9A858b789D68B4d866e593aE94\"},{\"baseSymbol\":\"USDT\",\"cometAddress\":\"0x3Afdc9BCA9213A35503b077a6072F3D0d5AB0840\"},{\"baseSymbol\":\"wstETH\",\"cometAddress\":\"0x3D0bb1ccaB520A66e607822fC55BC921738fAFE3\"},{\"baseSymbol\":\"USDS\",\"cometAddress\":\"0x5D409e56D886231aDAf00c8775665AD0f9897b56\"}],\"10\":[{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0x2e44e174f7D53F0212823acC11C01A11d58c5bCB\"},{\"baseSymbol\":\"USDT\",\"cometAddress\":\"0x995E394b8B2437aC8Ce61Ee0bC610D617962B214\"},{\"baseSymbol\":\"WETH\",\"cometAddress\":\"0xE36A30D249f7761327fd973001A32010b521b6Fd\"}],\"137\":[{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0xF25212E676D1F7F89Cd72fFEe66158f541246445\"},{\"baseSymbol\":\"USDT\",\"cometAddress\":\"0xaeB318360f27748Acb200CE616E389A6C9409a07\"}],\"5000\":[{\"baseSymbol\":\"USDe\",\"cometAddress\":\"0x606174f62cd968d8e684c645080fa694c1D7786E\"}],\"8453\":[{\"baseSymbol\":\"USDbC\",\"cometAddress\":\"0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf\"},{\"baseSymbol\":\"WETH\",\"cometAddress\":\"0x46e6b214b524310239732D51387075E0e70970bf\"},{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0xb125E6687d4313864e53df431d5425969c15Eb2F\"},{\"baseSymbol\":\"AERO\",\"cometAddress\":\"0x784efeB622244d2348d4F2522f8860B96fbEcE89\"},{\"baseSymbol\":\"USDS\",\"cometAddress\":\"0x2c776041CCFe903071AF44aa147368a9c8EEA518\"}],\"42161\":[{\"baseSymbol\":\"USDC.e\",\"cometAddress\":\"0xA5EDBDD9646f8dFF606d7448e414884C7d905dCA\"},{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf\"},{\"baseSymbol\":\"WETH\",\"cometAddress\":\"0x6f7D514bbD4aFf3BcD1140B7344b32f063dEe486\"},{\"baseSymbol\":\"USDT\",\"cometAddress\":\"0xd98Be00b5D27fc98112BdE293e487f8D4cA57d07\"}],\"534352\":[{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0xB2f97c1Bd3bf02f5e74d13f02E3e26F93D77CE44\"}]}"
           ]
         }
       }
@@ -4529,7 +4543,8 @@
       345,
       350,
       357,
-      394
+      394,
+      395
     ]
   },
   "0xa0c68c638235ee32657e8f720a23cec1bfc77c77": {
@@ -5103,13 +5118,18 @@
           "394": [
             "0x6d903f6003cca6255D85CcA4D3B5E5146dC33925",
             "100000000000000000000000"
+          ],
+          "395": [
+            "0x6d903f6003cca6255D85CcA4D3B5E5146dC33925",
+            "100000000000000000000000"
           ]
         }
       }
     },
     "proposals": [
       350,
-      394
+      394,
+      395
     ]
   },
   "0x95fc37a27a2f68e3a647cdc081f0a89bb47c3012": {
@@ -5168,12 +5188,17 @@
           "394": [
             "0xA5874756416Fa632257eEA380CAbd2E87cED352A",
             "100000000000000000000000"
+          ],
+          "395": [
+            "0xA5874756416Fa632257eEA380CAbd2E87cED352A",
+            "100000000000000000000000"
           ]
         }
       }
     },
     "proposals": [
-      394
+      394,
+      395
     ]
   }
 }
