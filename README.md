@@ -85,3 +85,5 @@ You can run specific checks by setting the `CHECKS_ENABLED` environment variable
 
 ### Register for Email Alerts
 https://jidiu32obg.execute-api.us-east-1.amazonaws.com/email-subscription
+
+
