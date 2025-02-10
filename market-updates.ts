@@ -9,9 +9,9 @@ import { analyzeProposal } from './checks/compound/check-compound-proposal-detai
 import { listFilesInFolder, uploadFileToS3 } from './checks/compound/s3-utils'
 import { BigNumber, Contract } from 'ethers'
 import { DAO_NAME, GOVERNOR_ADDRESS, SIM_NAME } from './utils/constants'
-import { provider } from './utils/clients/ethers'
+import { customProvider } from './utils/clients/ethers'
 import { simulate } from './utils/clients/tenderly'
-import { AllCheckResults, GovernorType, SimulationConfig, SimulationConfigBase, SimulationData } from './types'
+import { AllCheckResults, CometChains, GovernorType, SimulationConfig, SimulationConfigBase, SimulationData } from './types'
 import ALL_CHECKS from './checks'
 import { generateAndSaveReports, pushCompoundChecksToDiscord, pushCompoundChecksToEmail } from './presentation/report'
 import { PROPOSAL_STATES } from './utils/contracts/governor-bravo'
@@ -23,6 +23,7 @@ import {
   inferGovernorType,
 } from './utils/contracts/governor'
 import { getAddress } from '@ethersproject/address'
+import { MarketUpdateProposerMap } from './checks/compound/l2-utils'
 
 /**
  * @notice Simulate governance proposals and run proposal checks against them
@@ -30,31 +31,25 @@ import { getAddress } from '@ethersproject/address'
 async function main() {
   console.log('Starting main function with GOVERNOR_ADDRESS: ', GOVERNOR_ADDRESS)
 
-  const s3ReportsFolder = process.env.AWS_BUCKET_BASE_PATH || 'all-proposals'
   // --- Run simulations ---
   // Prepare array to store all simulation outputs
   const simOutputs: SimulationData[] = []
-
+  
   let governor: Contract
   let governorType: GovernorType
-
-  // Determine if we are running a specific simulation or all on-chain proposals for a specified governor.
-  if (SIM_NAME) {
-    // If a SIM_NAME is provided, we run that simulation
-    const configPath = `./sims/${SIM_NAME}.sim.ts`
-    const config: SimulationConfig = await import(configPath).then((d) => d.config) // dynamic path `import` statements not allowed
-
-    const { sim, proposal, latestBlock } = await simulate(config, provider)
-    simOutputs.push({ sim, proposal, latestBlock, config })
-
-    governorType = await inferGovernorType(config.governorAddress, provider)
-    governor = getGovernor(governorType, config.governorAddress, provider)
-  } else {
-    // If no SIM_NAME is provided, we get proposals to simulate from the chain
-    if (!GOVERNOR_ADDRESS) throw new Error('Must provider a GOVERNOR_ADDRESS')
-    if (!DAO_NAME) throw new Error('Must provider a DAO_NAME')
-    const latestBlock = await provider.getBlock('latest')
-
+  
+  // If no SIM_NAME is provided, we get proposals to simulate from the chain
+  // if (!GOVERNOR_ADDRESS) throw new Error('Must provider a GOVERNOR_ADDRESS')
+  if (!DAO_NAME) throw new Error('Must provider a DAO_NAME')
+    
+    for (const [chain, GOVERNOR_ADDRESS] of Object.entries(MarketUpdateProposerMap).filter(([_, address]) => address !== '')) {
+        const s3ReportsFolder = `${process.env.AWS_BUCKET_BASE_PATH}/${chain}` || `all-proposals/${chain}`
+        const provider = customProvider(chain as CometChains);
+        
+        const latestBlock = await provider.getBlock('latest');
+        console.log(`Chain: ${chain}, Address: ${GOVERNOR_ADDRESS}, Latest Block: ${latestBlock.number}`);
+    
+      
     // Fetch all proposal IDs
     governorType = await inferGovernorType(GOVERNOR_ADDRESS, provider)
     const allProposalIds = await getProposalIds(governorType, GOVERNOR_ADDRESS, latestBlock.number, provider)
@@ -113,7 +108,7 @@ async function main() {
       simOutputs.push({ sim, proposal, latestBlock, config })
       console.log(`done`)
     }
-  }
+  
 
   // --- Run proposal checks and save output ---
   // Generate the proposal data and dependencies needed by checks
@@ -182,6 +177,7 @@ async function main() {
     await pushCompoundChecksToEmail(proposal.id!.toString(), checkResults, compProposalAnalysis, s3ReportsFolder)
   }
   console.log('Done!')
+}
 }
 
 main()

@@ -31,7 +31,7 @@ export const checkSlither: ProposalCheck = {
     // at the simulation block number, since the implementation may have changed since.
     const addressesToSkip = new Set([deps.timelock.address, deps.governor.address])
     try {
-      const implementation = await getImplementation(deps.governor.address, sim.transaction.block_number)
+      const implementation = await getImplementation(deps.governor.address, sim.transaction.block_number, deps.provider)
       if (implementation) addressesToSkip.add(implementation)
     } catch (e) {
       const msg = `Could not read address of governor implementation at block \`${sim.transaction.block_number}\`. Make sure the \`RPC_URL\` is an archive node. As a result the Slither check will show warnings on the governor's implementation contract.`

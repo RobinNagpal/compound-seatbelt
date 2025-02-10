@@ -1,7 +1,7 @@
 import { BigNumber, BigNumberish, Contract } from 'ethers'
 import { hexZeroPad } from '@ethersproject/bytes'
-import { provider } from '../clients/ethers'
 import { getSolidityStorageSlotUint } from '../utils'
+import { JsonRpcProvider } from '@ethersproject/providers'
 
 const GOVERNOR_OZ_ABI = [
   'event ProposalCanceled(uint256 proposalId)',
@@ -44,7 +44,7 @@ const GOVERNOR_OZ_ABI = [
   'function votingPeriod() view returns (uint256)',
 ]
 
-export const governorOz = (address: string) => new Contract(address, GOVERNOR_OZ_ABI, provider)
+export const governorOz = (address: string, provider: JsonRpcProvider) => new Contract(address, GOVERNOR_OZ_ABI, provider)
 
 // All possible states a proposal might be in.
 // These are defined by the `ProposalState` enum so when we fetch the state of a proposal ID

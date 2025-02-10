@@ -3,14 +3,14 @@ import { getAddress } from '@ethersproject/address'
 import { toUtf8Bytes } from '@ethersproject/strings'
 import { keccak256 } from '@ethersproject/keccak256'
 import { defaultAbiCoder } from '@ethersproject/abi'
-import { provider } from '../clients/ethers'
 import { governorBravo, getBravoSlots } from './governor-bravo'
 import { governorOz, getOzSlots } from './governor-oz'
 import { timelock } from './timelock'
 import { GovernorType, ProposalEvent, ProposalStruct } from '../../types'
+import { JsonRpcProvider } from '@ethersproject/providers'
 
 // --- Exported methods ---
-export async function inferGovernorType(address: string): Promise<GovernorType> {
+export async function inferGovernorType(address: string, provider: JsonRpcProvider): Promise<GovernorType> {
   const abi = ['function initialProposalId() external view returns (uint256)']
   const governor = new Contract(address, abi, provider)
 
@@ -25,9 +25,9 @@ export async function inferGovernorType(address: string): Promise<GovernorType> 
   return 'oz'
 }
 
-export function getGovernor(governorType: GovernorType, address: string) {
-  if (governorType === 'bravo') return governorBravo(address)
-  if (governorType === 'oz') return governorOz(address)
+export function getGovernor(governorType: GovernorType, address: string, provider: JsonRpcProvider ) {
+  if (governorType === 'bravo') return governorBravo(address, provider)
+  if (governorType === 'oz') return governorOz(address, provider)
   throw new Error(`Unknown governor type: ${governorType}`)
 }
 
@@ -35,8 +35,9 @@ export async function getProposal(
   governorType: GovernorType,
   address: string,
   proposalId: BigNumberish,
+  provider: JsonRpcProvider
 ): Promise<ProposalStruct> {
-  const governor = getGovernor(governorType, address)
+  const governor = getGovernor(governorType, address, provider)
   if (governorType === 'bravo') return governor.proposals(proposalId)
 
   // Piece together the struct for OZ Governors.
@@ -61,23 +62,23 @@ export async function getProposal(
   }
 }
 
-export async function getTimelock(governorType: GovernorType, address: string) {
-  const governor = getGovernor(governorType, address)
-  if (governorType === 'bravo') return timelock(await governor.admin())
-  return timelock(await governor.timelock())
+export async function getTimelock(governorType: GovernorType, address: string, provider: JsonRpcProvider ) {
+  const governor = getGovernor(governorType, address, provider)
+  if (governorType === 'bravo') return timelock(await governor.admin(), provider)
+  return timelock(await governor.timelock(), provider)
 }
 
-export async function getVotingToken(governorType: GovernorType, address: string, proposalId: BigNumberish) {
-  const governor = getGovernor(governorType, address)
+export async function getVotingToken(governorType: GovernorType, address: string, proposalId: BigNumberish, provider: JsonRpcProvider) {
+  const governor = getGovernor(governorType, address, provider)
   if (governorType === 'bravo') {
     // Get voting token and total supply
     const govSlots = getBravoSlots(proposalId)
     const rawVotingToken = await provider.getStorageAt(governor.address, govSlots.votingToken)
     const votingToken = getAddress(`0x${rawVotingToken.slice(26)}`)
-    return erc20(votingToken)
+    return erc20(votingToken, provider)
   }
 
-  return erc20(await governor.token())
+  return erc20(await governor.token(), provider)
 }
 
 export function getGovSlots(governorType: GovernorType, proposalId: BigNumberish) {
@@ -89,10 +90,11 @@ export async function getProposalIds(
   governorType: GovernorType,
   address: string,
   latestBlockNum: number,
+  provider: JsonRpcProvider 
 ): Promise<BigNumber[]> {
   if (governorType === 'bravo') {
     // Fetch all proposal IDs
-    const governor = governorBravo(address)
+    const governor = governorBravo(address, provider)
     const proposalCreatedLogs = await governor.queryFilter(governor.filters.ProposalCreated(), 0, latestBlockNum)
     const allProposalIds = proposalCreatedLogs.map((logs) => (logs.args as unknown as ProposalEvent).id!)
 
@@ -101,7 +103,7 @@ export async function getProposalIds(
     return allProposalIds.filter((id) => id.gt(initialProposalId))
   }
 
-  const governor = governorOz(address)
+  const governor = governorOz(address, provider)
   const proposalCreatedLogs = await governor.queryFilter(governor.filters.ProposalCreated(), 0, latestBlockNum)
   return proposalCreatedLogs.map((logs) => (logs.args as unknown as ProposalEvent).proposalId!)
 }
@@ -128,10 +130,11 @@ export async function generateProposalId(
     calldatas: [],
     description: '',
   },
+  provider: JsonRpcProvider,
 ): Promise<BigNumber> {
   // Fetch proposal count from the contract and increment it by 1.
   if (governorType === 'bravo') {
-    const count: BigNumber = await governorBravo(address).proposalCount()
+    const count: BigNumber = await governorBravo(address, provider).proposalCount()
     return count.add(1)
   }
 
@@ -186,7 +189,7 @@ export function hashOperationBatchOz(
   )
 }
 
-export async function getImplementation(address: string, blockTag: number) {
+export async function getImplementation(address: string, blockTag: number, provider: JsonRpcProvider) {
   // First try calling an `implementation` method.
   const abi = ['function implementation() external view returns (address)']
   const governor = new Contract(address, abi, provider)
@@ -216,7 +219,7 @@ export function formatProposalId(governorType: GovernorType, id: BigNumberish) {
  * @notice Returns an ERC20 instance of the specified token
  * @param token Token address
  */
-function erc20(token: string) {
+function erc20(token: string, provider: JsonRpcProvider) {
   // This ABI only contains view methods and events
   const ERC20_ABI = [
     'function name() external view returns (string)',

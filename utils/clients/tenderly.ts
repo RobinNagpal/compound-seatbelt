@@ -52,9 +52,10 @@ import {
   l2ChainSenderMap,
 } from './../../checks/compound/l2-utils'
 import { bridgeReceiver } from './../contracts/baseBridgeReceiver'
-import { provider } from './ethers'
 import { capitalizeWord } from './../../checks/compound/formatters/helper'
 import { Block } from '@ethersproject/abstract-provider'
+import { JsonRpcProvider } from '@ethersproject/providers'
+
 // @ts-ignore
 const fetchUrl = mftch.default
 
@@ -67,17 +68,17 @@ const DEFAULT_FROM = '0xD73a92Be73EfbFcF3854433A5FcbAbF9c1316073' // arbitrary E
  * @notice Simulates a proposal based on the provided configuration
  * @param config Configuration object
  */
-export async function simulate(config: SimulationConfig) {
-  if (config.type === 'executed') return await simulateExecuted(config)
-  else if (config.type === 'proposed') return await simulateProposed(config)
-  else return await simulateNew(config)
+export async function simulate(config: SimulationConfig, provider: JsonRpcProvider) {
+  if (config.type === 'executed') return await simulateExecuted(config, provider)
+  else if (config.type === 'proposed') return await simulateProposed(config, provider)
+  else return await simulateNew(config, provider)
 }
 
 /**
  * @notice Simulates execution of an on-chain proposal that has not yet been executed
  * @param config Configuration object
  */
-async function simulateNew(config: SimulationConfigNew): Promise<SimulationResult> {
+async function simulateNew(config: SimulationConfigNew, provider: JsonRpcProvider): Promise<SimulationResult> {
   // --- Validate config ---
   const { governorAddress, governorType, targets, values, signatures, calldatas, description } = config
   if (targets.length !== values.length) throw new Error('targets and values must be the same length')
@@ -88,11 +89,11 @@ async function simulateNew(config: SimulationConfigNew): Promise<SimulationResul
   const network = await provider.getNetwork()
   const blockNumberToUse = (await getLatestBlock(network.chainId)) - 3 // subtracting a few blocks to ensure tenderly has the block
   const latestBlock = await provider.getBlock(blockNumberToUse)
-  const governor = getGovernor(governorType, governorAddress)
+  const governor = getGovernor(governorType, governorAddress, provider)
 
   const [proposalId, timelock] = await Promise.all([
-    generateProposalId(governorType, governorAddress, { targets, values, calldatas, description }),
-    getTimelock(governorType, governorAddress),
+    generateProposalId(governorType, governorAddress, { targets, values, calldatas, description }, provider),
+    getTimelock(governorType, governorAddress, provider),
   ])
 
   const startBlock = BigNumber.from(latestBlock.number - 100) // arbitrarily subtract 100
@@ -111,7 +112,7 @@ async function simulateNew(config: SimulationConfigNew): Promise<SimulationResul
 
   // --- Prepare simulation configuration ---
   // Get voting token and total supply
-  const votingToken = await getVotingToken(governorType, governorAddress, proposalId)
+  const votingToken = await getVotingToken(governorType, governorAddress, proposalId, provider)
   const votingTokenSupply = <BigNumber>await votingToken.totalSupply() // used to manipulate vote count
 
   // Set `from` arbitrarily.
@@ -263,7 +264,7 @@ async function simulateNew(config: SimulationConfigNew): Promise<SimulationResul
  * @notice Simulates execution of an on-chain proposal that has not yet been executed
  * @param config Configuration object
  */
-async function simulateProposed(config: SimulationConfigProposed): Promise<SimulationResult> {
+async function simulateProposed(config: SimulationConfigProposed, provider: JsonRpcProvider): Promise<SimulationResult> {
   const { governorAddress, governorType, proposalId } = config
 
   // --- Get details about the proposal we're simulating ---
@@ -271,12 +272,12 @@ async function simulateProposed(config: SimulationConfigProposed): Promise<Simul
   const blockNumberToUse = (await getLatestBlock(network.chainId)) - 3 // subtracting a few blocks to ensure tenderly has the block
   const latestBlock = await provider.getBlock(blockNumberToUse)
   const blockRange = [0, latestBlock.number]
-  const governor = getGovernor(governorType, governorAddress)
+  const governor = getGovernor(governorType, governorAddress, provider)
 
   const [_proposal, proposalCreatedLogs, timelock] = await Promise.all([
-    getProposal(governorType, governorAddress, proposalId),
+    getProposal(governorType, governorAddress, proposalId, provider),
     governor.queryFilter(governor.filters.ProposalCreated(), ...blockRange),
-    getTimelock(governorType, governorAddress),
+    getTimelock(governorType, governorAddress, provider),
   ])
   const proposal = <ProposalStruct>_proposal
 
@@ -306,7 +307,7 @@ async function simulateProposed(config: SimulationConfigProposed): Promise<Simul
   //   - queuedTransactions[txHash] = true for each action in the proposal
 
   // Get voting token and total supply
-  const votingToken = await getVotingToken(governorType, governorAddress, proposal.id)
+  const votingToken = await getVotingToken(governorType, governorAddress, proposal.id, provider)
   const votingTokenSupply = <BigNumber>await votingToken.totalSupply() // used to manipulate vote count
 
   // Set `from` arbitrarily.
@@ -460,14 +461,14 @@ async function simulateProposed(config: SimulationConfigProposed): Promise<Simul
  * @notice Simulates execution of an already-executed governance proposal
  * @param config Configuration object
  */
-async function simulateExecuted(config: SimulationConfigExecuted): Promise<SimulationResult> {
+async function simulateExecuted(config: SimulationConfigExecuted, provider: JsonRpcProvider): Promise<SimulationResult> {
   const { governorAddress, governorType, proposalId } = config
 
   console.log(`Simulating executed proposal #${proposalId}...`)
   // --- Get details about the proposal we're analyzing ---
   const latestBlock = await provider.getBlock('latest')
   const blockRange = [0, latestBlock.number]
-  const governor = getGovernor(governorType, governorAddress)
+  const governor = getGovernor(governorType, governorAddress, provider)
 
   const [createProposalLogs, proposalExecutedLogs] = await Promise.all([
     governor.queryFilter(governor.filters.ProposalCreated(), ...blockRange),

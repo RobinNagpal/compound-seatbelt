@@ -33,6 +33,16 @@ export const l2ChainSenderMap: Record<L2Chain, string> = {
   [CometChains.mantle]: '0x4200000000000000000000000000000000000007', //L2CrossDomainMessenger
 }
 
+export const MarketUpdateProposerMap: Record<CometChains, string> = {
+  [CometChains.mainnet]: '', 
+  [CometChains.arbitrum]: '', 
+  [CometChains.optimism]: '0xB6Ef3AC71E9baCF1F4b9426C149d855Bfc4415F9',
+  [CometChains.polygon]: '',
+  [CometChains.base]: '',
+  [CometChains.scroll]: '', 
+  [CometChains.mantle]: '',
+}
+
 export interface apiKeyFlagConfig {
   flag: string
   key: string
