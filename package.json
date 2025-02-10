@@ -9,6 +9,7 @@
   "scripts": {
     "compile": "hardhat compile",
     "start": "node --version && node --loader ts-node/esm --experimental-specifier-resolution=node index.ts",
+    "market": "node --version && node --loader ts-node/esm --experimental-specifier-resolution=node market-updates.ts",
     "lint:fix": "prettier --write .",
     "test": "ts-node --experimental-specifier-resolution node targetLookup.ts",
     "tst": "ts-node --experimental-specifier-resolution node formatting.ts"

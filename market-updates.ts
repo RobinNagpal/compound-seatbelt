@@ -35,9 +35,6 @@ async function main() {
   // Prepare array to store all simulation outputs
   const simOutputs: SimulationData[] = []
   
-  let governor: Contract
-  let governorType: GovernorType
-  
   // If no SIM_NAME is provided, we get proposals to simulate from the chain
   // if (!GOVERNOR_ADDRESS) throw new Error('Must provider a GOVERNOR_ADDRESS')
   if (!DAO_NAME) throw new Error('Must provider a DAO_NAME')
@@ -51,7 +48,8 @@ async function main() {
     
       
     // Fetch all proposal IDs
-    governorType = await inferGovernorType(GOVERNOR_ADDRESS, provider)
+    const governorType : GovernorType = await inferGovernorType(GOVERNOR_ADDRESS, provider)
+    console.log('inferred governor: ', governorType)
     const allProposalIds = await getProposalIds(governorType, GOVERNOR_ADDRESS, latestBlock.number, provider)
     const files = await listFilesInFolder(s3ReportsFolder)
     console.log('files', files)
@@ -60,7 +58,7 @@ async function main() {
 
     const proposalIds = proposalIdsArr.map((id) => BigNumber.from(id))
 
-    governor = getGovernor(governorType, GOVERNOR_ADDRESS, provider)
+    const governor: Contract = getGovernor(governorType, GOVERNOR_ADDRESS, provider)
 
     // If we aren't simulating all proposals, filter down to just the active ones. For now we
     // assume we're simulating all by default

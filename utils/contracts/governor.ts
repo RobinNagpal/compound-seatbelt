@@ -11,7 +11,10 @@ import { JsonRpcProvider } from '@ethersproject/providers'
 
 // --- Exported methods ---
 export async function inferGovernorType(address: string, provider: JsonRpcProvider): Promise<GovernorType> {
-  const abi = ['function initialProposalId() external view returns (uint256)']
+  const abi = [
+    'function initialProposalId() external view returns (uint256)',
+    'function INITIAL_PROPOSAL_ID() external view returns (uint256)' // Added for market updates governance flow
+  ];
   const governor = new Contract(address, abi, provider)
 
   try {
@@ -20,7 +23,13 @@ export async function inferGovernorType(address: string, provider: JsonRpcProvid
     // proposal IDs so IDs will be very large numbers.
     const id = <BigNumberish>await governor.initialProposalId()
     if (BigNumber.from(id).lte(100_000)) return 'bravo'
-  } catch (err) {}
+  } catch (err) {
+    // If `initialProposalId()` is missing, try `INITIAL_PROPOSAL_ID` for market updates governance flow
+    try {
+      const id = <BigNumberish>await governor.INITIAL_PROPOSAL_ID();
+      if (BigNumber.from(id).eq(0)) return 'bravo';
+    } catch (err) {}
+  }
 
   return 'oz'
 }
@@ -94,13 +103,27 @@ export async function getProposalIds(
 ): Promise<BigNumber[]> {
   if (governorType === 'bravo') {
     // Fetch all proposal IDs
-    const governor = governorBravo(address, provider)
-    const proposalCreatedLogs = await governor.queryFilter(governor.filters.ProposalCreated(), 0, latestBlockNum)
-    const allProposalIds = proposalCreatedLogs.map((logs) => (logs.args as unknown as ProposalEvent).id!)
+    const governor = governorBravo(address, provider);
+    const proposalCreatedLogs = await governor.queryFilter(governor.filters.ProposalCreated(), 0, latestBlockNum);
+    const allProposalIds = proposalCreatedLogs.map((logs) => (logs.args as unknown as ProposalEvent).id!);
 
-    // Remove proposals from GovernorAlpha based on the initial GovernorBravo proposal ID
-    const initialProposalId = await governor.initialProposalId()
-    return allProposalIds.filter((id) => id.gt(initialProposalId))
+    let initialProposalId: BigNumber | null = null;
+
+    try {
+      // Try fetching `initialProposalId()` (for standard GovernorBravo)
+      initialProposalId = await governor.initialProposalId();
+    } catch (err) {
+      try {
+        // If `initialProposalId()` is missing, fall back to `INITIAL_PROPOSAL_ID()`
+        initialProposalId = await governor.INITIAL_PROPOSAL_ID();
+      } catch (err) {
+        // If both fail, assume no filtering is needed (return all IDs)
+        console.warn('Neither initialProposalId() nor INITIAL_PROPOSAL_ID() exists');
+        return allProposalIds;
+      }
+    }
+
+    return allProposalIds.filter((id) => id.gt(initialProposalId!));
   }
 
   const governor = governorOz(address, provider)
