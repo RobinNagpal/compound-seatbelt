@@ -33,6 +33,11 @@ export interface SimulationConfigNew extends SimulationConfigBase {
 
 export type SimulationConfig = SimulationConfigExecuted | SimulationConfigProposed | SimulationConfigNew
 
+export type ConfigWithoutGovernorType =
+  | Omit<SimulationConfigExecuted, 'governorType'>
+  | Omit<SimulationConfigProposed, 'governorType'>
+  | Omit<SimulationConfigNew, 'governorType'>;
+
 export interface BridgedSimulation {
   chain: L2Chain
   proposal?: ProposalEvent
@@ -48,6 +53,10 @@ export interface SimulationResult {
 
 export interface SimulationData extends SimulationResult {
   config: SimulationConfig
+}
+
+export interface MarketUpdateSimulationData extends SimulationResult {
+  config: ConfigWithoutGovernorType
 }
 
 // --- Proposal checks ---
@@ -114,6 +123,7 @@ export type ProposalData = {
   governor: Contract
   timelock: Contract
   provider: JsonRpcProvider
+  chain: CometChains
 }
 
 export interface ProposalCheck {

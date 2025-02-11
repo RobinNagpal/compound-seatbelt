@@ -33,6 +33,7 @@ export const checkSolc: ProposalCheck = {
     // NOTE: This requires an archive node since we need to query for the governor implementation
     // at the simulation block number, since the implementation may have changed since.
     const addressesToSkip = new Set([deps.timelock.address, deps.governor.address])
+    // TODO - need to handle this try-catch for market update flow cause proposer doesnt have an implementation
     try {
       const implementation = await getImplementation(deps.governor.address, sim.transaction.block_number, deps.provider)
       if (implementation) addressesToSkip.add(implementation)
@@ -43,7 +44,7 @@ export const checkSolc: ProposalCheck = {
       warnings.push(msg)
     }
 
-    const mainnetResults = await createSolcResult(addressesToSkip, sim.contracts, CometChains.mainnet)
+    const mainnetResults = await createSolcResult(addressesToSkip, sim.contracts, deps.chain)
         
     const bridgedSimulations = sim.bridgedSimulations || []
     const bridgedCheckResults: BridgedCheckResult[] = []
@@ -56,7 +57,7 @@ export const checkSolc: ProposalCheck = {
       if (b.sim) {
         const addressesToSkip = new Set([ChainAddresses.L2BridgeReceiver[b.chain], ChainAddresses.L2Timelock[b.chain]])
         const bridgedContracts : TenderlyContract[] = b.sim.simulation_results.flatMap((sr) => sr.contracts) || []
-        const bridgeResults = await createSolcResult(addressesToSkip, bridgedContracts, b.chain)
+        const bridgeResults = await createSolcResult(addressesToSkip, bridgedContracts, b.chain, deps.chain)
         bridgedCheckResults.push({ chain: b.chain, checkResults: { ...bridgeResults } });
       } else {
         bridgedCheckResults.push({ chain: b.chain, checkResults: { info: [], warnings: [], errors: ['No bridge simulation to run solc'] } });
@@ -70,14 +71,15 @@ export const checkSolc: ProposalCheck = {
 async function createSolcResult(
   addressesToSkip: Set<string>,
   simContracts: TenderlyContract[],
-  chain: CometChains
+  chain: CometChains,
+  sourceChain?: CometChains
 ) {
   const info: string[] = []
   const warnings: string[] = []
   // Return early if the only contracts touched are the timelock and governor.
   const contracts = simContracts.filter((contract) => !addressesToSkip.has(getAddress(contract.address)))
   if (contracts.length === 0) {
-    return { info: [`No contracts to analyze: only the timelock and ${chain != CometChains.mainnet ? 'bridge receiver':'governor'} are touched`], warnings, errors: [] }
+    return { info: [`No contracts to analyze: only the timelock and ${chain != (sourceChain ?? chain) ? 'bridge receiver':'governor'} are touched`], warnings, errors: [] }
   }
   
   const apiKeyFlag = apiKeyFlagMap[chain]

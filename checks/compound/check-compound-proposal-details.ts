@@ -25,7 +25,7 @@ import { generateAISummary } from './aiSummary'
 
 export async function analyzeProposal(proposal: ProposalEvent, sim: TenderlySimulation, deps: ProposalData): Promise<GovernanceProposalAnalysis> {
   const { targets: targets, signatures: signatures, calldatas: calldatas, values } = proposal
-  const chain = CometChains.mainnet
+  const chain = deps.chain
   const proposalId = proposal.id?.toNumber() || 0
 
   const checkResults = await getCompoundCheckResults(chain, proposalId, { targets, signatures, calldatas, values })
@@ -49,9 +49,9 @@ async function getCompoundCheckResults(chain: CometChains, proposalId: number, t
       value: values?.[i],
     }
     if (Object.keys(l2Bridges).includes(target)) {
-      const cometChain = l2Bridges[target]
-      const l2TransactionsInfo = await getDecodedBytesForChain(cometChain, proposalId, transactionInfo)
-      const l2CheckResults = await getL2CompoundCheckResults(cometChain, proposalId, l2TransactionsInfo)
+      const l2Chain = l2Bridges[target]
+      const l2TransactionsInfo = await getDecodedBytesForChain(chain, l2Chain, proposalId, transactionInfo)
+      const l2CheckResults = await getL2CompoundCheckResults(l2Chain, proposalId, l2TransactionsInfo)
       checkResults.chainedProposalAnalysis.push(l2CheckResults)
     } else {
       const message = await getTransactionMessages(chain, proposalId, transactionInfo)

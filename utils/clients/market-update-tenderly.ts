@@ -9,6 +9,7 @@ import { writeFileSync } from 'fs'
 import mftch, { FETCH_OPT } from 'micro-ftch'
 import {
   BridgedSimulation,
+  ConfigWithoutGovernorType,
   ProposalEvent,
   ProposalStruct,
   SimulationConfig,
@@ -33,14 +34,11 @@ import {
 } from '../constants'
 import {
   generateProposalId,
-  getGovernor,
+  getProposer,
   getProposal,
   getProposalId,
   getTimelock,
-  getVotingToken,
-  hashOperationBatchOz,
-  hashOperationOz,
-} from '../contracts/governor'
+} from '../contracts/market-update-proposer'
 import { CometChains, ExecuteTransactionInfo } from './../../checks/compound/compound-types'
 import {
   ChainAddresses,
@@ -68,19 +66,19 @@ const DEFAULT_FROM = '0xD73a92Be73EfbFcF3854433A5FcbAbF9c1316073' // arbitrary E
  * @notice Simulates a proposal based on the provided configuration
  * @param config Configuration object
  */
-export async function simulate(config: SimulationConfig, provider: JsonRpcProvider) {
-  if (config.type === 'executed') return await simulateExecuted(config, provider)
-  else if (config.type === 'proposed') return await simulateProposed(config, provider)
-  else return await simulateNew(config, provider)
+export async function simulate(config: ConfigWithoutGovernorType, provider: JsonRpcProvider, chain: CometChains) {
+  if (config.type === 'executed') return await simulateExecuted(config as SimulationConfigExecuted, provider, chain)
+  else if (config.type === 'proposed') return await simulateProposed(config as SimulationConfigProposed, provider, chain)
+  else return await simulateNew(config as SimulationConfigNew, provider, chain)
 }
 
 /**
  * @notice Simulates execution of an on-chain proposal that has not yet been executed
  * @param config Configuration object
  */
-async function simulateNew(config: SimulationConfigNew, provider: JsonRpcProvider): Promise<SimulationResult> {
+async function simulateNew(config: SimulationConfigNew, provider: JsonRpcProvider, chain: CometChains): Promise<SimulationResult> {
   // --- Validate config ---
-  const { governorAddress, governorType, targets, values, signatures, calldatas, description } = config
+  const { governorAddress, targets, values, signatures, calldatas, description } = config
   if (targets.length !== values.length) throw new Error('targets and values must be the same length')
   if (targets.length !== signatures.length) throw new Error('targets and signatures must be the same length')
   if (targets.length !== calldatas.length) throw new Error('targets and calldatas must be the same length')
@@ -89,17 +87,17 @@ async function simulateNew(config: SimulationConfigNew, provider: JsonRpcProvide
   const network = await provider.getNetwork()
   const blockNumberToUse = (await getLatestBlock(network.chainId)) - 3 // subtracting a few blocks to ensure tenderly has the block
   const latestBlock = await provider.getBlock(blockNumberToUse)
-  const governor = getGovernor(governorType, governorAddress, provider)
+  const governor = getProposer(governorAddress, provider)
 
   const [proposalId, timelock] = await Promise.all([
-    generateProposalId(governorType, governorAddress, { targets, values, calldatas, description }, provider),
-    getTimelock(governorType, governorAddress, provider),
+    generateProposalId(governorAddress, provider),
+    getTimelock(governorAddress, provider),
   ])
 
   const startBlock = BigNumber.from(latestBlock.number - 100) // arbitrarily subtract 100
   const proposal: ProposalEvent = {
-    id: proposalId, // Bravo governor
-    proposalId, // OZ governor (for simplicity we just include both ID formats)
+    id: proposalId, 
+    proposalId,
     proposer: DEFAULT_FROM,
     startBlock,
     endBlock: startBlock.add(1),
@@ -111,10 +109,6 @@ async function simulateNew(config: SimulationConfigNew, provider: JsonRpcProvide
   }
 
   // --- Prepare simulation configuration ---
-  // Get voting token and total supply
-  const votingToken = await getVotingToken(governorType, governorAddress, proposalId, provider)
-  const votingTokenSupply = <BigNumber>await votingToken.totalSupply() // used to manipulate vote count
-
   // Set `from` arbitrarily.
   const from = DEFAULT_FROM
 
@@ -128,10 +122,7 @@ async function simulateNew(config: SimulationConfigNew, provider: JsonRpcProvide
   // and we prefer underestimating to avoid simulations reverting in cases where governance
   // proposals call methods that pass in a start timestamp that must be lower than the current
   // block timestamp (represented by the `simTimestamp` variable below)
-  const simTimestamp =
-    governorType === 'bravo'
-      ? BigNumber.from(latestBlock.timestamp).add(simBlock.sub(proposal.endBlock!).mul(12))
-      : BigNumber.from(latestBlock.timestamp + 1)
+  const simTimestamp = BigNumber.from(latestBlock.timestamp).add(simBlock.sub(proposal.endBlock!).mul(12))
   const eta = simTimestamp // set proposal eta to be equal to the timestamp we simulate at
 
   // Compute transaction hashes used by the Timelock
@@ -148,58 +139,28 @@ async function simulateNew(config: SimulationConfigNew, provider: JsonRpcProvide
     timelockStorageObj[`queuedTransactions[${hash}]`] = 'true'
   })
 
-  if (governorType === 'oz') {
-    const id = hashOperationBatchOz(targets, values, calldatas, HashZero, keccak256(toUtf8Bytes(description)))
-    timelockStorageObj[`_timestamps[${id.toHexString()}]`] = simTimestamp.toString()
-  }
-
   // Use the Tenderly API to get the encoded state overrides for governor storage
   let governorStateOverrides: Record<string, string> = {}
-  if (governorType === 'bravo') {
-    const proposalKey = `proposals[${proposalId.toString()}]`
-    governorStateOverrides = {
-      proposalCount: proposalId.toString(),
-      [`${proposalKey}.id`]: proposalId.toString(),
-      [`${proposalKey}.proposer`]: DEFAULT_FROM,
-      [`${proposalKey}.eta`]: eta.toString(),
-      [`${proposalKey}.startBlock`]: proposal.startBlock.toString(),
-      [`${proposalKey}.endBlock`]: proposal.endBlock.toString(),
-      [`${proposalKey}.canceled`]: 'false',
-      [`${proposalKey}.executed`]: 'false',
-      [`${proposalKey}.forVotes`]: votingTokenSupply.toString(),
-      [`${proposalKey}.againstVotes`]: '0',
-      [`${proposalKey}.abstainVotes`]: '0',
-    }
-
-    targets.forEach((target, i) => {
-      const value = BigNumber.from(values[i]).toString()
-      governorStateOverrides[`${proposalKey}.targets[${i}]`] = target
-      governorStateOverrides[`${proposalKey}.values[${i}]`] = value
-      governorStateOverrides[`${proposalKey}.signatures[${i}]`] = signatures[i]
-      governorStateOverrides[`${proposalKey}.calldatas[${i}]`] = calldatas[i]
-    })
-  } else if (governorType === 'oz') {
-    const proposalCoreKey = `_proposals[${proposalId.toString()}]`
-    const proposalVotesKey = `_proposalVotes[${proposalId.toString()}]`
-    governorStateOverrides = {
-      [`${proposalCoreKey}.voteEnd._deadline`]: simBlock.sub(1).toString(),
-      [`${proposalCoreKey}.canceled`]: 'false',
-      [`${proposalCoreKey}.executed`]: 'false',
-      [`${proposalVotesKey}.forVotes`]: votingTokenSupply.toString(),
-      [`${proposalVotesKey}.againstVotes`]: '0',
-      [`${proposalVotesKey}.abstainVotes`]: '0',
-    }
-
-    targets.forEach((target, i) => {
-      const id = hashOperationOz(target, values[i], calldatas[i], HashZero, HashZero)
-      governorStateOverrides[`_timestamps[${id}]`] = '2' // must be > 1.
-    })
-  } else {
-    throw new Error(`Cannot generate overrides for unknown governor type: ${governorType}`)
+  const proposalKey = `proposals[${proposalId.toString()}]`
+  governorStateOverrides = {
+    proposalCount: proposalId.toString(),
+    [`${proposalKey}.id`]: proposalId.toString(),
+    [`${proposalKey}.proposer`]: DEFAULT_FROM,
+    [`${proposalKey}.eta`]: eta.toString(),
+    [`${proposalKey}.canceled`]: 'false',
+    [`${proposalKey}.executed`]: 'false',
   }
 
+  targets.forEach((target, i) => {
+    const value = BigNumber.from(values[i]).toString()
+    governorStateOverrides[`${proposalKey}.targets[${i}]`] = target
+    governorStateOverrides[`${proposalKey}.values[${i}]`] = value
+    governorStateOverrides[`${proposalKey}.signatures[${i}]`] = signatures[i]
+    governorStateOverrides[`${proposalKey}.calldatas[${i}]`] = calldatas[i]
+  })
+
   const stateOverrides = {
-    networkID: '1',
+    networkID: String(network.chainId),
     stateOverrides: {
       [timelock.address]: {
         value: timelockStorageObj,
@@ -217,18 +178,13 @@ async function simulateNew(config: SimulationConfigNew, provider: JsonRpcProvide
   //   - proposalCount >= proposal.id
   //   - proposal.canceled == false
   //   - proposal.executed == false
-  //   - block.number > proposal.endBlock
-  //   - proposal.forVotes > proposal.againstVotes
-  //   - proposal.forVotes > quorumVotes
   //   - proposal.eta !== 0
   //   - block.timestamp >= proposal.eta
   //   - block.timestamp <  proposal.eta + timelock.GRACE_PERIOD()
   //   - queuedTransactions[txHash] = true for each action in the proposal
-  const descriptionHash = keccak256(toUtf8Bytes(description))
-  const executeInputs =
-    governorType === 'bravo' ? [proposalId.toString()] : [targets, values, calldatas, descriptionHash]
+  const executeInputs = [proposalId.toString()]
   const simulationPayload: TenderlyPayload = {
-    network_id: '1',
+    network_id: String(network.chainId) as TenderlyPayload['network_id'],
     // this field represents the block state to simulate against, so we use the latest block number
     block_number: latestBlock.number,
     from: DEFAULT_FROM,
@@ -264,20 +220,20 @@ async function simulateNew(config: SimulationConfigNew, provider: JsonRpcProvide
  * @notice Simulates execution of an on-chain proposal that has not yet been executed
  * @param config Configuration object
  */
-async function simulateProposed(config: SimulationConfigProposed, provider: JsonRpcProvider): Promise<SimulationResult> {
-  const { governorAddress, governorType, proposalId } = config
+async function simulateProposed(config: SimulationConfigProposed, provider: JsonRpcProvider, chain: CometChains): Promise<SimulationResult> {
+  const { governorAddress, proposalId } = config
 
   // --- Get details about the proposal we're simulating ---
   const network = await provider.getNetwork()
   const blockNumberToUse = (await getLatestBlock(network.chainId)) - 3 // subtracting a few blocks to ensure tenderly has the block
   const latestBlock = await provider.getBlock(blockNumberToUse)
   const blockRange = [0, latestBlock.number]
-  const governor = getGovernor(governorType, governorAddress, provider)
+  const governor = getProposer(governorAddress, provider)
 
   const [_proposal, proposalCreatedLogs, timelock] = await Promise.all([
-    getProposal(governorType, governorAddress, proposalId, provider),
-    governor.queryFilter(governor.filters.ProposalCreated(), ...blockRange),
-    getTimelock(governorType, governorAddress, provider),
+    getProposal(governorAddress, proposalId, provider),
+    governor.queryFilter(governor.filters.MarketUpdateProposalCreated(), ...blockRange),
+    getTimelock(governorAddress, provider),
   ])
   const proposal = <ProposalStruct>_proposal
 
@@ -291,31 +247,22 @@ async function simulateProposed(config: SimulationConfigProposed, provider: Json
 
   // Workaround an issue that ethers cannot decode the values properly.
   // We know that the values are the 4th parameter in
-  // `ProposalCreated(proposalId, proposer, targets, values, signatures, calldatas, startBlock, endBlock, description)`
+  // `MarketUpdateProposalCreated(proposalId, proposer, targets, values, signatures, calldatas, description)`
   const values: BigNumber[] = proposalCreatedEventWrapper.args![3]
 
   // --- Prepare simulation configuration ---
   // We need the following state conditions to be true to successfully simulate a proposal:
   //   - proposal.canceled == false
   //   - proposal.executed == false
-  //   - block.number > proposal.endBlock
-  //   - proposal.forVotes > proposal.againstVotes
-  //   - proposal.forVotes > quorumVotes
   //   - proposal.eta !== 0
   //   - block.timestamp >= proposal.eta
   //   - block.timestamp <  proposal.eta + timelock.GRACE_PERIOD()
   //   - queuedTransactions[txHash] = true for each action in the proposal
 
-  // Get voting token and total supply
-  const votingToken = await getVotingToken(governorType, governorAddress, proposal.id, provider)
-  const votingTokenSupply = <BigNumber>await votingToken.totalSupply() // used to manipulate vote count
-
   // Set `from` arbitrarily.
   const from = DEFAULT_FROM
 
-  // For Bravo governors, we use the block right after the proposal ends, and for OZ
-  // governors we arbitrarily use the next block number.
-  const simBlock = governorType === 'bravo' ? proposal.endBlock!.add(1) : BigNumber.from(latestBlock.number + 1)
+  const simBlock = proposal.endBlock!.add(1)
 
   // For OZ governors we are given the earliest possible execution time. For Bravo governors, we
   // Compute the approximate earliest possible execution time based on governance parameters. This
@@ -324,10 +271,7 @@ async function simulateProposed(config: SimulationConfigProposed, provider: Json
   // and we prefer underestimating to avoid simulations reverting in cases where governance
   // proposals call methods that pass in a start timestamp that must be lower than the current
   // block timestamp (represented by the `simTimestamp` variable below)
-  const simTimestamp =
-    governorType === 'bravo'
-      ? BigNumber.from(latestBlock.timestamp).add(simBlock.sub(proposal.endBlock!).mul(12))
-      : proposal.endTime!.add(1)
+  const simTimestamp = BigNumber.from(latestBlock.timestamp).add(simBlock.sub(proposal.endBlock!).mul(12))
   const eta = simTimestamp // set proposal eta to be equal to the timestamp we simulate at
 
   // Compute transaction hashes used by the Timelock
@@ -344,41 +288,18 @@ async function simulateProposed(config: SimulationConfigProposed, provider: Json
     timelockStorageObj[`queuedTransactions[${hash}]`] = 'true'
   })
 
-  if (governorType === 'oz') {
-    const id = hashOperationBatchOz(targets, values, calldatas, HashZero, keccak256(toUtf8Bytes(description)))
-    timelockStorageObj[`_timestamps[${id.toHexString()}]`] = simTimestamp.toString()
-  }
-
   const proposalIdBn = BigNumber.from(proposalId)
   let governorStateOverrides: Record<string, string> = {}
-  if (governorType === 'bravo') {
-    const proposalKey = `proposals[${proposalIdBn.toString()}]`
-    governorStateOverrides = {
-      proposalCount: proposalId.toString(),
-      [`${proposalKey}.eta`]: eta.toString(),
-      [`${proposalKey}.canceled`]: 'false',
-      [`${proposalKey}.executed`]: 'false',
-      [`${proposalKey}.forVotes`]: votingTokenSupply.toString(),
-      [`${proposalKey}.againstVotes`]: '0',
-      [`${proposalKey}.abstainVotes`]: '0',
-    }
-  } else if (governorType === 'oz') {
-    const proposalCoreKey = `_proposals[${proposalIdBn.toString()}]`
-    const proposalVotesKey = `_proposalVotes[${proposalIdBn.toString()}]`
-    governorStateOverrides = {
-      [`${proposalCoreKey}.voteEnd._deadline`]: simBlock.sub(1).toString(),
-      [`${proposalCoreKey}.canceled`]: 'false',
-      [`${proposalCoreKey}.executed`]: 'false',
-      [`${proposalVotesKey}.forVotes`]: votingTokenSupply.toString(),
-      [`${proposalVotesKey}.againstVotes`]: '0',
-      [`${proposalVotesKey}.abstainVotes`]: '0',
-    }
-  } else {
-    throw new Error(`Cannot generate overrides for unknown governor type: ${governorType}`)
+  const proposalKey = `proposals[${proposalIdBn.toString()}]`
+  governorStateOverrides = {
+    proposalCount: proposalId.toString(),
+    [`${proposalKey}.eta`]: eta.toString(),
+    [`${proposalKey}.canceled`]: 'false',
+    [`${proposalKey}.executed`]: 'false',
   }
-
+  
   const stateOverrides = {
-    networkID: '1',
+    networkID: String(network.chainId),
     stateOverrides: {
       [timelock.address]: {
         value: timelockStorageObj,
@@ -394,12 +315,10 @@ async function simulateProposed(config: SimulationConfigProposed, provider: Json
   // Note: The Tenderly API is sensitive to the input types, so all formatting below (e.g. stripping
   // leading zeroes, padding with zeros, strings vs. hex, etc.) are all intentional decisions to
   // ensure Tenderly properly parses the simulation payload
-  const descriptionHash = keccak256(toUtf8Bytes(description))
-  const executeInputs =
-    governorType === 'bravo' ? [proposalId.toString()] : [targets, values, calldatas, descriptionHash]
+  const executeInputs = [proposalId.toString()]
 
   let simulationPayload: TenderlyPayload = {
-    network_id: '1',
+    network_id: String(network.chainId) as TenderlyPayload['network_id'],
     // this field represents the block state to simulate against, so we use the latest block number
     block_number: latestBlock.number,
     from,
@@ -426,15 +345,18 @@ async function simulateProposed(config: SimulationConfigProposed, provider: Json
       [governor.address]: { storage: storageObj.stateOverrides[governor.address.toLowerCase()].value },
     },
   }
+  const startBlock = BigNumber.from(latestBlock.number)
 
   const formattedProposal: ProposalEvent = {
     ...proposalCreatedEvent,
+    startBlock,
+    endBlock: startBlock.add(1),
     values, // This does not get included otherwise, same reason why we use `proposalCreatedEvent.args![3]` above.
     id: BigNumber.from(proposalId), // Make sure we always have an ID field
   }
 
   let sim = await sendSimulation(simulationPayload)
-  const bridgedSimulations = await simulateBridgedTransactions(config.proposalId, proposalCreatedEvent)
+  const bridgedSimulations = await simulateBridgedTransactions(chain, config.proposalId, proposalCreatedEvent)
   const totalValue = values.reduce((sum, cur) => sum.add(cur), Zero)
 
   // Sim succeeded, or failure was not due to an ETH balance issue, so return the simulation.
@@ -461,18 +383,18 @@ async function simulateProposed(config: SimulationConfigProposed, provider: Json
  * @notice Simulates execution of an already-executed governance proposal
  * @param config Configuration object
  */
-async function simulateExecuted(config: SimulationConfigExecuted, provider: JsonRpcProvider): Promise<SimulationResult> {
-  const { governorAddress, governorType, proposalId } = config
+async function simulateExecuted(config: SimulationConfigExecuted, provider: JsonRpcProvider, chain: CometChains): Promise<SimulationResult> {
+  const { governorAddress, proposalId } = config
 
   console.log(`Simulating executed proposal #${proposalId}...`)
   // --- Get details about the proposal we're analyzing ---
   const latestBlock = await provider.getBlock('latest')
   const blockRange = [0, latestBlock.number]
-  const governor = getGovernor(governorType, governorAddress, provider)
+  const governor = getProposer(governorAddress, provider)
 
   const [createProposalLogs, proposalExecutedLogs] = await Promise.all([
-    governor.queryFilter(governor.filters.ProposalCreated(), ...blockRange),
-    governor.queryFilter(governor.filters.ProposalExecuted(), ...blockRange),
+    governor.queryFilter(governor.filters.MarketUpdateProposalCreated(), ...blockRange),
+    governor.queryFilter(governor.filters.MarketUpdateProposalExecuted(), ...blockRange),
   ])
 
   const proposalCreatedEvent = createProposalLogs.filter((log) => {
@@ -503,14 +425,19 @@ async function simulateExecuted(config: SimulationConfigExecuted, provider: Json
     generate_access_list: true,
   }
   const sim = await sendSimulation(simulationPayload)
+  console.log('tx blocknumber: ', tx.blockNumber)
+  const startBlock = BigNumber.from(tx.blockNumber)
+  console.log('start block: ', startBlock)
 
   const formattedProposal: ProposalEvent = {
     ...proposal,
+    startBlock,
+    endBlock: startBlock.add(1),
     id: BigNumber.from(proposalId), // Make sure we always have an ID field
     values: proposalCreatedEvent.args?.[3],
   }
 
-  const bridgedSimulations = await simulateBridgedTransactions(config.proposalId, proposal)
+  const bridgedSimulations = await simulateBridgedTransactions(chain, config.proposalId, proposal)
   console.log(`Bridge simulations: ${bridgedSimulations.length}`)
   return { sim: { ...sim, bridgedSimulations }, proposal: formattedProposal, latestBlock }
 }
@@ -617,6 +544,7 @@ async function sendSimulation(payload: TenderlyPayload, delay = 1000): Promise<T
 }
 
 async function simulateBridgedTransactions(
+  sourceChain: CometChains,
   proposalId: BigNumberish,
   proposalEvent: ProposalEvent,
 ): Promise<BridgedSimulation[]> {
@@ -652,7 +580,7 @@ async function simulateBridgedTransactions(
       const networkId = l2ChainIdMap[destinationChain]
 
       const l2TransactionsInfo = await getDecodedBytesForChain(
-        CometChains.mainnet,
+        sourceChain,
         destinationChain,
         BigNumber.from(proposalId).toNumber(),
         transactionInfo,

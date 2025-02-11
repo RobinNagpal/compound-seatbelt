@@ -23,7 +23,7 @@ export const checkSimFailure: ProposalCheck = {
         : 'unknown error'
       errors.push(`Transaction reverted with reason: ${reason}`)
     } else {
-      info.push('Mainnet simulation was successful')
+      info.push(`${capitalizeWord(deps.chain)} simulation was successful`)
     }
 
     const bridgedCheckResults: BridgedCheckResult[] = []

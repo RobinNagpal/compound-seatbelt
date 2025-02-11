@@ -241,6 +241,10 @@ export async function fetchAssetPrice(chain: CometChains, address: string): Prom
 
   try {
     const response = await fetchUrl(url);
+    if (!response || Object.keys(response).length === 0 || !response[address.toLowerCase()]) {
+      console.error("Empty response from Coin Gecko API");
+      return null
+    }
 
     return response[address.toLowerCase()].usd;
   } catch (error:any) {

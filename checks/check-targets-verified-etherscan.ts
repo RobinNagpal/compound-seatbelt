@@ -11,7 +11,7 @@ export const checkTargetsVerifiedEtherscan: ProposalCheck = {
   name: 'Check all targets are verified on Explorer',
   async checkProposal(proposal, sim, deps) {
     const uniqueTargets = proposal.targets.filter((addr, i, targets) => targets.indexOf(addr) === i)
-    const mainnetResults = await checkVerificationStatuses(sim.contracts, uniqueTargets, deps.provider, CometChains.mainnet)
+    const mainnetResults = await checkVerificationStatuses(sim.contracts, uniqueTargets, deps.provider, deps.chain)
     
     const bridgedSimulations = sim.bridgedSimulations || []
     const bridgedCheckResults: BridgedCheckResult[] = await Promise.all(
@@ -38,7 +38,7 @@ export const checkTargetsVerifiedEtherscan: ProposalCheck = {
 export const checkTouchedContractsVerifiedEtherscan: ProposalCheck = {
   name: 'Check all touched contracts are verified on Explorer',
   async checkProposal(proposal, sim, deps) {
-    const mainnetResults = await checkVerificationStatuses(sim.contracts, sim.transaction.addresses, deps.provider, CometChains.mainnet)
+    const mainnetResults = await checkVerificationStatuses(sim.contracts, sim.transaction.addresses, deps.provider, deps.chain)
     
     const bridgedSimulations = sim.bridgedSimulations || []
     const bridgedCheckResults: BridgedCheckResult[] = []
@@ -78,7 +78,7 @@ async function checkVerificationStatuses(
   const info: string[] = []
   for (const addr of addresses) {
     const status = await checkVerificationStatus(simContracts, addr, provider)
-    const address = toAddressLink(addr, false, chain)
+    const address = toAddressLink(addr, chain, false)
     if (status === 'eoa') info.push(bullet(`${address}: EOA (verification not applicable)`))
     else if (status === 'verified') info.push(bullet(`${address}: Contract (verified)`))
     else info.push(bullet(`${address}: Contract (not verified)`))

@@ -47,8 +47,8 @@ export function blockQuote(str: string): string {
  */
 export function toAddressLink(
   address: string,
+  chain: CometChains,
   code: boolean = false,
-  chain: CometChains = CometChains.mainnet,
 ): string {
   return `[\`${address}\`](${getExplorerBaseUrl(chain)}/${address}${code ? '#code' : ''})`
 }
@@ -79,7 +79,7 @@ ${toMessageList('Info', info)}
 `
 }
 
-function populateChecks(checks: AllCheckResults): string {
+function populateChecks(checks: AllCheckResults, sourceChain: CometChains): string {
   // Collect mainnet and bridged summaries separately
   const mainnetSummaries: string[] = []
   const bridgedSummaries: Record<string, string[]> = {}
@@ -116,7 +116,7 @@ function populateChecks(checks: AllCheckResults): string {
   })
 
   // Create the consolidated mainnet summary
-  const mainnetSummary = `### Mainnet Changes\n\n${mainnetSummaries.join('\n\n')}`
+  const mainnetSummary = `### ${capitalizeWord(sourceChain)} Changes\n\n${mainnetSummaries.join('\n\n')}`
 
   // Create the consolidated bridged summaries for each chain
   const bridgedSummary = Object.keys(bridgedSummaries)
@@ -166,7 +166,8 @@ function estimateTime(current: Block, block: BigNumber): number {
  * @param filename The name of the file. All report formats will have the same filename with different extensions.
  */
 export async function generateAndSaveReports(
-  governorType: GovernorType,
+  sourceChain: CometChains,
+  proposalId: string,
   blocks: { current: Block; start: Block | null; end: Block | null },
   proposal: ProposalEvent,
   checks: AllCheckResults,
@@ -175,11 +176,10 @@ export async function generateAndSaveReports(
 ) {
   // Prepare the output folder and filename.
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
-  const id = formatProposalId(governorType, proposal.id!)
-  const path = `${dir}/${id}`
+  const path = `${dir}/${proposalId}`
 
   // Generate the base markdown proposal report. This is the markdown report which is translated into other file types.
-  const baseReport = await toMarkdownProposalReport(governorType, blocks, proposal, checks, compProposalAnalysis)
+  const baseReport = await toMarkdownProposalReport(sourceChain, proposalId, blocks, proposal, checks, compProposalAnalysis)
   const { markdownReport, htmlReport } = await toMarkdownAndHTML(baseReport)
 
   // Save off all reports. The Markdown and PDF reports use the `markdownReport`.
@@ -217,8 +217,6 @@ function getFailedChecksAndWarnings(checks: AllCheckResults) {
 }
 
 export async function pushCompoundChecksToDiscord(
-  governorType: GovernorType,
-  blocks: { current: Block; start: Block | null; end: Block | null },
   proposal: ProposalEvent,
   checks: AllCheckResults,
   compProposalAnalysis: GovernanceProposalAnalysis,
@@ -229,6 +227,7 @@ export async function pushCompoundChecksToDiscord(
 }
 
 export async function pushCompoundChecksToEmail(
+  chain: CometChains,
   proposalNo: string,
   checks: AllCheckResults,
   compoundChecks: GovernanceProposalAnalysis,
@@ -241,7 +240,7 @@ export async function pushCompoundChecksToEmail(
   let marketUpdates = '**No market updates in this proposal.**'
   if (hasMarketUpdates) {
     marketUpdates = toMessageList(
-      'Mainnet Actions',
+      `${capitalizeWord(chain)} Actions`,
       compoundChecks.mainnetActionAnalysis.map((a) => a.summary),
     )
 
@@ -277,14 +276,14 @@ See the full report [here](https://compound-governance-proposals.s3.amazonaws.co
  * @param checks The checks results.
  */
 async function toMarkdownProposalReport(
-  governorType: GovernorType,
+  sourceChain: CometChains,
+  proposalID: string,
   blocks: { current: Block; start: Block | null; end: Block | null },
   proposal: ProposalEvent,
   checks: AllCheckResults,
   compProposalAnalysis: GovernanceProposalAnalysis,
 ): Promise<string> {
-  const { id, proposer, targets, endBlock, startBlock, description } = proposal
-  const proposalID = formatProposalId(governorType, id!)
+  const { proposer, targets, endBlock, startBlock, description } = proposal
 
   // Generate the report. We insert an empty table of contents header which is populated later using remark-toc.
   const report = `
@@ -295,14 +294,14 @@ _Updated as of block [${blocks.current.number}](https://etherscan.io/block/${blo
   )}_
 
 - ID: ${proposalID}
-- Proposer: ${toAddressLink(proposer)}
+- Proposer: ${toAddressLink(proposer, sourceChain)}
 - Start Block: ${startBlock} (${
     blocks.start ? formatTime(blocks.start.timestamp) : formatTime(estimateTime(blocks.current, startBlock))
   })
 - End Block: ${endBlock} (${
     blocks.end ? formatTime(blocks.end.timestamp) : formatTime(estimateTime(blocks.current, endBlock))
   })
-- Targets: ${targets.map((target) => toAddressLink(target, true)).join('; ')}
+- Targets: ${targets.map((target) => toAddressLink(target, sourceChain, true)).join('; ')}
 
 ## Forum Post
 
@@ -317,7 +316,7 @@ This is filled in by remark-toc and this sentence will be removed.
 ${blockQuote(description.trim())}
 
 ## Checks\n
-${populateChecks(checks)}
+${populateChecks(checks, sourceChain)}
   
 ## Compound Checks\n
 
@@ -330,7 +329,7 @@ ${Object.values(iconLookupTable)
   .join('\n')}
 
 ${toMessageList(
-  'Mainnet Actions',
+  `${capitalizeWord(sourceChain)} Actions`,
   compProposalAnalysis.mainnetActionAnalysis.map((a) => a.details),
 )}
 \n\n

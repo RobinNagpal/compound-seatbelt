@@ -23,6 +23,7 @@ import {
   inferGovernorType,
 } from './utils/contracts/governor'
 import { getAddress } from '@ethersproject/address'
+import { CometChains } from './checks/compound/compound-types'
 
 /**
  * @notice Simulate governance proposals and run proposal checks against them
@@ -117,7 +118,7 @@ async function main() {
 
   // --- Run proposal checks and save output ---
   // Generate the proposal data and dependencies needed by checks
-  const proposalData = { governor, provider, timelock: await getTimelock(governorType, governor.address, provider) }
+  const proposalData = { governor, provider, timelock: await getTimelock(governorType, governor.address, provider), chain: CometChains.mainnet }
 
   for (const simOutput of simOutputs) {
     console.log('Starting proposal checks and report generation...')
@@ -157,8 +158,10 @@ async function main() {
     // Save markdown report to a file.
     // GitHub artifacts are flattened (folder structure is not preserved), so we include the DAO name in the filename.
     const dir = `./reports/${config.daoName}/${config.governorAddress}`
+    const proposalId = formatProposalId(governorType, proposal.id!)
     await generateAndSaveReports(
-      governorType,
+      CometChains.mainnet,
+      proposalId,
       { start: startBlock, end: endBlock, current: latestBlock },
       proposal,
       checkResults,
@@ -167,8 +170,6 @@ async function main() {
     )
 
     await pushCompoundChecksToDiscord(
-      governorType,
-      { start: startBlock, end: endBlock, current: latestBlock },
       proposal,
       checkResults,
       compProposalAnalysis,
@@ -179,7 +180,7 @@ async function main() {
     await uploadFileToS3(`${s3ReportsFolder}/${proposal.id}.pdf`, `${reportPath}.pdf`)
     await uploadFileToS3(`${s3ReportsFolder}/${proposal.id}.html`, `${reportPath}.html`)
 
-    await pushCompoundChecksToEmail(proposal.id!.toString(), checkResults, compProposalAnalysis, s3ReportsFolder)
+    await pushCompoundChecksToEmail(CometChains.mainnet, proposal.id!.toString(), checkResults, compProposalAnalysis, s3ReportsFolder)
   }
   console.log('Done!')
 }

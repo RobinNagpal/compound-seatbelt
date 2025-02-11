@@ -11,7 +11,7 @@ export const checkTargetsNames: ProposalCheck = {
   name: 'Check all targets are present in the registry',
   async checkProposal(proposal, sim, deps) {
     const uniqueTargets = proposal.targets.filter((addr, i, targets) => targets.indexOf(addr) === i)
-    const mainnetResults = await checkTargetRegistry(uniqueTargets, CometChains.mainnet)
+    const mainnetResults = await checkTargetRegistry(uniqueTargets, deps.chain)
     
     const bridgedSimulations = sim.bridgedSimulations || []
     const bridgedCheckResults: BridgedCheckResult[] = await Promise.all(
@@ -50,7 +50,7 @@ async function checkTargetRegistry(
   // Check each address against the registry data
   for (const addr of addresses) {
     const contractName = registryData[addr.toLowerCase()];
-    const address = toAddressLink(addr, false, chain);
+    const address = toAddressLink(addr, chain, false);
 
     if (contractName) {
       info.push(bullet(`${address}: ${contractName}`));
