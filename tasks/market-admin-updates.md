@@ -12,3 +12,4 @@
 - `tenderly.ts` file needs changing:
   - when getting logs, instead of checking for `ProposalCreated`/`ProposalExecuted` event, we gotta check for `MarketUpdateProposalCreated`/`MarketUpdateProposalExecuted` event
   - instead of using `provider`, we have to use `customProvider` cause simple `provider` is using `mainnet` rpc url
+- need to handle the logic where we are storing the target lookup and formatters
