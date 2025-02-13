@@ -16,7 +16,7 @@ export const checkTargetsNoSelfdestruct: ProposalCheck = {
       [deps.governor.address, deps.timelock.address],
       uniqueTargets,
       deps.provider,
-      CometChains.mainnet
+      deps.chain
     )
     
     const bridgedSimulations = sim.bridgedSimulations || []
@@ -51,7 +51,7 @@ export const checkTouchedContractsNoSelfdestruct: ProposalCheck = {
       [deps.governor.address, deps.timelock.address],
       sim.transaction.addresses,
       deps.provider,
-      CometChains.mainnet
+      deps.chain
     )
 
     const bridgedSimulations = sim.bridgedSimulations || []
@@ -92,7 +92,7 @@ async function checkNoSelfdestructs(
   const errors: string[] = []
   for (const addr of addresses) {
     const status = await checkNoSelfdestruct(trustedAddrs, addr, provider)
-    const address = toAddressLink(addr, false, chain)
+    const address = toAddressLink(addr, chain, false)
     if (status === 'eoa') info.push(bullet(`${address}: EOA`))
     else if (status === 'empty') warnings.push(bullet(`${address}: EOA (may have code later)`))
     else if (status === 'safe') info.push(bullet(`${address}: Contract (looks safe)`))

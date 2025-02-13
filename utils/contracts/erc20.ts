@@ -1,5 +1,5 @@
 import { Contract } from 'ethers'
-import { provider } from '../clients/ethers'
+import { JsonRpcProvider } from '@ethersproject/providers'
 import { getAddress } from '@ethersproject/address'
 
 const SAI = '0x89d24A6b4CcB1B6fAA2625fE562bDD9a23260359'
@@ -28,7 +28,7 @@ export const SAI_ABI = [
   ...ERC20_BASE_ABI,
 ]
 
-export async function fetchTokenMetadata(address: string) {
+export async function fetchTokenMetadata(address: string, provider: JsonRpcProvider) {
   const abi = getAddress(address) === SAI ? SAI_ABI : ERC20_ABI
   const token = new Contract(address, abi, provider)
   const response = await Promise.all([token.name(), token.symbol(), token.decimals()])

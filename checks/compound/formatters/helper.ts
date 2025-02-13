@@ -4,7 +4,7 @@ dotenv.config()
 import { Contract, ethers } from 'ethers'
 import fs from 'fs'
 import mftch from 'micro-ftch'
-import { CometChains, SymbolAndDecimalsLookupData } from '../compound-types'
+import { CometChains, GovernanceFlows, SymbolAndDecimalsLookupData } from '../compound-types'
 import { customProvider } from './../../../utils/clients/ethers'
 import { defactorFn } from './../../../utils/roundingUtils'
 import { getContractNameAndAbiFromFile } from './../abi-utils'
@@ -241,6 +241,10 @@ export async function fetchAssetPrice(chain: CometChains, address: string): Prom
 
   try {
     const response = await fetchUrl(url);
+    if (!response || Object.keys(response).length === 0 || !response[address.toLowerCase()]) {
+      console.error("Empty response from Coin Gecko API");
+      return null
+    }
 
     return response[address.toLowerCase()].usd;
   } catch (error:any) {
@@ -356,13 +360,13 @@ export const iconLookupTable: Record<IconType, { icon: string; description: stri
 
 export function getIcon(keyword: IconType) {
   const result = iconLookupTable[keyword]
-  if (result) {
-    return result.icon
-  } else {
-    return '❓'
-  }
+  return result.icon
 }
 
 export function capitalizeWord(word: string) {
   return word.charAt(0).toUpperCase() + word.slice(1)
+}
+
+export function getFlowText(flow: GovernanceFlows, mainFlowText: string, marketFlowText: string){
+  return flow === GovernanceFlows.main ? mainFlowText : marketFlowText
 }

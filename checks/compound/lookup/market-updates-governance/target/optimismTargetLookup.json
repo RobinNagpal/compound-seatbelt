@@ -1,0 +1,70 @@
+{
+  "0x84e93ec6170ed630f5ebd89a1aae72d4f63f2713": {
+    "contractName": "Configurator",
+    "functions": {
+      "updateAssetSupplyCap(address,address,uint128)": {
+        "description": "updateAssetSupplyCap(address,address,uint128)",
+        "transactionFormatter": "Configurator.updateAssetSupplyCap(address,address,uint128)",
+        "proposals": {
+          "1": [
+            "0xE36A30D249f7761327fd973001A32010b521b6Fd",
+            "0x9Bcef72be871e61ED4fBbc7630889beE758eb81D",
+            "1200000000000000000000"
+          ],
+          "2": [
+            "0xE36A30D249f7761327fd973001A32010b521b6Fd",
+            "0x5A7fACB970D094B6C7FF1df0eA68D99E6e73CBFF",
+            "1000000000000000000000",
+            "0xE36A30D249f7761327fd973001A32010b521b6Fd",
+            "0x87eEE96D50Fb761AD85B1c982d28A042169d61b1",
+            "800000000000000000000"
+          ],
+          "3": [
+            "0xE36A30D249f7761327fd973001A32010b521b6Fd",
+            "0x9Bcef72be871e61ED4fBbc7630889beE758eb81D",
+            "3000000000000000000000",
+            "0xE36A30D249f7761327fd973001A32010b521b6Fd",
+            "0x5A7fACB970D094B6C7FF1df0eA68D99E6e73CBFF",
+            "1600000000000000000000",
+            "0xE36A30D249f7761327fd973001A32010b521b6Fd",
+            "0x87eEE96D50Fb761AD85B1c982d28A042169d61b1",
+            "1000000000000000000000"
+          ]
+        }
+      }
+    },
+    "proposals": [
+      1,
+      2,
+      3
+    ]
+  },
+  "0x24d86da09c4dd64e50db7501b0f695d030f397af": {
+    "contractName": "CometProxyAdmin",
+    "functions": {
+      "deployAndUpgradeTo(address,address)": {
+        "description": "deployAndUpgradeTo(address,address)",
+        "transactionFormatter": "CometProxyAdmin.deployAndUpgradeTo(address,address)",
+        "proposals": {
+          "1": [
+            "0x84E93EC6170ED630f5ebD89A1AAE72d4F63f2713",
+            "0xE36A30D249f7761327fd973001A32010b521b6Fd"
+          ],
+          "2": [
+            "0x84E93EC6170ED630f5ebD89A1AAE72d4F63f2713",
+            "0xE36A30D249f7761327fd973001A32010b521b6Fd"
+          ],
+          "3": [
+            "0x84E93EC6170ED630f5ebD89A1AAE72d4F63f2713",
+            "0xE36A30D249f7761327fd973001A32010b521b6Fd"
+          ]
+        }
+      }
+    },
+    "proposals": [
+      1,
+      2,
+      3
+    ]
+  }
+}

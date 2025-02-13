@@ -97,3 +97,8 @@ export enum CometChains {
 }
 
 export type L2Chain = CometChains.arbitrum | CometChains.polygon | CometChains.base | CometChains.optimism | CometChains.scroll | CometChains.mantle
+
+export enum GovernanceFlows {
+  main = 'main-governance',
+  market = 'market-updates-governance'
+}
