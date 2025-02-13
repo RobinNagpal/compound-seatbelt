@@ -55,7 +55,6 @@ import { bridgeReceiver } from './../contracts/baseBridgeReceiver'
 import { provider } from './ethers'
 import { capitalizeWord } from './../../checks/compound/formatters/helper'
 import { Block } from '@ethersproject/abstract-provider'
-// import { JsonRpcProvider } from '@ethersproject/providers'
 
 // @ts-ignore
 const fetchUrl = mftch.default
