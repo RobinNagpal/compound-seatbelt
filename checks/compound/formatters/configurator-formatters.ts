@@ -376,37 +376,14 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
     
     const prevFactor = defactorFn(factorRaw, decimals)
     const newFactor = defactorFn(newFactorRaw, decimals)
-    
-    const targetAssetPrice = await fetchAssetPrice(chain, decodedParams[1])
-    if (!targetAssetPrice) {
-      throw new Error(`Failed to fetch price for target asset: ${decodedParams[1]}`);
-    }
-    
-    let totalMarketValueWithoutAsset = 0
-    for (const assetConfig of configuration[20]) {
-      const { asset, supplyCap, decimals: assetDecimals } = assetConfig
-      const price = await fetchAssetPrice(chain, asset.toString())
-      if (price) {
-        const supplyCapValue = defactorFn(supplyCap.toString(), assetDecimals.toString());
-        totalMarketValueWithoutAsset += parseFloat(supplyCapValue) * price;
-      }
-    }
-    
-    const calculatePercentage = (factor: string) => {
-      const assetValue = multiplyFn(factor, targetAssetPrice.toString())
-      const totalMarketValueWithAsset = addFn(assetValue, totalMarketValueWithoutAsset.toString())
-      return percentageFn(divideFn(assetValue, totalMarketValueWithAsset))
-    }
-
-    const oldPercentage = calculatePercentage(prevFactor)
-    const newPercentage = calculatePercentage(newFactor)
-    const changeInPercentage = subtractFn(newPercentage, oldPercentage)
-
     const changeInFactor = subtractFn(newFactor, prevFactor)
-    const sign = getAttentionSign(changeInPercentage, thresholds)
-
     const tokenInfo = `**${addressFormatter(decodedParams[1], chain, tokenSymbol)}**`
-
+    const rawChanges = `Update from ${factorRaw} to ${newFactorRaw} for token - ${decodedParams[1]}`
+    
+    
+    let sign = getIcon(IconType.Update)
+    let criticalitySign = ''
+    let changeText = ''
     const functionDesc = await functionDescription({
       sign,
       chain,
@@ -415,15 +392,41 @@ export const configuratorFormatters: { [functionName: string]: TransactionFormat
       cometAddress: decodedParams[0],
     })
     const functionDescWithToken = `${functionDesc} for token - ${tokenInfo}`
-    const normalizedChanges = `Update from ${prevFactor} to ${newFactor} ${getChangeTextFn(
-      changeInFactor,
-      false,
-      thresholds,
-      changeInPercentage
-    )}`
-    const rawChanges = `Update from ${factorRaw} to ${newFactorRaw} for token - ${decodedParams[1]}`
-    const details = `${functionDescWithToken}\n\n${tab} **Changes:** ${normalizedChanges}\n\n${tab}  **Raw Changes:** ${rawChanges}`
-    const summary = `${sign} ${changeInFactor.startsWith('-') ? 'Decrease' : 'Increase'} SupplyCap by ${addCommas(changeInFactor)} ${getCriticalitySign(changeInPercentage, thresholds)} for ${tokenInfo} of ${await getMarket({chain, cometAddress:decodedParams[0]})} market (value=${newFactor}).`
+    const normalizedChanges = `Update from ${prevFactor} to ${newFactor}`
+    
+    
+    const targetAssetPrice = await fetchAssetPrice(chain, decodedParams[1])
+    if (targetAssetPrice) {
+      let totalMarketValueWithoutAsset = 0
+      for (const assetConfig of configuration[20]) {
+        const { asset, supplyCap, decimals: assetDecimals } = assetConfig
+        const price = await fetchAssetPrice(chain, asset.toString())
+        if (price) {
+          const supplyCapValue = defactorFn(supplyCap.toString(), assetDecimals.toString());
+          totalMarketValueWithoutAsset += parseFloat(supplyCapValue) * price;
+        }
+      }
+      
+      const calculatePercentage = (factor: string) => {
+        const assetValue = multiplyFn(factor, targetAssetPrice.toString())
+        const totalMarketValueWithAsset = addFn(assetValue, totalMarketValueWithoutAsset.toString())
+        return percentageFn(divideFn(assetValue, totalMarketValueWithAsset))
+      }
+      
+      const oldPercentage = calculatePercentage(prevFactor)
+      const newPercentage = calculatePercentage(newFactor)
+      const changeInPercentage = subtractFn(newPercentage, oldPercentage)
+
+      sign = getAttentionSign(changeInPercentage, thresholds)
+      changeText = getChangeTextFn(changeInFactor, false, thresholds, changeInPercentage)
+      criticalitySign = ' ' + getCriticalitySign(changeInPercentage, thresholds) //space added for formatting
+      
+    } else {
+      console.error(`Failed to fetch price for target asset: ${decodedParams[1]}`);
+      changeText = getChangeTextFn(changeInFactor, false, thresholds)
+    }
+    const details = `${functionDescWithToken}\n\n${tab} **Changes:** ${normalizedChanges} ${changeText}\n\n${tab}  **Raw Changes:** ${rawChanges}`
+    const summary = `${sign} ${changeInFactor.startsWith('-') ? 'Decrease' : 'Increase'} SupplyCap by ${addCommas(changeInFactor)}${criticalitySign} for ${tokenInfo} of ${await getMarket({chain, cometAddress:decodedParams[0]})} market (value=${newFactor}).`
     return { summary, details }
   },
   'setBaseBorrowMin(address,uint104)': async (chain: CometChains, transaction: ExecuteTransactionInfo, decodedParams: string[]) => {

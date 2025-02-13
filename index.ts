@@ -23,7 +23,7 @@ import {
   inferGovernorType,
 } from './utils/contracts/governor'
 import { getAddress } from '@ethersproject/address'
-import { CometChains } from './checks/compound/compound-types'
+import { CometChains, GovernanceFlows } from './checks/compound/compound-types'
 
 /**
  * @notice Simulate governance proposals and run proposal checks against them
@@ -147,7 +147,7 @@ async function main() {
     const compProposalAnalysis =
       process.env.DISABLE_COMPOUND_CHECKS === 'true'
         ? { mainnetActionAnalysis: [], chainedProposalAnalysis: [] }
-        : await analyzeProposal(proposal, sim, proposalData)
+        : await analyzeProposal(proposal, sim, proposalData, GovernanceFlows.main)
 
     // Generate markdown report.
     const [startBlock, endBlock] = await Promise.all([
@@ -170,9 +170,11 @@ async function main() {
     )
 
     await pushCompoundChecksToDiscord(
+      GovernanceFlows.main,
       proposal,
       checkResults,
       compProposalAnalysis,
+      s3ReportsFolder
     )
 
     const reportPath = `reports/${config.daoName}/${config.governorAddress}/${proposal.id}`
@@ -180,7 +182,13 @@ async function main() {
     await uploadFileToS3(`${s3ReportsFolder}/${proposal.id}.pdf`, `${reportPath}.pdf`)
     await uploadFileToS3(`${s3ReportsFolder}/${proposal.id}.html`, `${reportPath}.html`)
 
-    await pushCompoundChecksToEmail(CometChains.mainnet, proposal.id!.toString(), checkResults, compProposalAnalysis, s3ReportsFolder)
+    await pushCompoundChecksToEmail(
+      CometChains.mainnet, 
+      GovernanceFlows.main, 
+      proposal.id!.toString(), 
+      checkResults, 
+      compProposalAnalysis, 
+      s3ReportsFolder)
   }
   console.log('Done!')
 }

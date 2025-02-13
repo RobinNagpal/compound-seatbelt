@@ -241,9 +241,9 @@ async function simulateProposed(config: SimulationConfigProposed, provider: Json
     return getProposalId(log.args as unknown as ProposalEvent).eq(proposalId)
   })[0]
   if (!proposalCreatedEventWrapper)
-    throw new Error(`Proposal creation log for #${proposalId} not found in governor logs`)
+    throw new Error(`Proposal creation log for #${proposalId} not found in proposer logs`)
   const proposalCreatedEvent = proposalCreatedEventWrapper.args as unknown as ProposalEvent
-  const { targets, signatures: sigs, calldatas, description } = proposalCreatedEvent
+  const { targets, signatures: sigs, calldatas } = proposalCreatedEvent
 
   // Workaround an issue that ethers cannot decode the values properly.
   // We know that the values are the 4th parameter in
@@ -391,26 +391,27 @@ async function simulateExecuted(config: SimulationConfigExecuted, provider: Json
   const latestBlock = await provider.getBlock('latest')
   const blockRange = [0, latestBlock.number]
   const governor = getProposer(governorAddress, provider)
-
-  const [createProposalLogs, proposalExecutedLogs] = await Promise.all([
+  
+  const [proposalCreatedLogs, proposalExecutedLogs] = await Promise.all([
     governor.queryFilter(governor.filters.MarketUpdateProposalCreated(), ...blockRange),
     governor.queryFilter(governor.filters.MarketUpdateProposalExecuted(), ...blockRange),
   ])
 
-  const proposalCreatedEvent = createProposalLogs.filter((log) => {
+  const proposalCreatedEvent = proposalCreatedLogs.filter((log) => {
     return getProposalId(log.args as unknown as ProposalEvent).eq(proposalId)
   })[0]
-  if (!proposalCreatedEvent) throw new Error(`Proposal creation log for #${proposalId} not found in governor logs`)
+  if (!proposalCreatedEvent) throw new Error(`Proposal creation log for #${proposalId} not found in proposer logs`)
   const proposal = proposalCreatedEvent.args as unknown as ProposalEvent
 
   const proposalExecutedEvent = proposalExecutedLogs.filter((log) => {
     return getProposalId(log.args as unknown as ProposalEvent).eq(proposalId)
   })[0]
-  if (!proposalExecutedEvent) throw new Error(`Proposal execution log for #${proposalId} not found in governor logs`)
+  if (!proposalExecutedEvent) throw new Error(`Proposal execution log for #${proposalId} not found in proposer logs`)
 
   // --- Simulate it ---
   // Prepare tenderly payload. Since this proposal was already executed, we directly use that transaction data
   const tx = await provider.getTransaction(proposalExecutedEvent.transactionHash)
+  
   const simulationPayload: TenderlyPayload = {
     network_id: String(tx.chainId) as TenderlyPayload['network_id'],
     block_number: tx.blockNumber,
@@ -424,10 +425,9 @@ async function simulateExecuted(config: SimulationConfigExecuted, provider: Json
     save: false, // Set to true to save the simulation to your Tenderly dashboard if it succeeds.
     generate_access_list: true,
   }
+  
   const sim = await sendSimulation(simulationPayload)
-  console.log('tx blocknumber: ', tx.blockNumber)
   const startBlock = BigNumber.from(tx.blockNumber)
-  console.log('start block: ', startBlock)
 
   const formattedProposal: ProposalEvent = {
     ...proposal,

@@ -19,27 +19,26 @@ import {
 } from './utils/contracts/market-update-proposer'
 import { getAddress } from '@ethersproject/address'
 import { MarketUpdateProposerMap } from './checks/compound/l2-utils'
-import { CometChains } from './checks/compound/compound-types'
+import { CometChains, GovernanceFlows } from './checks/compound/compound-types'
 
 async function main() {
-  console.log('Starting main function with GOVERNOR_ADDRESS: ', GOVERNOR_ADDRESS)
-
   // --- Run simulations ---
   // Prepare array to store all simulation outputs
   const simOutputs: MarketUpdateSimulationData[] = []
   
   // If no SIM_NAME is provided, we get proposals to simulate from the chain
-  // if (!GOVERNOR_ADDRESS) throw new Error('Must provider a GOVERNOR_ADDRESS')
   if (!DAO_NAME) throw new Error('Must provider a DAO_NAME')
     
-  for (const [chain, PROPOSER_ADDRESS] of Object.entries(MarketUpdateProposerMap).filter(([_, address]) => address !== '')) {
-      // TODO: Remove this check after Tenderly add support for Scroll
+  for (const [chainKey, PROPOSER_ADDRESS] of Object.entries(MarketUpdateProposerMap).filter(([_, address]) => address !== '')) {
+    const chain = chainKey as CometChains
+    // TODO: Remove this check after Tenderly add support for Scroll
     if (chain === CometChains.scroll) {
       console.log('Tenderly does not support simulating transactions on Scroll')
       continue
     }
+    
     const s3ReportsFolder = `${process.env.AWS_BUCKET_BASE_PATH}/${chain}` || `all-proposals/${chain}`
-    const provider = customProvider(chain as CometChains);
+    const provider = customProvider(chain);
         
     const latestBlock = await provider.getBlock('latest');
     console.log(`Chain: ${chain}, Address: ${PROPOSER_ADDRESS}, Latest Block: ${latestBlock.number}`);
@@ -54,7 +53,6 @@ async function main() {
     const proposalIds = proposalIdsArr.map((id) => BigNumber.from(id))
 
     const proposer: Contract = getProposer(PROPOSER_ADDRESS, provider)
-
     // If we aren't simulating all proposals, filter down to just the active ones. For now we
     // assume we're simulating all by default
     const states = await Promise.all(proposalIds.map((id) => proposer.state(id)))
@@ -96,7 +94,7 @@ async function main() {
       }
 
       console.log(`  Simulating ${DAO_NAME} proposal ${simProposal.id}...`)
-      const { sim, proposal, latestBlock } = await simulate(config, provider, chain as CometChains)
+      const { sim, proposal, latestBlock } = await simulate(config, provider, chain )
       simOutputs.push({ sim, proposal, latestBlock, config })
       console.log(`done`)
     }
@@ -104,7 +102,7 @@ async function main() {
 
   // --- Run proposal checks and save output ---
   // Generate the proposal data and dependencies needed by checks
-  const proposalData = { governor: proposer, provider, timelock: await getTimelock(proposer.address, provider), chain: (chain as CometChains) }
+  const proposalData = { governor: proposer, provider, timelock: await getTimelock(proposer.address, provider), chain: (chain ) }
 
   for (const simOutput of simOutputs) {
     console.log('Starting proposal checks and report generation...')
@@ -133,7 +131,7 @@ async function main() {
     const compProposalAnalysis =
       process.env.DISABLE_COMPOUND_CHECKS === 'true'
         ? { mainnetActionAnalysis: [], chainedProposalAnalysis: [] }
-        : await analyzeProposal(proposal, sim, proposalData)
+        : await analyzeProposal(proposal, sim, proposalData, GovernanceFlows.market)
         
     // Generate markdown report.
     const [startBlock, endBlock] = await Promise.all([
@@ -151,7 +149,7 @@ async function main() {
     const proposalId = formatProposalId(proposal.id!)
   
     await generateAndSaveReports(
-      chain as CometChains,
+      chain ,
       proposalId,
       { start: startBlock, end: endBlock, current: latestBlock },
       proposal,
@@ -161,17 +159,25 @@ async function main() {
     )
 
     await pushCompoundChecksToDiscord(
+      GovernanceFlows.market,
       proposal,
       checkResults,
       compProposalAnalysis,
+      s3ReportsFolder
     )
 
-    const reportPath = `reports/${config.daoName}/${config.governorAddress}/${proposal.id}`
+    const reportPath = `reports/${config.daoName}/${chain}-${config.governorAddress}/${proposal.id}`
     await uploadFileToS3(`${s3ReportsFolder}/${proposal.id}.md`, `${reportPath}.md`)
     await uploadFileToS3(`${s3ReportsFolder}/${proposal.id}.pdf`, `${reportPath}.pdf`)
     await uploadFileToS3(`${s3ReportsFolder}/${proposal.id}.html`, `${reportPath}.html`)
 
-    await pushCompoundChecksToEmail(chain as CometChains, proposal.id!.toString(), checkResults, compProposalAnalysis, s3ReportsFolder)
+    await pushCompoundChecksToEmail(
+      chain , 
+      GovernanceFlows.market, 
+      proposal.id!.toString(), 
+      checkResults, 
+      compProposalAnalysis, 
+      s3ReportsFolder)
   }
   console.log('Done!')
 }

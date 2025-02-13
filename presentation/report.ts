@@ -4,13 +4,12 @@ import fs, { promises as fsp } from 'fs'
 import { mdToPdf } from 'md-to-pdf'
 import { remark } from 'remark'
 import remarkToc from 'remark-toc'
-import { capitalizeWord, checkforumPost, iconLookupTable, tab } from '../checks/compound/formatters/helper'
+import { capitalizeWord, checkforumPost, getFlowText, getPlatform, iconLookupTable, tab } from '../checks/compound/formatters/helper'
 import { pushChecksSummaryToDiscordAsEmbeds } from '../checks/compound/formatters/push-to-discord'
 import { sendEmails } from '../checks/compound/formatters/push-to-email'
 import { AllCheckResults, GovernorType, ProposalEvent } from '../types'
-import { formatProposalId } from '../utils/contracts/governor'
 import { getExplorerBaseUrl } from './../checks/compound/abi-utils'
-import { CometChains, GovernanceProposalAnalysis } from './../checks/compound/compound-types'
+import { CometChains, GovernanceFlows, GovernanceProposalAnalysis } from './../checks/compound/compound-types'
 import { toMarkdownAndHTML } from './toMarkdownAndHTML'
 
 // --- Markdown helpers ---
@@ -132,9 +131,10 @@ function populateChecks(checks: AllCheckResults, sourceChain: CometChains): stri
  * @param description the proposal description
  */
 function getProposalTitle(description: string) {
-  const match = description.match(/^\s*#\s*(.*)\s*\n/)
-  if (!match || match.length < 2) return 'Title not found'
-  return match[1]
+  if (!description.trim()) return "Title not found"; // If empty, return "Title not found"
+
+  const match = description.match(/^\s*#\s*(.*)\s*\n/);
+  return match ? match[1] : description.trim(); // Use matched title or fallback to full description
 }
 
 /**
@@ -217,17 +217,20 @@ function getFailedChecksAndWarnings(checks: AllCheckResults) {
 }
 
 export async function pushCompoundChecksToDiscord(
+  flow: GovernanceFlows,
   proposal: ProposalEvent,
   checks: AllCheckResults,
   compProposalAnalysis: GovernanceProposalAnalysis,
+  s3ReportsFolder: string
 ) {
   const { failedChecks, warningChecks } = getFailedChecksAndWarnings(checks)
 
-  await pushChecksSummaryToDiscordAsEmbeds(failedChecks, warningChecks, compProposalAnalysis, proposal.id!.toString())
+  await pushChecksSummaryToDiscordAsEmbeds(flow, failedChecks, warningChecks, compProposalAnalysis, proposal.id!.toString(), s3ReportsFolder)
 }
 
 export async function pushCompoundChecksToEmail(
   chain: CometChains,
+  flow: GovernanceFlows,
   proposalNo: string,
   checks: AllCheckResults,
   compoundChecks: GovernanceProposalAnalysis,
@@ -257,7 +260,7 @@ export async function pushCompoundChecksToEmail(
   }
 
   const content =
-    `## Summary of Compound Checks - Proposal #[${proposalNo}](https://compound.finance/governance/proposals/${proposalNo})
+    `## Summary of ${getFlowText(flow, 'Compound Checks', 'Market Updates')} - Proposal #[${proposalNo}]${getFlowText(flow, `(https://compound.finance/governance/proposals/${proposalNo})`,'')}
   
 ${toMessageList('Errors', failedChecks) || '**No errors found simulating this proposal.**'}
   
@@ -289,7 +292,7 @@ async function toMarkdownProposalReport(
   const report = `
 # ${getProposalTitle(description.trim())}
 
-_Updated as of block [${blocks.current.number}](https://etherscan.io/block/${blocks.current.number}) at ${formatTime(
+_Updated as of block [${blocks.current.number}](https://${getPlatform(sourceChain)}/block/${blocks.current.number}) at ${formatTime(
     blocks.current.timestamp,
   )}_
 

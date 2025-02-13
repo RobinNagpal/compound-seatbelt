@@ -4,7 +4,7 @@ dotenv.config()
 import { Contract, ethers } from 'ethers'
 import fs from 'fs'
 import mftch from 'micro-ftch'
-import { CometChains, SymbolAndDecimalsLookupData } from '../compound-types'
+import { CometChains, GovernanceFlows, SymbolAndDecimalsLookupData } from '../compound-types'
 import { customProvider } from './../../../utils/clients/ethers'
 import { defactorFn } from './../../../utils/roundingUtils'
 import { getContractNameAndAbiFromFile } from './../abi-utils'
@@ -360,13 +360,13 @@ export const iconLookupTable: Record<IconType, { icon: string; description: stri
 
 export function getIcon(keyword: IconType) {
   const result = iconLookupTable[keyword]
-  if (result) {
-    return result.icon
-  } else {
-    return '❓'
-  }
+  return result.icon
 }
 
 export function capitalizeWord(word: string) {
   return word.charAt(0).toUpperCase() + word.slice(1)
+}
+
+export function getFlowText(flow: GovernanceFlows, mainFlowText: string, marketFlowText: string){
+  return flow === GovernanceFlows.main ? mainFlowText : marketFlowText
 }

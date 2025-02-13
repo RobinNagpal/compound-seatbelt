@@ -13,3 +13,5 @@
   - when getting logs, instead of checking for `ProposalCreated`/`ProposalExecuted` event, we gotta check for `MarketUpdateProposalCreated`/`MarketUpdateProposalExecuted` event
   - instead of using `provider`, we have to use `customProvider` cause simple `provider` is using `mainnet` rpc url
 - need to handle the logic where we are storing the target lookup and formatters
+- maybe create a separate discord webhook for market updates notifications or we can just change the heading 
+- add check boxes on email subscription ui lambda to select which updates to receive compound/market or both
