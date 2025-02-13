@@ -3,16 +3,16 @@ import { getAddress } from '@ethersproject/address'
 import { toUtf8Bytes } from '@ethersproject/strings'
 import { keccak256 } from '@ethersproject/keccak256'
 import { defaultAbiCoder } from '@ethersproject/abi'
+import { provider } from '../clients/ethers'
 import { governorBravo, getBravoSlots } from './governor-bravo'
 import { governorOz, getOzSlots } from './governor-oz'
 import { timelock } from './timelock'
 import { GovernorType, ProposalEvent, ProposalStruct } from '../../types'
-import { provider } from '../clients/ethers'
 
 // --- Exported methods ---
 export async function inferGovernorType(address: string): Promise<GovernorType> {
   const abi = ['function initialProposalId() external view returns (uint256)']
-  const governor = new Contract(address, abi)
+  const governor = new Contract(address, abi, provider)
 
   try {
     // If the `initialProposalId` function exists, and the initial proposal was a "small" value,
@@ -25,7 +25,7 @@ export async function inferGovernorType(address: string): Promise<GovernorType> 
   return 'oz'
 }
 
-export function getGovernor(governorType: GovernorType, address: string ) {
+export function getGovernor(governorType: GovernorType, address: string) {
   if (governorType === 'bravo') return governorBravo(address)
   if (governorType === 'oz') return governorOz(address)
   throw new Error(`Unknown governor type: ${governorType}`)
@@ -104,6 +104,12 @@ export async function getProposalIds(
   const governor = governorOz(address)
   const proposalCreatedLogs = await governor.queryFilter(governor.filters.ProposalCreated(), 0, latestBlockNum)
   return proposalCreatedLogs.map((logs) => (logs.args as unknown as ProposalEvent).proposalId!)
+}
+
+export function getProposalId(proposal: ProposalEvent): BigNumber {
+  const id = proposal.id || proposal.proposalId
+  if (!id) throw new Error(`Proposal ID not found for proposal: ${JSON.stringify(proposal)}`)
+  return id
 }
 
 // Generate proposal ID, used when simulating new proposals.

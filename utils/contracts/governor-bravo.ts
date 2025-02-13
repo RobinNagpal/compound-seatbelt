@@ -1,7 +1,7 @@
 import { BigNumber, BigNumberish, Contract } from 'ethers'
 import { hexZeroPad } from '@ethersproject/bytes'
-import { getSolidityStorageSlotUint, to32ByteHexString } from '../utils'
 import { provider } from '../clients/ethers'
+import { getSolidityStorageSlotUint, to32ByteHexString } from '../utils'
 
 const GOVERNOR_BRAVO_ABI = [
   'event NewAdmin(address oldAdmin, address newAdmin)',

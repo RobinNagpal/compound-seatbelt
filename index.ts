@@ -45,7 +45,7 @@ async function main() {
     const configPath = `./sims/${SIM_NAME}.sim.ts`
     const config: SimulationConfig = await import(configPath).then((d) => d.config) // dynamic path `import` statements not allowed
 
-    const { sim, proposal, latestBlock } = await simulate(config, provider)
+    const { sim, proposal, latestBlock } = await simulate(config)
     simOutputs.push({ sim, proposal, latestBlock, config })
 
     governorType = await inferGovernorType(config.governorAddress)
@@ -110,7 +110,7 @@ async function main() {
       }
 
       console.log(`  Simulating ${DAO_NAME} proposal ${simProposal.id}...`)
-      const { sim, proposal, latestBlock } = await simulate(config, provider)
+      const { sim, proposal, latestBlock } = await simulate(config)
       simOutputs.push({ sim, proposal, latestBlock, config })
       console.log(`done`)
     }
