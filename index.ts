@@ -48,8 +48,8 @@ async function main() {
     const { sim, proposal, latestBlock } = await simulate(config, provider)
     simOutputs.push({ sim, proposal, latestBlock, config })
 
-    governorType = await inferGovernorType(config.governorAddress, provider)
-    governor = getGovernor(governorType, config.governorAddress, provider)
+    governorType = await inferGovernorType(config.governorAddress)
+    governor = getGovernor(governorType, config.governorAddress)
   } else {
     // If no SIM_NAME is provided, we get proposals to simulate from the chain
     if (!GOVERNOR_ADDRESS) throw new Error('Must provider a GOVERNOR_ADDRESS')
@@ -57,8 +57,8 @@ async function main() {
     const latestBlock = await provider.getBlock('latest')
 
     // Fetch all proposal IDs
-    governorType = await inferGovernorType(GOVERNOR_ADDRESS, provider)
-    const allProposalIds = await getProposalIds(governorType, GOVERNOR_ADDRESS, latestBlock.number, provider)
+    governorType = await inferGovernorType(GOVERNOR_ADDRESS)
+    const allProposalIds = await getProposalIds(governorType, GOVERNOR_ADDRESS, latestBlock.number)
     const files = await listFilesInFolder(s3ReportsFolder)
     console.log('files', files)
     const proposalIdsArr =
@@ -66,7 +66,7 @@ async function main() {
 
     const proposalIds = proposalIdsArr.map((id) => BigNumber.from(id))
 
-    governor = getGovernor(governorType, GOVERNOR_ADDRESS, provider)
+    governor = getGovernor(governorType, GOVERNOR_ADDRESS)
 
     // If we aren't simulating all proposals, filter down to just the active ones. For now we
     // assume we're simulating all by default
@@ -118,7 +118,7 @@ async function main() {
 
   // --- Run proposal checks and save output ---
   // Generate the proposal data and dependencies needed by checks
-  const proposalData = { governor, provider, timelock: await getTimelock(governorType, governor.address, provider), chain: CometChains.mainnet }
+  const proposalData = { governor, provider, timelock: await getTimelock(governorType, governor.address), chain: CometChains.mainnet }
 
   for (const simOutput of simOutputs) {
     console.log('Starting proposal checks and report generation...')
