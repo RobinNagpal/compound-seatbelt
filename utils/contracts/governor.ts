@@ -61,7 +61,7 @@ export async function getProposal(
   }
 }
 
-export async function getTimelock(governorType: GovernorType, address: string ) {
+export async function getTimelock(governorType: GovernorType, address: string) {
   const governor = getGovernor(governorType, address)
   if (governorType === 'bravo') return timelock(await governor.admin(), provider)
   return timelock(await governor.timelock(), provider)

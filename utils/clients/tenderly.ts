@@ -52,7 +52,7 @@ import {
   l2ChainSenderMap,
 } from './../../checks/compound/l2-utils'
 import { bridgeReceiver } from './../contracts/baseBridgeReceiver'
-import { provider } from '../clients/ethers'
+import { provider } from './ethers'
 import { capitalizeWord } from './../../checks/compound/formatters/helper'
 import { Block } from '@ethersproject/abstract-provider'
 // import { JsonRpcProvider } from '@ethersproject/providers'
