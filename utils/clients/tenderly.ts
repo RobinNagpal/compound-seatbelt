@@ -1,10 +1,12 @@
 import { defaultAbiCoder } from '@ethersproject/abi'
+import { Block } from '@ethersproject/abstract-provider'
 import { getAddress } from '@ethersproject/address'
 import { BigNumber, BigNumberish } from '@ethersproject/bignumber'
 import { hexStripZeros } from '@ethersproject/bytes'
 import { HashZero, Zero } from '@ethersproject/constants'
 import { keccak256 } from '@ethersproject/keccak256'
 import { toUtf8Bytes } from '@ethersproject/strings'
+import { Contract, ethers } from 'ethers'
 import { writeFileSync } from 'fs'
 import mftch, { FETCH_OPT } from 'micro-ftch'
 import {
@@ -42,6 +44,7 @@ import {
   hashOperationOz,
 } from '../contracts/governor'
 import { CometChains, ExecuteTransactionInfo } from './../../checks/compound/compound-types'
+import { capitalizeWord } from './../../checks/compound/formatters/helper'
 import {
   ChainAddresses,
   getBridgeReceiverInput,
@@ -53,8 +56,6 @@ import {
 } from './../../checks/compound/l2-utils'
 import { bridgeReceiver } from './../contracts/baseBridgeReceiver'
 import { provider } from './ethers'
-import { capitalizeWord } from './../../checks/compound/formatters/helper'
-import { Block } from '@ethersproject/abstract-provider'
 
 // @ts-ignore
 const fetchUrl = mftch.default
@@ -79,6 +80,7 @@ export async function simulate(config: SimulationConfig) {
  * @param config Configuration object
  */
 async function simulateNew(config: SimulationConfigNew): Promise<SimulationResult> {
+  console.log('Simulating new proposal...')
   // --- Validate config ---
   const { governorAddress, governorType, targets, values, signatures, calldatas, description } = config
   if (targets.length !== values.length) throw new Error('targets and values must be the same length')
@@ -260,11 +262,129 @@ async function simulateNew(config: SimulationConfigNew): Promise<SimulationResul
   return { sim, proposal, latestBlock }
 }
 
+async function getGovernorOverrides(
+  proposalId: BigNumber | ArrayLike<number> | bigint | string | number,
+  governor: Contract,
+  eta: BigNumber,
+): Promise<{ [x: string]: string }> {
+  const GovernorStorageLocationBigNumber = BigNumber.from(
+    '0x7c712897014dbe49c045ef1299aa2d5f9e67e48eea4403efa21f1e0f3ac0cb00',
+  )
+
+  // Add 1 to skip the first slot which is the governor's `string _name;` in GovernorStorage.
+  const mappingBaseSlot = GovernorStorageLocationBigNumber.add(1).toHexString()
+
+  // Encode the values like Solidity's abi.encode.
+  // Compute the keccak256 hash of the encoded data.
+  const slotKey = ethers.utils.keccak256(
+    ethers.utils.defaultAbiCoder.encode(['uint256', 'uint256'], [proposalId, mappingBaseSlot]),
+  )
+
+  console.log('Storage slot for proposalId:', slotKey)
+  await readProposal(governor.address, slotKey)
+
+  // Read current storage value
+  const currentValue = await provider.getStorageAt(governor.address, slotKey)
+  console.log('Current Storage:', currentValue)
+
+  // Decode currentValue into parts (assuming hex string):
+  const proposer = '0x' + currentValue.slice(2, 42) // first 20 bytes
+
+  /*
+  struct ProposalCore {
+    address proposer;
+    uint48 voteStart;
+    uint32 voteDuration;
+    bool executed;
+    bool canceled;
+    uint48 etaSeconds;
+  }
+*/
+
+  const newProposalCoreValue = ethers.utils.solidityPack(
+    ['uint8', 'uint8', 'uint32', 'uint48', 'address'],
+    [
+      0, // cancelled
+      0, // executed
+      0, // voteDuration
+      1, // voteStart
+      proposer,
+    ],
+  )
+
+  const newEtaValue = eta // the new etaSeconds value (must fit in 6 bytes)
+  // Because the ProposalCore spans two storage slots, etaSeconds is stored in the next slot:
+  const etaSlotKey = ethers.BigNumber.from(slotKey).add(1).toHexString()
+  console.log('Storage slot for etaSeconds (second slot):', etaSlotKey)
+
+  // Encode the new etaSeconds value as a 32-byte hex string.
+  // Note: newEtaValue is a uint48, so it should fit within 6 bytes.
+  const newEtaSlotEncodedValue = ethers.utils.hexZeroPad(ethers.BigNumber.from(newEtaValue).toHexString(), 32)
+
+  console.log('eta value', eta)
+  console.log('New Storage Value:', newProposalCoreValue)
+  console.log('New encoded etaSeconds:', newEtaSlotEncodedValue)
+
+  const GovernorPreventLateQuorumStorageLocationBigNumber = BigNumber.from(
+    '0x042f525fd47e44d02e065dd7bb464f47b4f926fbd05b5e087891ebd756adf100',
+  )
+
+  // skip uint48 _voteExtension in GovernorPreventLateQuorumStorage
+  const extendedTimelinesBaseSlot = GovernorPreventLateQuorumStorageLocationBigNumber.add(1).toHexString()
+
+  // Encode the values like Solidity's abi.encode.
+  const extendedTimelinesSlotKey = ethers.utils.keccak256(
+    ethers.utils.defaultAbiCoder.encode(['uint256', 'uint256'], [proposalId, extendedTimelinesBaseSlot]),
+  )
+
+  const newExtendedValue = ethers.utils.solidityPack(['uint48'], [0])
+
+  const GovernorCountingFractionalStorageLocation = '0xd073797d8f9d07d835a3fc13195afeafd2f137da609f97a44f7a3aa434170800'
+
+  // Compute the storage slot for the proposal’s ProposalVote struct.
+  // The slot is calculated as keccak256(abi.encode(proposalId, baseSlot)).
+  const proposalVotesSlot = ethers.utils.keccak256(
+    ethers.utils.defaultAbiCoder.encode(
+      ['uint256', 'uint256'],
+      [proposalId, GovernorCountingFractionalStorageLocation],
+    ),
+  )
+
+  // The ProposalVote struct layout is:
+  //   slot 0: againstVotes
+  //   slot 1: forVotes
+  //   slot 2: abstainVotes
+  // We want to set:
+  //   againstVotes = 0
+  //   forVotes = 600000
+  const againstVotesSlot = proposalVotesSlot
+  const forVotesSlot = ethers.BigNumber.from(proposalVotesSlot).add(1).toHexString()
+
+  // Encode the new vote values as 32-byte hex strings.
+  const newAgainstVotesValue = ethers.utils.hexZeroPad(ethers.BigNumber.from(0).toHexString(), 32)
+  const newForVotesValue = ethers.utils.hexZeroPad(ethers.BigNumber.from(600000).toHexString(), 32)
+
+  // Create an object for the ProposalVote overrides.
+  const proposalVotesOverrides = {
+    [againstVotesSlot]: newAgainstVotesValue,
+    [forVotesSlot]: newForVotesValue,
+  }
+
+  const governorOverrides = {
+    [slotKey]: newProposalCoreValue,
+    [etaSlotKey]: newEtaSlotEncodedValue,
+    [extendedTimelinesSlotKey]: newExtendedValue,
+    ...proposalVotesOverrides,
+  }
+  return governorOverrides
+}
+
 /**
  * @notice Simulates execution of an on-chain proposal that has not yet been executed
  * @param config Configuration object
  */
 async function simulateProposed(config: SimulationConfigProposed): Promise<SimulationResult> {
+  console.log('Simulating proposed proposal...')
   const { governorAddress, governorType, proposalId } = config
 
   // --- Get details about the proposal we're simulating ---
@@ -330,11 +450,17 @@ async function simulateProposed(config: SimulationConfigProposed): Promise<Simul
       : proposal.endTime!.add(1)
   const eta = simTimestamp // set proposal eta to be equal to the timestamp we simulate at
 
+  const timestampBignumber = BigNumber.from(Math.floor(new Date().getTime() / 1000) + 2 * 24 * 60 * 60)
+  const timestamp = timestampBignumber.toHexString()
+
   // Compute transaction hashes used by the Timelock
   const txHashes = targets.map((target, i) => {
     const [val, sig, calldata] = [values[i], sigs[i], calldatas[i]]
     return keccak256(
-      defaultAbiCoder.encode(['address', 'uint256', 'string', 'bytes', 'uint256'], [target, val, sig, calldata, eta]),
+      defaultAbiCoder.encode(
+        ['address', 'uint256', 'string', 'bytes', 'uint256'],
+        [target, val, sig, calldata, timestampBignumber],
+      ),
     )
   })
 
@@ -363,16 +489,7 @@ async function simulateProposed(config: SimulationConfigProposed): Promise<Simul
       [`${proposalKey}.abstainVotes`]: '0',
     }
   } else if (governorType === 'oz') {
-    const proposalCoreKey = `_proposals[${proposalIdBn.toString()}]`
-    const proposalVotesKey = `_proposalVotes[${proposalIdBn.toString()}]`
-    governorStateOverrides = {
-      [`${proposalCoreKey}.voteEnd._deadline`]: simBlock.sub(1).toString(),
-      [`${proposalCoreKey}.canceled`]: 'false',
-      [`${proposalCoreKey}.executed`]: 'false',
-      [`${proposalVotesKey}.forVotes`]: votingTokenSupply.toString(),
-      [`${proposalVotesKey}.againstVotes`]: '0',
-      [`${proposalVotesKey}.abstainVotes`]: '0',
-    }
+    governorStateOverrides = await getGovernorOverrides(proposalId, governor, timestampBignumber)
   } else {
     throw new Error(`Cannot generate overrides for unknown governor type: ${governorType}`)
   }
@@ -383,11 +500,9 @@ async function simulateProposed(config: SimulationConfigProposed): Promise<Simul
       [timelock.address]: {
         value: timelockStorageObj,
       },
-      [governor.address]: {
-        value: governorStateOverrides,
-      },
     },
   }
+
   const storageObj = await sendEncodeRequest(stateOverrides)
 
   // --- Simulate it ---
@@ -414,7 +529,7 @@ async function simulateProposed(config: SimulationConfigProposed): Promise<Simul
     block_header: {
       // this data represents what block.number and block.timestamp should return in the EVM during the simulation
       number: hexStripZeros(simBlock.toHexString()),
-      timestamp: hexStripZeros(simTimestamp.toHexString()),
+      timestamp: timestamp,
     },
     state_objects: {
       // Since gas price is zero, the sender needs no balance. If the sender does need a balance to
@@ -423,7 +538,9 @@ async function simulateProposed(config: SimulationConfigProposed): Promise<Simul
       // Ensure transactions are queued in the timelock
       [timelock.address]: { storage: storageObj.stateOverrides[timelock.address.toLowerCase()].value },
       // Ensure governor storage is properly configured so `state(proposalId)` returns `Queued`
-      [governor.address]: { storage: storageObj.stateOverrides[governor.address.toLowerCase()].value },
+      [governor.address]: {
+        storage: governorStateOverrides,
+      },
     },
   }
 
@@ -516,6 +633,47 @@ async function simulateExecuted(config: SimulationConfigExecuted): Promise<Simul
 }
 
 // --- Helper methods ---
+async function readProposal(contractAddress: string, slotKey: string) {
+  // Read slot0 (contains proposer, voteStart, voteDuration, executed, canceled)
+  const slot0 = await provider.getStorageAt(contractAddress, slotKey)
+  // Read slot1 (contains etaSeconds)
+  const slot1 = await provider.getStorageAt(contractAddress, ethers.BigNumber.from(slotKey).add(1).toHexString())
+
+  // Convert hex string to byte array
+  const bytes0 = ethers.utils.arrayify(slot0)
+  const bytes1 = ethers.utils.arrayify(slot1)
+
+  // Extract proposer
+  const proposerBytes = bytes0.slice(12, 32)
+  const proposer = ethers.utils.getAddress(ethers.utils.hexlify(proposerBytes))
+
+  // Extract voteStart
+  const voteStartBytes = bytes0.slice(6, 12)
+  const voteStart = ethers.BigNumber.from(voteStartBytes)
+
+  // Extract voteDuration
+  const voteDurationBytes = bytes0.slice(2, 6)
+  const voteDuration = ethers.BigNumber.from(voteDurationBytes)
+
+  // Extract executed
+  const executed = bytes0[1] !== 0
+
+  // Extract canceled
+  const canceled = bytes0[0] !== 0
+
+  // Extract etaSeconds from slot1
+  const etaSecondsBytes = bytes1.slice(26, 32)
+  const etaSeconds = ethers.BigNumber.from(etaSecondsBytes)
+
+  // Print out the decoded values
+  console.log('Proposal Core Values:')
+  console.log('Proposer:    ', proposer)
+  console.log('voteStart:   ', voteStart.toString())
+  console.log('voteDuration:', voteDuration.toString())
+  console.log('Executed:    ', executed)
+  console.log('Canceled:    ', canceled)
+  console.log('etaSeconds:  ', etaSeconds.toString())
+}
 
 // Sleep for the specified number of milliseconds
 const sleep = (delay: number) => new Promise((resolve) => setTimeout(resolve, delay)) // delay in milliseconds
@@ -574,7 +732,6 @@ async function sendEncodeRequest(payload: any): Promise<StorageEncodingResponse>
   } catch (err) {
     console.log('logging sendEncodeRequest error')
     console.log(JSON.stringify(err, null, 2))
-    console.log(JSON.stringify(payload))
     throw err
   }
 }

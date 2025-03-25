@@ -68,7 +68,8 @@ const DEFAULT_FROM = '0xD73a92Be73EfbFcF3854433A5FcbAbF9c1316073' // arbitrary E
  */
 export async function simulate(config: ConfigWithoutGovernorType, provider: JsonRpcProvider, chain: CometChains) {
   if (config.type === 'executed') return await simulateExecuted(config as SimulationConfigExecuted, provider, chain)
-  else if (config.type === 'proposed') return await simulateProposed(config as SimulationConfigProposed, provider, chain)
+  else if (config.type === 'proposed')
+    return await simulateProposed(config as SimulationConfigProposed, provider, chain)
   else return await simulateNew(config as SimulationConfigNew, provider, chain)
 }
 
@@ -76,7 +77,11 @@ export async function simulate(config: ConfigWithoutGovernorType, provider: Json
  * @notice Simulates execution of an on-chain proposal that has not yet been executed
  * @param config Configuration object
  */
-async function simulateNew(config: SimulationConfigNew, provider: JsonRpcProvider, chain: CometChains): Promise<SimulationResult> {
+async function simulateNew(
+  config: SimulationConfigNew,
+  provider: JsonRpcProvider,
+  chain: CometChains,
+): Promise<SimulationResult> {
   // --- Validate config ---
   const { governorAddress, targets, values, signatures, calldatas, description } = config
   if (targets.length !== values.length) throw new Error('targets and values must be the same length')
@@ -96,7 +101,7 @@ async function simulateNew(config: SimulationConfigNew, provider: JsonRpcProvide
 
   const startBlock = BigNumber.from(latestBlock.number - 100) // arbitrarily subtract 100
   const proposal: ProposalEvent = {
-    id: proposalId, 
+    id: proposalId,
     proposalId,
     proposer: DEFAULT_FROM,
     startBlock,
@@ -220,7 +225,11 @@ async function simulateNew(config: SimulationConfigNew, provider: JsonRpcProvide
  * @notice Simulates execution of an on-chain proposal that has not yet been executed
  * @param config Configuration object
  */
-async function simulateProposed(config: SimulationConfigProposed, provider: JsonRpcProvider, chain: CometChains): Promise<SimulationResult> {
+async function simulateProposed(
+  config: SimulationConfigProposed,
+  provider: JsonRpcProvider,
+  chain: CometChains,
+): Promise<SimulationResult> {
   const { governorAddress, proposalId } = config
 
   // --- Get details about the proposal we're simulating ---
@@ -297,7 +306,7 @@ async function simulateProposed(config: SimulationConfigProposed, provider: Json
     [`${proposalKey}.canceled`]: 'false',
     [`${proposalKey}.executed`]: 'false',
   }
-  
+
   const stateOverrides = {
     networkID: String(network.chainId),
     stateOverrides: {
@@ -383,7 +392,11 @@ async function simulateProposed(config: SimulationConfigProposed, provider: Json
  * @notice Simulates execution of an already-executed governance proposal
  * @param config Configuration object
  */
-async function simulateExecuted(config: SimulationConfigExecuted, provider: JsonRpcProvider, chain: CometChains): Promise<SimulationResult> {
+async function simulateExecuted(
+  config: SimulationConfigExecuted,
+  provider: JsonRpcProvider,
+  chain: CometChains,
+): Promise<SimulationResult> {
   const { governorAddress, proposalId } = config
 
   console.log(`Simulating executed proposal #${proposalId}...`)
@@ -391,7 +404,7 @@ async function simulateExecuted(config: SimulationConfigExecuted, provider: Json
   const latestBlock = await provider.getBlock('latest')
   const blockRange = [0, latestBlock.number]
   const governor = getProposer(governorAddress, provider)
-  
+
   const [proposalCreatedLogs, proposalExecutedLogs] = await Promise.all([
     governor.queryFilter(governor.filters.MarketUpdateProposalCreated(), ...blockRange),
     governor.queryFilter(governor.filters.MarketUpdateProposalExecuted(), ...blockRange),
@@ -411,7 +424,7 @@ async function simulateExecuted(config: SimulationConfigExecuted, provider: Json
   // --- Simulate it ---
   // Prepare tenderly payload. Since this proposal was already executed, we directly use that transaction data
   const tx = await provider.getTransaction(proposalExecutedEvent.transactionHash)
-  
+
   const simulationPayload: TenderlyPayload = {
     network_id: String(tx.chainId) as TenderlyPayload['network_id'],
     block_number: tx.blockNumber,
@@ -425,7 +438,7 @@ async function simulateExecuted(config: SimulationConfigExecuted, provider: Json
     save: false, // Set to true to save the simulation to your Tenderly dashboard if it succeeds.
     generate_access_list: true,
   }
-  
+
   const sim = await sendSimulation(simulationPayload)
   const startBlock = BigNumber.from(tx.blockNumber)
 
@@ -529,13 +542,13 @@ async function sendSimulation(payload: TenderlyPayload, delay = 1000): Promise<T
     console.log('err in sendSimulation: ', JSON.stringify(err))
     const is429 = typeof err === 'object' && err?.statusCode === 429
     if (delay > 8000 || !is429) {
-      console.warn(`Simulation request failed with the below request payload and error`)
+      console.warn(`Market Update - Simulation request failed with the below request payload and error`)
       console.log(JSON.stringify(fetchOptions))
       throw err
     }
     console.warn(err)
     console.warn(
-      `Simulation request failed with the above error, retrying in ~${delay} milliseconds. See request payload below`,
+      `Market Update - Simulation request failed with the above error, retrying in ~${delay} milliseconds. See request payload below`,
     )
     console.log(JSON.stringify(payload))
     await sleep(delay + randomInt(0, 1000))

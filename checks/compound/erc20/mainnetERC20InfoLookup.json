@@ -206,5 +206,13 @@
   "0xf1c9acdc66974dfb6decb12aa385b9cd01190e38": {
     "symbol": "osETH",
     "decimals": "18"
+  },
+  "0xd11c452fc99cf405034ee446803b6f6c1f6d5ed8": {
+    "symbol": "tETH",
+    "decimals": "18"
+  },
+  "0xa663b02cf0a4b149d2ad41910cb81e23e1c41c32": {
+    "symbol": "sFRAX",
+    "decimals": "18"
   }
 }

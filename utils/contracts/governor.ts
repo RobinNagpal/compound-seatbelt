@@ -186,7 +186,7 @@ export function hashOperationBatchOz(
   )
 }
 
-export async function getImplementation(address: string, blockTag: number) {
+export async function getImplementation(address: string, blockTag: number, provider: ethers.providers.JsonRpcProvider) {
   // First try calling an `implementation` method.
   const abi = ['function implementation() external view returns (address)']
   const governor = new Contract(address, abi, provider)

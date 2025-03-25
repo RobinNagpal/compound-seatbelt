@@ -109,7 +109,9 @@ async function main() {
         continue
       }
 
-      console.log(`  Simulating ${DAO_NAME} proposal ${simProposal.id}...`)
+      console.log(
+        `  Simulating ${DAO_NAME} proposal ${simProposal.id}... with governor type ${config.governorType} and sim type ${simProposal.simType}`,
+      )
       const { sim, proposal, latestBlock } = await simulate(config)
       simOutputs.push({ sim, proposal, latestBlock, config })
       console.log(`done`)
@@ -118,7 +120,12 @@ async function main() {
 
   // --- Run proposal checks and save output ---
   // Generate the proposal data and dependencies needed by checks
-  const proposalData = { governor, provider, timelock: await getTimelock(governorType, governor.address), chain: CometChains.mainnet }
+  const proposalData = {
+    governor,
+    provider,
+    timelock: await getTimelock(governorType, governor.address),
+    chain: CometChains.mainnet,
+  }
 
   for (const simOutput of simOutputs) {
     console.log('Starting proposal checks and report generation...')
@@ -174,7 +181,7 @@ async function main() {
       proposal,
       checkResults,
       compProposalAnalysis,
-      s3ReportsFolder
+      s3ReportsFolder,
     )
 
     const reportPath = `reports/${config.daoName}/${config.governorAddress}/${proposal.id}`
@@ -183,12 +190,13 @@ async function main() {
     await uploadFileToS3(`${s3ReportsFolder}/${proposal.id}.html`, `${reportPath}.html`)
 
     await pushCompoundChecksToEmail(
-      CometChains.mainnet, 
-      GovernanceFlows.main, 
-      proposal.id!.toString(), 
-      checkResults, 
-      compProposalAnalysis, 
-      s3ReportsFolder)
+      CometChains.mainnet,
+      GovernanceFlows.main,
+      proposal.id!.toString(),
+      checkResults,
+      compProposalAnalysis,
+      s3ReportsFolder,
+    )
   }
   console.log('Done!')
 }
