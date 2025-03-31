@@ -9,6 +9,8 @@ import { toUtf8Bytes } from '@ethersproject/strings'
 import { Contract, ethers } from 'ethers'
 import { writeFileSync } from 'fs'
 import mftch, { FETCH_OPT } from 'micro-ftch'
+import * as fs from 'fs'
+
 import {
   BridgedSimulation,
   ProposalEvent,
@@ -134,13 +136,18 @@ async function simulateNew(config: SimulationConfigNew): Promise<SimulationResul
     governorType === 'bravo'
       ? BigNumber.from(latestBlock.timestamp).add(simBlock.sub(proposal.endBlock!).mul(12))
       : BigNumber.from(latestBlock.timestamp + 1)
-  const eta = simTimestamp // set proposal eta to be equal to the timestamp we simulate at
+
+  const timestampBignumber = BigNumber.from(Math.floor(new Date().getTime() / 1000) + 2 * 24 * 60 * 60)
+  const timestamp = timestampBignumber.toHexString()
 
   // Compute transaction hashes used by the Timelock
   const txHashes = targets.map((target, i) => {
     const [val, sig, calldata] = [values[i], signatures[i], calldatas[i]]
     return keccak256(
-      defaultAbiCoder.encode(['address', 'uint256', 'string', 'bytes', 'uint256'], [target, val, sig, calldata, eta]),
+      defaultAbiCoder.encode(
+        ['address', 'uint256', 'string', 'bytes', 'uint256'],
+        [target, val, sig, calldata, timestampBignumber],
+      ),
     )
   })
 
@@ -163,7 +170,7 @@ async function simulateNew(config: SimulationConfigNew): Promise<SimulationResul
       proposalCount: proposalId.toString(),
       [`${proposalKey}.id`]: proposalId.toString(),
       [`${proposalKey}.proposer`]: DEFAULT_FROM,
-      [`${proposalKey}.eta`]: eta.toString(),
+      [`${proposalKey}.eta`]: timestampBignumber.toString(),
       [`${proposalKey}.startBlock`]: proposal.startBlock.toString(),
       [`${proposalKey}.endBlock`]: proposal.endBlock.toString(),
       [`${proposalKey}.canceled`]: 'false',
@@ -181,21 +188,7 @@ async function simulateNew(config: SimulationConfigNew): Promise<SimulationResul
       governorStateOverrides[`${proposalKey}.calldatas[${i}]`] = calldatas[i]
     })
   } else if (governorType === 'oz') {
-    const proposalCoreKey = `_proposals[${proposalId.toString()}]`
-    const proposalVotesKey = `_proposalVotes[${proposalId.toString()}]`
-    governorStateOverrides = {
-      [`${proposalCoreKey}.voteEnd._deadline`]: simBlock.sub(1).toString(),
-      [`${proposalCoreKey}.canceled`]: 'false',
-      [`${proposalCoreKey}.executed`]: 'false',
-      [`${proposalVotesKey}.forVotes`]: votingTokenSupply.toString(),
-      [`${proposalVotesKey}.againstVotes`]: '0',
-      [`${proposalVotesKey}.abstainVotes`]: '0',
-    }
-
-    targets.forEach((target, i) => {
-      const id = hashOperationOz(target, values[i], calldatas[i], HashZero, HashZero)
-      governorStateOverrides[`_timestamps[${id}]`] = '2' // must be > 1.
-    })
+    governorStateOverrides = await getGovernorOverrides(proposalId, governor, timestampBignumber)
   } else {
     throw new Error(`Cannot generate overrides for unknown governor type: ${governorType}`)
   }
@@ -205,9 +198,6 @@ async function simulateNew(config: SimulationConfigNew): Promise<SimulationResul
     stateOverrides: {
       [timelock.address]: {
         value: timelockStorageObj,
-      },
-      [governor.address]: {
-        value: governorStateOverrides,
       },
     },
   }
@@ -254,7 +244,9 @@ async function simulateNew(config: SimulationConfigNew): Promise<SimulationResul
       // Ensure transactions are queued in the timelock
       [timelock.address]: { storage: storageObj.stateOverrides[timelock.address.toLowerCase()].value },
       // Ensure governor storage is properly configured so `state(proposalId)` returns `Queued`
-      [governor.address]: { storage: storageObj.stateOverrides[governor.address.toLowerCase()].value },
+      [governor.address]: {
+        storage: governorStateOverrides,
+      },
     },
   }
   const sim = await sendSimulation(simulationPayload)
