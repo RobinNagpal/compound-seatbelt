@@ -36,7 +36,7 @@ export type SimulationConfig = SimulationConfigExecuted | SimulationConfigPropos
 export type ConfigWithoutGovernorType =
   | Omit<SimulationConfigExecuted, 'governorType'>
   | Omit<SimulationConfigProposed, 'governorType'>
-  | Omit<SimulationConfigNew, 'governorType'>;
+  | Omit<SimulationConfigNew, 'governorType'>
 
 export interface BridgedSimulation {
   chain: L2Chain
@@ -66,7 +66,7 @@ export type ProposalActions = [
   string[],
   BigNumber[],
   string[],
-  string[]
+  string[],
 ]
 
 // TODO If adding support for a third governor, instead of hardcoding optional governor-specific
@@ -175,7 +175,7 @@ type ContractObject = {
 }
 
 export type TenderlyPayload = {
-  network_id: '1' | '3' | '4' | '5' | '42'
+  network_id: '1' | '3' | '4' | '5' | '42' | string
   block_number?: number
   transaction_index?: number
   from: string
