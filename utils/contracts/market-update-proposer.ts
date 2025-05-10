@@ -26,10 +26,10 @@ const MARKET_UPDATE_PROPOSER_ABI = [
   'function cancel(uint256 proposalId)',
   'function state(uint256 proposalId) view returns (uint8)',
   'function getProposal(uint256 proposalId) view returns (uint256, address, uint256, address[], uint256[], string[], bytes[], bool, bool)',
-];
+]
 
-
-export const marketUpdateProposer = (address: string, provider: JsonRpcProvider) => new Contract(address, MARKET_UPDATE_PROPOSER_ABI, provider)
+export const marketUpdateProposer = (address: string, provider: JsonRpcProvider) =>
+  new Contract(address, MARKET_UPDATE_PROPOSER_ABI, provider)
 
 // All possible states a proposal might be in.
 // These are defined by the `ProposalState` enum so when we fetch the state of a proposal ID
@@ -41,20 +41,20 @@ export const PROPOSAL_STATES = {
   '3': 'Expired',
 }
 
-export function getProposer(address: string, provider: JsonRpcProvider ) {
+export function getProposer(address: string, provider: JsonRpcProvider) {
   return marketUpdateProposer(address, provider)
 }
 
 export async function getProposal(
   address: string,
   proposalId: BigNumberish,
-  provider: JsonRpcProvider
+  provider: JsonRpcProvider,
 ): Promise<ProposalStruct> {
   const proposer = getProposer(address, provider)
   return proposer.proposals(proposalId)
 }
 
-export async function getTimelock(address: string, provider: JsonRpcProvider ) {
+export async function getTimelock(address: string, provider: JsonRpcProvider) {
   const proposer = getProposer(address, provider)
   return timelock(await proposer.timelock(), provider)
 }
@@ -62,17 +62,20 @@ export async function getTimelock(address: string, provider: JsonRpcProvider ) {
 export async function getProposalIds(
   address: string,
   latestBlockNum: number,
-  provider: JsonRpcProvider 
+  provider: JsonRpcProvider,
 ): Promise<BigNumber[]> {
-    // Fetch all proposal IDs
-    const proposer = marketUpdateProposer(address, provider);
-    const proposalCreatedLogs = await proposer.queryFilter(proposer.filters.MarketUpdateProposalCreated(), 0, latestBlockNum);
-    const allProposalIds = proposalCreatedLogs.map((logs) => (logs.args as unknown as ProposalEvent).id!);
+  // Fetch all proposal IDs
+  const proposer = marketUpdateProposer(address, provider)
+  const proposalCreatedLogs = await proposer.queryFilter(
+    proposer.filters.MarketUpdateProposalCreated(),
+    0,
+    latestBlockNum,
+  )
+  const allProposalIds = proposalCreatedLogs.map((logs) => (logs.args as unknown as ProposalEvent).id!)
 
-    const initialProposalId = await proposer.INITIAL_PROPOSAL_ID();
+  const initialProposalId = await proposer.INITIAL_PROPOSAL_ID()
 
-
-    return allProposalIds.filter((id) => id.gt(initialProposalId!));
+  return allProposalIds.filter((id) => id.gt(initialProposalId!))
 }
 
 export function getProposalId(proposal: ProposalEvent): BigNumber {
@@ -82,10 +85,7 @@ export function getProposalId(proposal: ProposalEvent): BigNumber {
 }
 
 // Generate proposal ID, used when simulating new proposals.
-export async function generateProposalId(
-  address: string,
-  provider: JsonRpcProvider,
-): Promise<BigNumber> {
+export async function generateProposalId(address: string, provider: JsonRpcProvider): Promise<BigNumber> {
   // Fetch proposal count from the contract and increment it by 1.
   const count: BigNumber = await marketUpdateProposer(address, provider).proposalCount()
   return count.add(1)
