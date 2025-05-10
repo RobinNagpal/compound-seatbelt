@@ -62,5 +62,23 @@
     "proposals": [
       438
     ]
+  },
+  "0x4200000000000000000000000000000000000006": {
+    "contractName": "WETH",
+    "functions": {
+      "transfer(address,uint256)": {
+        "description": "transfer(address,uint256)",
+        "transactionFormatter": "ERC20.transfer(address,uint256)",
+        "proposals": {
+          "438": [
+            "0x6C987dDE50dB1dcDd32Cd4175778C2a291978E2a",
+            "100000000000000000000"
+          ]
+        }
+      }
+    },
+    "proposals": [
+      438
+    ]
   }
 }
