@@ -5,6 +5,8 @@ import { ProposalCheck, FluffyCall, ProposalEvent, TenderlySimulation, CallTrace
 import { ERC20_ABI, fetchTokenMetadata } from '../utils/contracts/erc20'
 import { bullet } from '../presentation/report'
 import { ChainAddresses } from './compound/l2-utils'
+import { JsonRpcProvider } from '@ethersproject/providers'
+import { customProvider } from './../utils/clients/ethers'
 
 const ierc20 = new Interface(ERC20_ABI)
 
@@ -14,16 +16,18 @@ const ierc20 = new Interface(ERC20_ABI)
 export const checkDecodeCalldata: ProposalCheck = {
   name: 'Decodes target calldata into a human-readable format',
   async checkProposal(proposal, sim, deps) {
-    const mainnetResult = await createDecodedCalldataResult(proposal,sim.transaction.transaction_info.call_trace.calls,deps.timelock.address)
+    const mainnetResult = await createDecodedCalldataResult(proposal,sim.transaction.transaction_info.call_trace.calls,deps.timelock.address, deps.provider)
     
     const bridgedSimulations = sim.bridgedSimulations || []
     const bridgedCheckResults: BridgedCheckResult[] = []
     for (const b of bridgedSimulations) {
       if (b.sim && b.proposal) {
+        const customChainProvider = customProvider(b.chain)
         const bridgeResults = await createDecodedCalldataResult(
           b.proposal, 
           b.sim.simulation_results[1].transaction.transaction_info.call_trace.calls, // using `1` because second simulation is the one associated with `execute` call
-          ChainAddresses.L2Timelock[b.chain]
+          ChainAddresses.L2Timelock[b.chain],
+          customChainProvider
         )
         bridgedCheckResults.push({ chain: b.chain, checkResults: { ...bridgeResults } });
       } else {
@@ -39,7 +43,8 @@ export const checkDecodeCalldata: ProposalCheck = {
 async function createDecodedCalldataResult(
   proposal: ProposalEvent,
   calls: CallTraceCall[],
-  timelockAddress: string
+  timelockAddress: string,
+  provider: JsonRpcProvider
 ){
   let warnings: string[] = []
   // Generate the raw calldata for each proposal action
@@ -61,7 +66,7 @@ async function createDecodedCalldataResult(
       // will show the function name as `fallback`. Therefore, we look for the deepest function
       // in the callstack with the same input data and use that to decode/prettify calldata
       call = returnCallOrMatchingSubcall(calldata, call)
-      return prettifyCalldata(call, proposal.targets[i])
+      return prettifyCalldata(call, proposal.targets[i], provider)
     })
   )
   const info = descriptions.filter((d) => d !== null).map((d) => bullet(d as string))
@@ -151,7 +156,7 @@ function getDescription(target: string, sig: string, call: FluffyCall) {
 /**
  * Given a call, return a human-readable description of the call
  */
-async function prettifyCalldata(call: FluffyCall, target: string) {
+async function prettifyCalldata(call: FluffyCall, target: string, provider: JsonRpcProvider) {
   // If this is a token action, we decode the amounts and show the token symbol
   const selector = call.input.slice(0, 10)
   const tokenSelectors = new Set([
@@ -161,7 +166,7 @@ async function prettifyCalldata(call: FluffyCall, target: string) {
   ])
   const isTokenAction = tokenSelectors.has(selector)
   const { name, symbol, decimals } = isTokenAction
-    ? await fetchTokenMetadata(call.to)
+    ? await fetchTokenMetadata(call.to, provider)
     : { name: null, symbol: null, decimals: 0 }
 
   switch (selector) {

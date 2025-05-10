@@ -9,6 +9,7 @@ export const ARBITRUMSCAN_API_KEY: string = process.env.ARBITRUMSCAN_API_KEY!
 export const OPTIMISMIC_ETHERSCAN_API_KEY: string = process.env.OPTIMISM_API_KEY!
 export const SCROLLSCAN_API_KEY: string = process.env.SCROLL_API_KEY!
 export const MANTLESCAN_API_KEY: string = process.env.MANTLE_API_KEY!
+export const UNISCAN_API_KEY: string = process.env.UNISCAN_API_KEY!
 
 export const RPC_URL_MAINNET: string = process.env.RPC_URL_MAINNET!
 export const RPC_URL_POLYGON: string = process.env.RPC_URL_POLYGON!
@@ -17,6 +18,7 @@ export const RPC_URL_SCROLL: string = process.env.RPC_URL_SCROLL!
 export const RPC_URL_ARBITRUM: string = process.env.RPC_URL_ARBITRUM!
 export const RPC_URL_OPTIMISM: string = process.env.RPC_URL_OPTIMISM!
 export const RPC_URL_MANTLE: string = process.env.RPC_URL_MANTLE!
+export const RPC_URL_UNICHAIN: string = process.env.RPC_URL_UNICHAIN!
 
 export const TENDERLY_ACCESS_TOKEN: string = process.env.TENDERLY_ACCESS_TOKEN!
 export const TENDERLY_USER: string = process.env.TENDERLY_USER!
@@ -30,7 +32,8 @@ if (!ARBITRUMSCAN_API_KEY) throw new Error('ARBITRUMSCAN_API_KEY is not defined'
 if (!OPTIMISMIC_ETHERSCAN_API_KEY) throw new Error('OPTIMISM_API_KEY is not defined')
 if (!SCROLLSCAN_API_KEY) throw new Error('SCROLL_API_KEY is not defined')
 if (!MANTLESCAN_API_KEY) throw new Error('MANTLE_API_KEY is not defined')
-    
+if (!RPC_URL_UNICHAIN) throw new Error('RPC_URL_UNICHAIN is not defined')
+
 if (!RPC_URL_MAINNET) throw new Error('RPC_URL_MAINNET is not defined')
 if (!RPC_URL_POLYGON) throw new Error('RPC_URL_POLYGON is not defined')
 if (!RPC_URL_BASE) throw new Error('RPC_URL_BASE is not defined')
@@ -38,7 +41,7 @@ if (!RPC_URL_SCROLL) throw new Error('RPC_URL_SCROLL is not defined')
 if (!RPC_URL_ARBITRUM) throw new Error('RPC_URL_ARBITRUM is not defined')
 if (!RPC_URL_OPTIMISM) throw new Error('RPC_URL_OPTIMISM is not defined')
 if (!RPC_URL_MANTLE) throw new Error('RPC_URL_MANTLE is not defined')
-    
+
 if (!TENDERLY_ACCESS_TOKEN) throw new Error('TENDERLY_ACCESS_TOKEN is not defined')
 if (!TENDERLY_USER) throw new Error('TENDERLY_USER is not defined')
 if (!TENDERLY_PROJECT_SLUG) throw new Error('TENDERLY_PROJECT_SLUG is not defined')

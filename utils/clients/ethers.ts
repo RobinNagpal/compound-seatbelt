@@ -8,6 +8,7 @@ import {
   RPC_URL_OPTIMISM,
   RPC_URL_POLYGON,
   RPC_URL_SCROLL,
+  RPC_URL_UNICHAIN,
 } from '../constants'
 
 export const provider = new providers.JsonRpcProvider(RPC_URL_MAINNET)
@@ -28,6 +29,8 @@ export function customProvider(chain: CometChains) {
       return new providers.JsonRpcProvider(RPC_URL_OPTIMISM)
     case CometChains.mantle:
       return new providers.JsonRpcProvider(RPC_URL_MANTLE)
+    case CometChains.unichain:
+      return new providers.JsonRpcProvider(RPC_URL_UNICHAIN)
     default:
       throw new Error('Unknown chain: ' + chain)
   }

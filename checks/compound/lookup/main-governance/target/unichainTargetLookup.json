@@ -1,0 +1,84 @@
+{
+  "0x6f7d514bbd4aff3bcd1140b7344b32f063dee486": {
+    "contractName": "CometRewards",
+    "functions": {
+      "setRewardConfig(address,address)": {
+        "description": "setRewardConfig(address,address)",
+        "transactionFormatter": "CometRewards.setRewardConfig(address,address)",
+        "proposals": {
+          "438": [
+            "0x6C987dDE50dB1dcDd32Cd4175778C2a291978E2a",
+            "0xdf78e4F0A8279942ca68046476919A90f2288656"
+          ]
+        }
+      }
+    },
+    "proposals": [
+      438
+    ]
+  },
+  "0x8df378453ff9deffa513367cdf9b3b53726303e9": {
+    "contractName": "Configurator",
+    "functions": {
+      "setFactory(address,address)": {
+        "description": "setFactory(address,address)",
+        "transactionFormatter": "Configurator.setFactory(address,address)",
+        "proposals": {
+          "438": [
+            "0x6C987dDE50dB1dcDd32Cd4175778C2a291978E2a",
+            "0xdB7EdFa090061D9367CbEAF6bE16ECbDE596676C"
+          ]
+        }
+      },
+      "setConfiguration(address,tuple)": {
+        "description": "setConfiguration(address,tuple)",
+        "transactionFormatter": "Configurator.setConfiguration(address,tuple)",
+        "proposals": {
+          "438": [
+            "0x6C987dDE50dB1dcDd32Cd4175778C2a291978E2a",
+            "0x2F4eAF29dfeeF4654bD091F7112926E108eF4Ed0,0x6784FC9e931D7d5B1075e665A4016c299ee6C31B,0x4200000000000000000000000000000000000006,0x3C30B5a5A04656565686f800481580Ac4E7ed178,0x443EA0340cb75a160F31A440722dec7b5bc3C2E9,900000000000000000,21600000000000000,1125000000000000000,0,900000000000000000,15500000000000000,1260000000000000000,10000000000000000,700000000000000000,1000000000000000,138888888888,92592592592,100000000000000000000,10000000000000000,5000000000000000000000,0xc02fE7317D4eb8753a02c35fe019786854A92001,0x3870FAc3De911c12A57E5a2532D15aD8Ca275A60,18,900000000000000000,930000000000000000,970000000000000000,5000000000000000000000,0x7DCC39B4d1C53CB31e1aBc0e358b43987FEF80f7,0x2e44e174f7D53F0212823acC11C01A11d58c5bCB,18,900000000000000000,930000000000000000,960000000000000000,5000000000000000000000,0x2416092f143378750bb29b79eD961ab195CcEea5,0x1Ad4CEBa9f8135A557bBe317DB62Aa125C330F26,18,880000000000000000,910000000000000000,940000000000000000,2200000000000000000000,0x8f187aA05619a017077f5308904739877ce9eA21,0x84E93EC6170ED630f5ebD89A1AAE72d4F63f2713,18,700000000000000000,750000000000000000,800000000000000000,500000000000000000000000,0x927B51f251480a681271180DA4de28D44EC4AfB8,0xFa454dE61b317b6535A0C462267208E8FdB89f45,8,800000000000000000,850000000000000000,900000000000000000,12000000000"
+          ]
+        }
+      }
+    },
+    "proposals": [
+      438
+    ]
+  },
+  "0xaeb318360f27748acb200ce616e389a6c9409a07": {
+    "contractName": "CometProxyAdmin",
+    "functions": {
+      "deployAndUpgradeTo(address,address)": {
+        "description": "deployAndUpgradeTo(address,address)",
+        "transactionFormatter": "CometProxyAdmin.deployAndUpgradeTo(address,address)",
+        "proposals": {
+          "438": [
+            "0x8df378453Ff9dEFFa513367CDF9b3B53726303e9",
+            "0x6C987dDE50dB1dcDd32Cd4175778C2a291978E2a"
+          ]
+        }
+      }
+    },
+    "proposals": [
+      438
+    ]
+  },
+  "0x4200000000000000000000000000000000000006": {
+    "contractName": "WETH",
+    "functions": {
+      "transfer(address,uint256)": {
+        "description": "transfer(address,uint256)",
+        "transactionFormatter": "ERC20.transfer(address,uint256)",
+        "proposals": {
+          "438": [
+            "0x6C987dDE50dB1dcDd32Cd4175778C2a291978E2a",
+            "100000000000000000000"
+          ]
+        }
+      }
+    },
+    "proposals": [
+      438
+    ]
+  }
+}

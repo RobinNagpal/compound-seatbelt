@@ -23,6 +23,7 @@ import {
   inferGovernorType,
 } from './utils/contracts/governor'
 import { getAddress } from '@ethersproject/address'
+import { CometChains, GovernanceFlows } from './checks/compound/compound-types'
 
 /**
  * @notice Simulate governance proposals and run proposal checks against them
@@ -48,7 +49,7 @@ async function main() {
     simOutputs.push({ sim, proposal, latestBlock, config })
 
     governorType = await inferGovernorType(config.governorAddress)
-    governor = await getGovernor(governorType, config.governorAddress)
+    governor = getGovernor(governorType, config.governorAddress)
   } else {
     // If no SIM_NAME is provided, we get proposals to simulate from the chain
     if (!GOVERNOR_ADDRESS) throw new Error('Must provider a GOVERNOR_ADDRESS')
@@ -61,7 +62,7 @@ async function main() {
     const files = await listFilesInFolder(s3ReportsFolder)
     console.log('files', files)
     const proposalIdsArr =
-      process.env.SELECTED_PROPOSALS?.split(',') || allProposalIds.filter((id) => id.toNumber() > 228)
+      process.env.SELECTED_PROPOSALS?.split(',') || allProposalIds.filter((id) => id.toNumber() > 438)
 
     const proposalIds = proposalIdsArr.map((id) => BigNumber.from(id))
 
@@ -108,7 +109,9 @@ async function main() {
         continue
       }
 
-      console.log(`  Simulating ${DAO_NAME} proposal ${simProposal.id}...`)
+      console.log(
+        `  Simulating ${DAO_NAME} proposal ${simProposal.id}... with governor type ${config.governorType} and sim type ${simProposal.simType}`,
+      )
       const { sim, proposal, latestBlock } = await simulate(config)
       simOutputs.push({ sim, proposal, latestBlock, config })
       console.log(`done`)
@@ -117,7 +120,12 @@ async function main() {
 
   // --- Run proposal checks and save output ---
   // Generate the proposal data and dependencies needed by checks
-  const proposalData = { governor, provider, timelock: await getTimelock(governorType, governor.address) }
+  const proposalData = {
+    governor,
+    provider,
+    timelock: await getTimelock(governorType, governor.address),
+    chain: CometChains.mainnet,
+  }
 
   for (const simOutput of simOutputs) {
     console.log('Starting proposal checks and report generation...')
@@ -131,22 +139,18 @@ async function main() {
         return String(process.env.SKIP_DEFAULT_CHECKS).toLowerCase() !== 'true'
       })
     console.log(`Running ${checksToRun.length} checks: ${checksToRun.join(', ')} for proposal ID ${proposal.id!}`)
-    const checkResults: AllCheckResults = Object.fromEntries(
-      await Promise.all(
-        checksToRun.map(async (checkId) => [
-          checkId,
-          {
-            name: ALL_CHECKS[checkId].name,
-            result: await ALL_CHECKS[checkId].checkProposal(proposal, sim, proposalData),
-          },
-        ]),
-      ),
-    )
-
+    const checkResults: AllCheckResults = {}
+    for (const checkToRun of checksToRun) {
+      console.log(`Running check ${checkToRun}...`)
+      checkResults[checkToRun] = {
+        name: ALL_CHECKS[checkToRun].name,
+        result: await ALL_CHECKS[checkToRun].checkProposal(proposal, sim, proposalData),
+      }
+    }
     const compProposalAnalysis =
       process.env.DISABLE_COMPOUND_CHECKS === 'true'
         ? { mainnetActionAnalysis: [], chainedProposalAnalysis: [] }
-        : await analyzeProposal(proposal, sim, proposalData)
+        : await analyzeProposal(proposal, sim, proposalData, GovernanceFlows.main)
 
     // Generate markdown report.
     const [startBlock, endBlock] = await Promise.all([
@@ -157,8 +161,10 @@ async function main() {
     // Save markdown report to a file.
     // GitHub artifacts are flattened (folder structure is not preserved), so we include the DAO name in the filename.
     const dir = `./reports/${config.daoName}/${config.governorAddress}`
+    const proposalId = formatProposalId(governorType, proposal.id!)
     await generateAndSaveReports(
-      governorType,
+      CometChains.mainnet,
+      proposalId,
       { start: startBlock, end: endBlock, current: latestBlock },
       proposal,
       checkResults,
@@ -167,11 +173,11 @@ async function main() {
     )
 
     await pushCompoundChecksToDiscord(
-      governorType,
-      { start: startBlock, end: endBlock, current: latestBlock },
+      GovernanceFlows.main,
       proposal,
       checkResults,
       compProposalAnalysis,
+      s3ReportsFolder,
     )
 
     const reportPath = `reports/${config.daoName}/${config.governorAddress}/${proposal.id}`
@@ -179,7 +185,14 @@ async function main() {
     await uploadFileToS3(`${s3ReportsFolder}/${proposal.id}.pdf`, `${reportPath}.pdf`)
     await uploadFileToS3(`${s3ReportsFolder}/${proposal.id}.html`, `${reportPath}.html`)
 
-    await pushCompoundChecksToEmail(proposal.id!.toString(), checkResults, compProposalAnalysis, s3ReportsFolder)
+    await pushCompoundChecksToEmail(
+      CometChains.mainnet,
+      GovernanceFlows.main,
+      proposal.id!.toString(),
+      checkResults,
+      compProposalAnalysis,
+      s3ReportsFolder,
+    )
   }
   console.log('Done!')
 }

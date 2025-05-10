@@ -1,12 +1,11 @@
-import { defaultAbiCoder } from '@ethersproject/abi'
+import { Block } from '@ethersproject/abstract-provider'
 import { getAddress } from '@ethersproject/address'
 import { BigNumber, BigNumberish } from '@ethersproject/bignumber'
 import { hexStripZeros } from '@ethersproject/bytes'
-import { HashZero, Zero } from '@ethersproject/constants'
+import { Zero } from '@ethersproject/constants'
 import { keccak256 } from '@ethersproject/keccak256'
 import { toUtf8Bytes } from '@ethersproject/strings'
 import { writeFileSync } from 'fs'
-import mftch, { FETCH_OPT } from 'micro-ftch'
 import {
   BridgedSimulation,
   ProposalEvent,
@@ -16,21 +15,12 @@ import {
   SimulationConfigNew,
   SimulationConfigProposed,
   SimulationResult,
-  StorageEncodingResponse,
   TenderlyBundledSimulation,
   TenderlyContract,
   TenderlyPayload,
-  TenderlySimulation,
 } from '../../types'
 import { customProvider } from '../../utils/clients/ethers'
-import {
-  BLOCK_GAS_LIMIT,
-  TENDERLY_ACCESS_TOKEN,
-  TENDERLY_BASE_URL,
-  TENDERLY_ENCODE_URL,
-  TENDERLY_SIM_BUNDLE_URL,
-  TENDERLY_SIM_URL,
-} from '../constants'
+import { BLOCK_GAS_LIMIT } from '../constants'
 import {
   generateProposalId,
   getGovernor,
@@ -38,10 +28,9 @@ import {
   getProposalId,
   getTimelock,
   getVotingToken,
-  hashOperationBatchOz,
-  hashOperationOz,
 } from '../contracts/governor'
 import { CometChains, ExecuteTransactionInfo } from './../../checks/compound/compound-types'
+import { capitalizeWord } from './../../checks/compound/formatters/helper'
 import {
   ChainAddresses,
   getBridgeReceiverInput,
@@ -53,15 +42,24 @@ import {
 } from './../../checks/compound/l2-utils'
 import { bridgeReceiver } from './../contracts/baseBridgeReceiver'
 import { provider } from './ethers'
-import { capitalizeWord } from './../../checks/compound/formatters/helper'
-import { Block } from '@ethersproject/abstract-provider'
-// @ts-ignore
-const fetchUrl = mftch.default
+import { getGovernorOverrides, GovernorOverrideParams } from './governor-overrides'
+import {
+  createSimulationPayload,
+  getLatestBlock,
+  sendBundleSimulation,
+  sendEncodeRequest,
+  sendSimulation,
+  SimulationPayloadParams,
+} from './tenderly-helpers'
+import { generateTimelockOverrides, TimelockOverrideParams } from './timelock-overrides'
 
-const TENDERLY_FETCH_OPTIONS = { type: 'json', headers: { 'X-Access-Key': TENDERLY_ACCESS_TOKEN } }
+// Common constants
+
 const DEFAULT_FROM = '0xD73a92Be73EfbFcF3854433A5FcbAbF9c1316073' // arbitrary EOA not used on-chain
 
-// --- Simulation methods ---
+// --- Utility functions ---
+
+// --- Simulation Methods ---
 
 /**
  * @notice Simulates a proposal based on the provided configuration
@@ -78,6 +76,7 @@ export async function simulate(config: SimulationConfig) {
  * @param config Configuration object
  */
 async function simulateNew(config: SimulationConfigNew): Promise<SimulationResult> {
+  console.log('Simulating new proposal...')
   // --- Validate config ---
   const { governorAddress, governorType, targets, values, signatures, calldatas, description } = config
   if (targets.length !== values.length) throw new Error('targets and values must be the same length')
@@ -120,39 +119,28 @@ async function simulateNew(config: SimulationConfigNew): Promise<SimulationResul
   // Run simulation at the block right after the proposal ends.
   const simBlock = proposal.endBlock!.add(1)
 
-  // For OZ governors we arbitrarily choose execution time. For Bravo governors, we
-  // compute the approximate earliest possible execution time based on governance parameters. This
-  // can only be approximate because voting period is defined in blocks, not as a timestamp. We
-  // assume 12 second block times to prefer underestimating timestamp rather than overestimating,
-  // and we prefer underestimating to avoid simulations reverting in cases where governance
-  // proposals call methods that pass in a start timestamp that must be lower than the current
-  // block timestamp (represented by the `simTimestamp` variable below)
+  // Determine simulation timestamp based on governor type
   const simTimestamp =
     governorType === 'bravo'
       ? BigNumber.from(latestBlock.timestamp).add(simBlock.sub(proposal.endBlock!).mul(12))
       : BigNumber.from(latestBlock.timestamp + 1)
-  const eta = simTimestamp // set proposal eta to be equal to the timestamp we simulate at
 
-  // Compute transaction hashes used by the Timelock
-  const txHashes = targets.map((target, i) => {
-    const [val, sig, calldata] = [values[i], signatures[i], calldatas[i]]
-    return keccak256(
-      defaultAbiCoder.encode(['address', 'uint256', 'string', 'bytes', 'uint256'], [target, val, sig, calldata, eta]),
-    )
-  })
+  const timestampBignumber = BigNumber.from(Math.floor(new Date().getTime() / 1000) + 2 * 24 * 60 * 60)
+  const timestamp = timestampBignumber.toHexString()
 
-  // Generate the state object needed to mark the transactions as queued in the Timelock's storage
-  const timelockStorageObj: Record<string, string> = {}
-  txHashes.forEach((hash) => {
-    timelockStorageObj[`queuedTransactions[${hash}]`] = 'true'
-  })
-
-  if (governorType === 'oz') {
-    const id = hashOperationBatchOz(targets, values, calldatas, HashZero, keccak256(toUtf8Bytes(description)))
-    timelockStorageObj[`_timestamps[${id.toHexString()}]`] = simTimestamp.toString()
+  // Generate timelock state overrides
+  const timelockParams: TimelockOverrideParams = {
+    targets,
+    values,
+    signatures,
+    calldatas,
+    timestamp: timestampBignumber,
+    description,
+    governorType,
   }
+  const timelockStorageObj = await generateTimelockOverrides(timelockParams)
 
-  // Use the Tenderly API to get the encoded state overrides for governor storage
+  // Generate governor state overrides
   let governorStateOverrides: Record<string, string> = {}
   if (governorType === 'bravo') {
     const proposalKey = `proposals[${proposalId.toString()}]`
@@ -160,7 +148,7 @@ async function simulateNew(config: SimulationConfigNew): Promise<SimulationResul
       proposalCount: proposalId.toString(),
       [`${proposalKey}.id`]: proposalId.toString(),
       [`${proposalKey}.proposer`]: DEFAULT_FROM,
-      [`${proposalKey}.eta`]: eta.toString(),
+      [`${proposalKey}.eta`]: timestampBignumber.toString(),
       [`${proposalKey}.startBlock`]: proposal.startBlock.toString(),
       [`${proposalKey}.endBlock`]: proposal.endBlock.toString(),
       [`${proposalKey}.canceled`]: 'false',
@@ -178,21 +166,12 @@ async function simulateNew(config: SimulationConfigNew): Promise<SimulationResul
       governorStateOverrides[`${proposalKey}.calldatas[${i}]`] = calldatas[i]
     })
   } else if (governorType === 'oz') {
-    const proposalCoreKey = `_proposals[${proposalId.toString()}]`
-    const proposalVotesKey = `_proposalVotes[${proposalId.toString()}]`
-    governorStateOverrides = {
-      [`${proposalCoreKey}.voteEnd._deadline`]: simBlock.sub(1).toString(),
-      [`${proposalCoreKey}.canceled`]: 'false',
-      [`${proposalCoreKey}.executed`]: 'false',
-      [`${proposalVotesKey}.forVotes`]: votingTokenSupply.toString(),
-      [`${proposalVotesKey}.againstVotes`]: '0',
-      [`${proposalVotesKey}.abstainVotes`]: '0',
+    const overrideParams: GovernorOverrideParams = {
+      proposalId,
+      governor,
+      eta: timestampBignumber,
     }
-
-    targets.forEach((target, i) => {
-      const id = hashOperationOz(target, values[i], calldatas[i], HashZero, HashZero)
-      governorStateOverrides[`_timestamps[${id}]`] = '2' // must be > 1.
-    })
+    governorStateOverrides = await getGovernorOverrides(overrideParams)
   } else {
     throw new Error(`Cannot generate overrides for unknown governor type: ${governorType}`)
   }
@@ -203,57 +182,35 @@ async function simulateNew(config: SimulationConfigNew): Promise<SimulationResul
       [timelock.address]: {
         value: timelockStorageObj,
       },
-      [governor.address]: {
-        value: governorStateOverrides,
-      },
     },
   }
 
   const storageObj = await sendEncodeRequest(stateOverrides)
 
   // --- Simulate it ---
-  // We need the following state conditions to be true to successfully simulate a proposal:
-  //   - proposalCount >= proposal.id
-  //   - proposal.canceled == false
-  //   - proposal.executed == false
-  //   - block.number > proposal.endBlock
-  //   - proposal.forVotes > proposal.againstVotes
-  //   - proposal.forVotes > quorumVotes
-  //   - proposal.eta !== 0
-  //   - block.timestamp >= proposal.eta
-  //   - block.timestamp <  proposal.eta + timelock.GRACE_PERIOD()
-  //   - queuedTransactions[txHash] = true for each action in the proposal
   const descriptionHash = keccak256(toUtf8Bytes(description))
   const executeInputs =
     governorType === 'bravo' ? [proposalId.toString()] : [targets, values, calldatas, descriptionHash]
-  const simulationPayload: TenderlyPayload = {
-    network_id: '1',
-    // this field represents the block state to simulate against, so we use the latest block number
-    block_number: latestBlock.number,
+
+  const payloadParams: SimulationPayloadParams = {
+    networkId: '1',
+    blockNumber: latestBlock.number,
     from: DEFAULT_FROM,
     to: governor.address,
     input: governor.interface.encodeFunctionData('execute', executeInputs),
     gas: BLOCK_GAS_LIMIT,
-    gas_price: '0',
-    value: '0', // TODO Support sending ETH in local simulations like we do below in `simulateProposed`.
-    save_if_fails: false, // Set to true to save the simulation to your Tenderly dashboard if it fails.
-    save: false, // Set to true to save the simulation to your Tenderly dashboard if it succeeds.
-    generate_access_list: true, // not required, but useful as a sanity check to ensure consistency in the simulation response
-    block_header: {
-      // this data represents what block.number and block.timestamp should return in the EVM during the simulation
-      number: hexStripZeros(simBlock.toHexString()),
-      timestamp: hexStripZeros(simTimestamp.toHexString()),
-    },
-    state_objects: {
-      // Since gas price is zero, the sender needs no balance.
-      // TODO Support sending ETH in local simulations like we do below in `simulateProposed`.
+    gasPrice: '0',
+    value: '0',
+    simBlock,
+    simTimestamp,
+    stateObjects: {
       [from]: { balance: '0' },
-      // Ensure transactions are queued in the timelock
       [timelock.address]: { storage: storageObj.stateOverrides[timelock.address.toLowerCase()].value },
-      // Ensure governor storage is properly configured so `state(proposalId)` returns `Queued`
-      [governor.address]: { storage: storageObj.stateOverrides[governor.address.toLowerCase()].value },
+      [governor.address]: { storage: governorStateOverrides },
     },
   }
+
+  const simulationPayload = createSimulationPayload(payloadParams)
   const sim = await sendSimulation(simulationPayload)
   writeFileSync('new-response.json', JSON.stringify(sim, null, 2))
   return { sim, proposal, latestBlock }
@@ -264,6 +221,7 @@ async function simulateNew(config: SimulationConfigNew): Promise<SimulationResul
  * @param config Configuration object
  */
 async function simulateProposed(config: SimulationConfigProposed): Promise<SimulationResult> {
+  console.log('Simulating proposed proposal...')
   const { governorAddress, governorType, proposalId } = config
 
   // --- Get details about the proposal we're simulating ---
@@ -293,18 +251,6 @@ async function simulateProposed(config: SimulationConfigProposed): Promise<Simul
   // `ProposalCreated(proposalId, proposer, targets, values, signatures, calldatas, startBlock, endBlock, description)`
   const values: BigNumber[] = proposalCreatedEventWrapper.args![3]
 
-  // --- Prepare simulation configuration ---
-  // We need the following state conditions to be true to successfully simulate a proposal:
-  //   - proposal.canceled == false
-  //   - proposal.executed == false
-  //   - block.number > proposal.endBlock
-  //   - proposal.forVotes > proposal.againstVotes
-  //   - proposal.forVotes > quorumVotes
-  //   - proposal.eta !== 0
-  //   - block.timestamp >= proposal.eta
-  //   - block.timestamp <  proposal.eta + timelock.GRACE_PERIOD()
-  //   - queuedTransactions[txHash] = true for each action in the proposal
-
   // Get voting token and total supply
   const votingToken = await getVotingToken(governorType, governorAddress, proposal.id)
   const votingTokenSupply = <BigNumber>await votingToken.totalSupply() // used to manipulate vote count
@@ -312,42 +258,30 @@ async function simulateProposed(config: SimulationConfigProposed): Promise<Simul
   // Set `from` arbitrarily.
   const from = DEFAULT_FROM
 
-  // For Bravo governors, we use the block right after the proposal ends, and for OZ
-  // governors we arbitrarily use the next block number.
+  // Determine simulation block and timestamp
   const simBlock = governorType === 'bravo' ? proposal.endBlock!.add(1) : BigNumber.from(latestBlock.number + 1)
-
-  // For OZ governors we are given the earliest possible execution time. For Bravo governors, we
-  // Compute the approximate earliest possible execution time based on governance parameters. This
-  // can only be approximate because voting period is defined in blocks, not as a timestamp. We
-  // assume 12 second block times to prefer underestimating timestamp rather than overestimating,
-  // and we prefer underestimating to avoid simulations reverting in cases where governance
-  // proposals call methods that pass in a start timestamp that must be lower than the current
-  // block timestamp (represented by the `simTimestamp` variable below)
   const simTimestamp =
     governorType === 'bravo'
       ? BigNumber.from(latestBlock.timestamp).add(simBlock.sub(proposal.endBlock!).mul(12))
       : proposal.endTime!.add(1)
   const eta = simTimestamp // set proposal eta to be equal to the timestamp we simulate at
 
-  // Compute transaction hashes used by the Timelock
-  const txHashes = targets.map((target, i) => {
-    const [val, sig, calldata] = [values[i], sigs[i], calldatas[i]]
-    return keccak256(
-      defaultAbiCoder.encode(['address', 'uint256', 'string', 'bytes', 'uint256'], [target, val, sig, calldata, eta]),
-    )
-  })
+  const timestampBignumber = BigNumber.from(Math.floor(new Date().getTime() / 1000) + 2 * 24 * 60 * 60)
+  const timestamp = timestampBignumber.toHexString()
 
-  // Generate the state object needed to mark the transactions as queued in the Timelock's storage
-  const timelockStorageObj: Record<string, string> = {}
-  txHashes.forEach((hash) => {
-    timelockStorageObj[`queuedTransactions[${hash}]`] = 'true'
-  })
-
-  if (governorType === 'oz') {
-    const id = hashOperationBatchOz(targets, values, calldatas, HashZero, keccak256(toUtf8Bytes(description)))
-    timelockStorageObj[`_timestamps[${id.toHexString()}]`] = simTimestamp.toString()
+  // Generate timelock state overrides
+  const timelockParams: TimelockOverrideParams = {
+    targets,
+    values,
+    signatures: sigs,
+    calldatas,
+    timestamp: timestampBignumber,
+    description,
+    governorType,
   }
+  const timelockStorageObj = await generateTimelockOverrides(timelockParams)
 
+  // Generate governor state overrides
   const proposalIdBn = BigNumber.from(proposalId)
   let governorStateOverrides: Record<string, string> = {}
   if (governorType === 'bravo') {
@@ -362,16 +296,12 @@ async function simulateProposed(config: SimulationConfigProposed): Promise<Simul
       [`${proposalKey}.abstainVotes`]: '0',
     }
   } else if (governorType === 'oz') {
-    const proposalCoreKey = `_proposals[${proposalIdBn.toString()}]`
-    const proposalVotesKey = `_proposalVotes[${proposalIdBn.toString()}]`
-    governorStateOverrides = {
-      [`${proposalCoreKey}.voteEnd._deadline`]: simBlock.sub(1).toString(),
-      [`${proposalCoreKey}.canceled`]: 'false',
-      [`${proposalCoreKey}.executed`]: 'false',
-      [`${proposalVotesKey}.forVotes`]: votingTokenSupply.toString(),
-      [`${proposalVotesKey}.againstVotes`]: '0',
-      [`${proposalVotesKey}.abstainVotes`]: '0',
+    const overrideParams: GovernorOverrideParams = {
+      proposalId,
+      governor,
+      eta: timestampBignumber,
     }
+    governorStateOverrides = await getGovernorOverrides(overrideParams)
   } else {
     throw new Error(`Cannot generate overrides for unknown governor type: ${governorType}`)
   }
@@ -382,53 +312,41 @@ async function simulateProposed(config: SimulationConfigProposed): Promise<Simul
       [timelock.address]: {
         value: timelockStorageObj,
       },
-      [governor.address]: {
-        value: governorStateOverrides,
-      },
     },
   }
+
   const storageObj = await sendEncodeRequest(stateOverrides)
 
-  // --- Simulate it ---
-  // Note: The Tenderly API is sensitive to the input types, so all formatting below (e.g. stripping
-  // leading zeroes, padding with zeros, strings vs. hex, etc.) are all intentional decisions to
-  // ensure Tenderly properly parses the simulation payload
+  // Generate simulation payload
   const descriptionHash = keccak256(toUtf8Bytes(description))
   const executeInputs =
     governorType === 'bravo' ? [proposalId.toString()] : [targets, values, calldatas, descriptionHash]
 
-  let simulationPayload: TenderlyPayload = {
-    network_id: '1',
-    // this field represents the block state to simulate against, so we use the latest block number
-    block_number: latestBlock.number,
+  const stateObjects = {
+    [from]: { balance: '0' },
+    [timelock.address]: { storage: storageObj.stateOverrides[timelock.address.toLowerCase()].value },
+    [governor.address]: { storage: governorStateOverrides },
+  }
+
+  const payloadParams: SimulationPayloadParams = {
+    networkId: '1',
+    blockNumber: latestBlock.number,
     from,
     to: governor.address,
     input: governor.interface.encodeFunctionData('execute', executeInputs),
     gas: BLOCK_GAS_LIMIT,
-    gas_price: '0',
+    gasPrice: '0',
     value: '0',
-    save_if_fails: false, // Set to true to save the simulation to your Tenderly dashboard if it fails.
-    save: false, // Set to true to save the simulation to your Tenderly dashboard if it succeeds.
-    generate_access_list: true, // not required, but useful as a sanity check to ensure consistency in the simulation response
-    block_header: {
-      // this data represents what block.number and block.timestamp should return in the EVM during the simulation
-      number: hexStripZeros(simBlock.toHexString()),
-      timestamp: hexStripZeros(simTimestamp.toHexString()),
-    },
-    state_objects: {
-      // Since gas price is zero, the sender needs no balance. If the sender does need a balance to
-      // send ETH with the execution, this will be overridden later.
-      [from]: { balance: '0' },
-      // Ensure transactions are queued in the timelock
-      [timelock.address]: { storage: storageObj.stateOverrides[timelock.address.toLowerCase()].value },
-      // Ensure governor storage is properly configured so `state(proposalId)` returns `Queued`
-      [governor.address]: { storage: storageObj.stateOverrides[governor.address.toLowerCase()].value },
-    },
+    simBlock,
+    simTimestamp: timestamp,
+    stateObjects,
   }
+
+  let simulationPayload = createSimulationPayload(payloadParams)
 
   const formattedProposal: ProposalEvent = {
     ...proposalCreatedEvent,
-    values, // This does not get included otherwise, same reason why we use `proposalCreatedEvent.args![3]` above.
+    values, // This does not get included otherwise
     id: BigNumber.from(proposalId), // Make sure we always have an ID field
   }
 
@@ -497,8 +415,8 @@ async function simulateExecuted(config: SimulationConfigExecuted): Promise<Simul
     gas: tx.gasLimit.toNumber(),
     gas_price: tx.gasPrice?.toString(),
     value: tx.value.toString(),
-    save_if_fails: false, // Set to true to save the simulation to your Tenderly dashboard if it fails.
-    save: false, // Set to true to save the simulation to your Tenderly dashboard if it succeeds.
+    save_if_fails: false,
+    save: false,
     generate_access_list: true,
   }
   const sim = await sendSimulation(simulationPayload)
@@ -513,14 +431,6 @@ async function simulateExecuted(config: SimulationConfigExecuted): Promise<Simul
   console.log(`Bridge simulations: ${bridgedSimulations.length}`)
   return { sim: { ...sim, bridgedSimulations }, proposal: formattedProposal, latestBlock }
 }
-
-// --- Helper methods ---
-
-// Sleep for the specified number of milliseconds
-const sleep = (delay: number) => new Promise((resolve) => setTimeout(resolve, delay)) // delay in milliseconds
-
-// Get a random integer between two values
-const randomInt = (min: number, max: number) => Math.floor(Math.random() * (max - min) + min) // max is exclusive, min is inclusive
 
 /**
  * @notice Given a Tenderly contract object, generates a descriptive human-friendly name for that contract
@@ -539,82 +449,10 @@ export function getContractName(contract: TenderlyContract | undefined) {
 }
 
 /**
- * Gets the latest block number known to Tenderly
- * @param chainId Chain ID to get block number for
+ * Simulates L2 bridged transactions
+ * @param proposalId The proposal ID
+ * @param proposalEvent The proposal event data
  */
-async function getLatestBlock(chainId: BigNumberish): Promise<number> {
-  try {
-    // Send simulation request
-    const url = `${TENDERLY_BASE_URL}/network/${BigNumber.from(chainId).toString()}/block-number`
-    const fetchOptions = <Partial<FETCH_OPT>>{ method: 'GET', ...TENDERLY_FETCH_OPTIONS }
-    const res = await fetchUrl(url, fetchOptions)
-    return res.block_number as number
-  } catch (err) {
-    console.log('logging getLatestBlock error')
-    console.log(JSON.stringify(err, null, 2))
-    throw err
-  }
-}
-
-/**
- * @notice Encode state overrides
- * @param payload State overrides to send
- */
-async function sendEncodeRequest(payload: any): Promise<StorageEncodingResponse> {
-  try {
-    const fetchOptions = <Partial<FETCH_OPT>>{
-      method: 'POST',
-      data: payload,
-      ...TENDERLY_FETCH_OPTIONS,
-    }
-    const response = await fetchUrl(TENDERLY_ENCODE_URL, fetchOptions)
-
-    return response as StorageEncodingResponse
-  } catch (err) {
-    console.log('logging sendEncodeRequest error')
-    console.log(JSON.stringify(err, null, 2))
-    console.log(JSON.stringify(payload))
-    throw err
-  }
-}
-
-/**
- * @notice Sends a transaction simulation request to the Tenderly API
- * @dev Uses a simple exponential backoff when requests fail, with the following parameters:
- *   - Initial delay is 1 second
- *   - We randomize the delay duration to avoid synchronization issues if client is sending multiple requests simultaneously
- *   - We double delay each time and throw an error if delay is over 8 seconds
- * @param payload Transaction simulation parameters
- * @param delay How long to wait until next simulation request after failure, in milliseconds
- */
-async function sendSimulation(payload: TenderlyPayload, delay = 1000): Promise<TenderlySimulation> {
-  const fetchOptions = <Partial<FETCH_OPT>>{ method: 'POST', data: payload, ...TENDERLY_FETCH_OPTIONS }
-  try {
-    // Send simulation request
-    const sim = <TenderlySimulation>await fetchUrl(TENDERLY_SIM_URL, fetchOptions)
-
-    // Post-processing to ensure addresses we use are checksummed (since ethers returns checksummed addresses)
-    sim.transaction.addresses = sim.transaction.addresses.map(getAddress)
-    sim.contracts.forEach((contract) => (contract.address = getAddress(contract.address)))
-    return sim
-  } catch (err: any) {
-    console.log('err in sendSimulation: ', JSON.stringify(err))
-    const is429 = typeof err === 'object' && err?.statusCode === 429
-    if (delay > 8000 || !is429) {
-      console.warn(`Simulation request failed with the below request payload and error`)
-      console.log(JSON.stringify(fetchOptions))
-      throw err
-    }
-    console.warn(err)
-    console.warn(
-      `Simulation request failed with the above error, retrying in ~${delay} milliseconds. See request payload below`,
-    )
-    console.log(JSON.stringify(payload))
-    await sleep(delay + randomInt(0, 1000))
-    return await sendSimulation(payload, delay * 2)
-  }
-}
-
 async function simulateBridgedTransactions(
   proposalId: BigNumberish,
   proposalEvent: ProposalEvent,
@@ -648,9 +486,12 @@ async function simulateBridgedTransactions(
         value: proposalEvent.values?.[i],
       }
 
+      console.log(transactionInfo)
+
       const networkId = l2ChainIdMap[destinationChain]
 
       const l2TransactionsInfo = await getDecodedBytesForChain(
+        CometChains.mainnet,
         destinationChain,
         BigNumber.from(proposalId).toNumber(),
         transactionInfo,
@@ -672,43 +513,34 @@ async function simulateBridgedTransactions(
       // Mantle requires a higher gas limit
       const gas = destinationChain === CometChains.mantle ? 3000000000000 : BLOCK_GAS_LIMIT
 
-      // Construct the payload for the bridged chain simulation
-      const createProposalPayload: TenderlyPayload = {
-        network_id: networkId as TenderlyPayload['network_id'],
-        block_number: latestBlock.number,
+      // Construct the payloads for the bridged chain simulation
+      const createProposalPayload = createSimulationPayload({
+        networkId: networkId as string,
+        blockNumber: latestBlock.number,
         from: payloadSender,
         to: ChainAddresses.L2BridgeReceiver[destinationChain] as string,
         input: input,
         gas: gas,
-        gas_price: '0', // Gas price can be adjusted based on chain requirements
-        value: '0', // If the transaction sends ETH, adjust this field
-        save_if_fails: false,
-        save: false,
-        generate_access_list: true,
-        block_header: {
-          number: hexStripZeros(BigNumber.from(latestBlock.number).toHexString()),
-          timestamp: hexStripZeros(BigNumber.from(latestBlock.timestamp).toHexString()),
-        },
-        state_objects: stateOverrides, // Optionally add state overrides if required
-      }
-      const executeProposalPayload: TenderlyPayload = {
-        network_id: networkId as TenderlyPayload['network_id'],
-        block_number: latestBlock.number + 2,
-        from: DEFAULT_FROM, // Use a default address because any address can execute the proposal
-        to: ChainAddresses.L2BridgeReceiver[destinationChain],
+        gasPrice: '0',
+        value: '0',
+        simBlock: BigNumber.from(latestBlock.number),
+        simTimestamp: hexStripZeros(BigNumber.from(latestBlock.timestamp).toHexString()),
+        stateObjects: stateOverrides!,
+      })
+
+      const executeProposalPayload = createSimulationPayload({
+        networkId: networkId as string,
+        blockNumber: latestBlock.number + 2,
+        from: DEFAULT_FROM,
+        to: ChainAddresses.L2BridgeReceiver[destinationChain] as string,
         input: baseBridgeReceiver.interface.encodeFunctionData('executeProposal', [beforeProposalCount + 1]),
         gas: gas,
-        gas_price: '0',
+        gasPrice: '0',
         value: '0',
-        save_if_fails: false,
-        save: false,
-        generate_access_list: true,
-        block_header: {
-          number: hexStripZeros(BigNumber.from(latestBlock.number + 2).toHexString()),
-          // Add 4 days to make sure the timelock has passed
-          timestamp: hexStripZeros(BigNumber.from(latestBlock.timestamp + 4 * 24 * 60 * 60).toHexString()),
-        },
-      }
+        simBlock: BigNumber.from(latestBlock.number + 2),
+        simTimestamp: hexStripZeros(BigNumber.from(latestBlock.timestamp + 4 * 24 * 60 * 60).toHexString()),
+        stateObjects: {},
+      })
 
       const response = await sendBundleSimulation([createProposalPayload, executeProposalPayload])
       const proposal = createBridgeProposal(response, destinationChain, latestBlock)
@@ -731,37 +563,12 @@ async function simulateBridgedTransactions(
   return bridgedSims
 }
 
-async function sendBundleSimulation(payload: TenderlyPayload[], delay = 1000): Promise<TenderlyBundledSimulation> {
-  const fetchOptions = <Partial<FETCH_OPT>>{ method: 'POST', data: { simulations: payload }, ...TENDERLY_FETCH_OPTIONS }
-  try {
-    // Send simulation request
-    const bundledSim = <TenderlyBundledSimulation>await fetchUrl(TENDERLY_SIM_BUNDLE_URL, fetchOptions)
-    // Post-processing to ensure addresses we use are checksummed (since ethers returns checksummed addresses)
-    bundledSim.simulation_results.forEach((sim) => {
-      if (sim.transaction && sim.contracts.length > 0) {
-        sim.transaction.addresses = sim.transaction.addresses.map(getAddress)
-        sim.contracts.forEach((contract) => (contract.address = getAddress(contract.address)))
-      }
-    })
-    return bundledSim
-  } catch (err: any) {
-    console.log('err in sendSimulation: ', JSON.stringify(err))
-    const is429 = typeof err === 'object' && err?.statusCode === 429
-    if (delay > 8000 || !is429) {
-      console.warn(`Simulation request failed with the below request payload and error`)
-      console.log(JSON.stringify(fetchOptions))
-      throw err
-    }
-    console.warn(err)
-    console.warn(
-      `Simulation request failed with the above error, retrying in ~${delay} milliseconds. See request payload below`,
-    )
-    console.log(JSON.stringify(payload))
-    await sleep(delay + randomInt(0, 1000))
-    return await sendBundleSimulation(payload, delay * 2)
-  }
-}
-
+/**
+ * Creates a proposal event from bridge simulation results
+ * @param bundledSimulation The simulation results
+ * @param chain The destination chain
+ * @param block The block data
+ */
 function createBridgeProposal(
   bundledSimulation: TenderlyBundledSimulation,
   chain: CometChains,

@@ -9,9 +9,9 @@
   "scripts": {
     "compile": "hardhat compile",
     "start": "node --version && node --loader ts-node/esm --experimental-specifier-resolution=node index.ts",
+    "market": "node --version && node --loader ts-node/esm --experimental-specifier-resolution=node market-updates.ts",
     "lint:fix": "prettier --write .",
-    "test": "ts-node --experimental-specifier-resolution node targetLookup.ts",
-    "tst": "ts-node --experimental-specifier-resolution node formatting.ts"
+    "test": "ts-node --experimental-specifier-resolution node targetLookup.ts"
   },
   "repository": {
     "type": "git",
@@ -28,9 +28,9 @@
   },
   "homepage": "https://github.com/Uniswap/governance-seatbelt#readme",
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.537.0",
-    "@aws-sdk/client-ses": "^3.726.1",
-    "@aws-sdk/lib-storage": "^3.537.0",
+    "@aws-sdk/client-s3": "^3.772.0",
+    "@aws-sdk/client-ses": "^3.772.0",
+    "@aws-sdk/lib-storage": "^3.772.0",
     "@octokit/action": "^3.15.2",
     "@types/node": "^18.19.70",
     "axios": "^1.7.9",

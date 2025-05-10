@@ -3,13 +3,22 @@ import fs from 'fs'
 import mftch from 'micro-ftch'
 import { CometChains, ContractNameAndAbi, ExecuteTransactionInfo } from './compound-types'
 import { diffString } from 'json-diff'
-import { ARBITRUMSCAN_API_KEY, BASESCAN_API_KEY, ETHERSCAN_API_KEY, MANTLESCAN_API_KEY, OPTIMISMIC_ETHERSCAN_API_KEY, POLYGONSCAN_API_KEY, SCROLLSCAN_API_KEY } from './../../utils/constants'
+import {
+  ARBITRUMSCAN_API_KEY,
+  BASESCAN_API_KEY,
+  ETHERSCAN_API_KEY,
+  MANTLESCAN_API_KEY,
+  OPTIMISMIC_ETHERSCAN_API_KEY,
+  POLYGONSCAN_API_KEY,
+  SCROLLSCAN_API_KEY,
+  UNISCAN_API_KEY,
+} from './../../utils/constants'
 
 // @ts-ignore
 const fetchUrl = mftch.default
 
 interface FunctionFragmentAndDecodedCalldata {
-  fun: FunctionFragment;
+  fun: FunctionFragment
   decodedCalldata: Result
 }
 
@@ -96,6 +105,8 @@ export function getExplorerApiUrl(chain: CometChains, address: string) {
     return `https://api-optimistic.etherscan.io/api?module=contract&action=getsourcecode&address=${address}&apikey=${OPTIMISMIC_ETHERSCAN_API_KEY}`
   } else if (chain === CometChains.mantle) {
     return `https://api.mantlescan.xyz/api?module=contract&action=getsourcecode&address=${address}&apikey=${MANTLESCAN_API_KEY}`
+  } else if (chain === CometChains.unichain) {
+    return `https://api.uniscan.xyz/api?module=contract&action=getsourcecode&address=${address}&apikey=${UNISCAN_API_KEY}`
   } else {
     throw new Error('Unknown chain: ' + chain)
   }
@@ -116,15 +127,21 @@ export function getExplorerBaseUrl(chain: CometChains) {
     return `https://optimistic.etherscan.io/address`
   } else if (chain === CometChains.mantle) {
     return `https://mantlescan.xyz/address`
+  } else if (chain === CometChains.unichain) {
+    return `https://uniscan.xyz/address`
   } else {
     throw new Error('Unknown chain: ' + chain)
   }
 }
 
-export async function getFunctionFragmentAndDecodedCalldata(proposalId: number, chain: CometChains, transactionInfo: ExecuteTransactionInfo): Promise<FunctionFragmentAndDecodedCalldata> {
+export async function getFunctionFragmentAndDecodedCalldata(
+  proposalId: number,
+  chain: CometChains,
+  transactionInfo: ExecuteTransactionInfo,
+): Promise<FunctionFragmentAndDecodedCalldata> {
   const { target, signature, calldata } = transactionInfo
   const contractNameAndAbi = await getContractNameAndAbiFromFile(chain, target)
-  
+
   if (contractNameAndAbi.abi.toString() === 'Contract source code not verified') {
     console.log(`Contract at address ${target} is not verified.`)
     throw new Error(`Contract at address ${target} is not verified.`)
@@ -151,7 +168,7 @@ export async function getFunctionFragmentAndDecodedCalldata(proposalId: number, 
     console.log(`Error decoding function: ${proposalId} target: ${target} signature: ${signature} calldata:${calldata}`)
     console.log(`ContractName: ${contractNameAndAbi.contractName} chain: ${chain}`)
     console.error(e)
-    
+
     const isModified = await isContractModified(contractNameAndAbi, target, chain)
     if (isModified) {
       await storeContractNameAndAbi(chain, target)
@@ -168,13 +185,13 @@ export function getFunctionSignature(fun: FunctionFragment) {
 }
 
 async function isContractModified(contractNameAndAbi: ContractNameAndAbi, target: string, chain: CometChains): Promise<boolean> {
-  const {abi: newAbi} = await getContractNameAndAbi(chain, target)
-  
+  const { abi: newAbi } = await getContractNameAndAbi(chain, target)
+
   const oldAbiParsed = JSON.parse(contractNameAndAbi.abi.toString())
   const newAbiParsed = JSON.parse(newAbi.toString())
-  
+
   const changes = diffString(oldAbiParsed, newAbiParsed, { color: false, verbose: true })
-  const isEqual = JSON.stringify(oldAbiParsed) === JSON.stringify(newAbiParsed);
-  
-  return Boolean(changes) || !isEqual;
+  const isEqual = JSON.stringify(oldAbiParsed) === JSON.stringify(newAbiParsed)
+
+  return Boolean(changes) || !isEqual
 }

@@ -3,6 +3,7 @@ import { ProposalData, ProposalEvent, TenderlySimulation } from './../../types'
 import {
   ActionAnalysis,
   ChainedProposalAnalysis,
+  GovernanceFlows,
   GovernanceProposalAnalysis,
   ProposalActionResponse,
   TargetLookupData,
@@ -23,17 +24,17 @@ import { getDecodedBytesForChain, l2Bridges } from './l2-utils'
 import { formattersLookup } from './transaction-formatter'
 import { generateAISummary } from './aiSummary'
 
-export async function analyzeProposal(proposal: ProposalEvent, sim: TenderlySimulation, deps: ProposalData): Promise<GovernanceProposalAnalysis> {
+export async function analyzeProposal(proposal: ProposalEvent, sim: TenderlySimulation, deps: ProposalData, flow: GovernanceFlows): Promise<GovernanceProposalAnalysis> {
   const { targets: targets, signatures: signatures, calldatas: calldatas, values } = proposal
-  const chain = CometChains.mainnet
+  const chain = deps.chain
   const proposalId = proposal.id?.toNumber() || 0
 
-  const checkResults = await getCompoundCheckResults(chain, proposalId, { targets, signatures, calldatas, values })
+  const checkResults = await getCompoundCheckResults(chain, proposalId, flow, { targets, signatures, calldatas, values })
 
   return checkResults
 }
 
-async function getCompoundCheckResults(chain: CometChains, proposalId: number, transactions: ExecuteTransactionsInfo): Promise<GovernanceProposalAnalysis> {
+async function getCompoundCheckResults(chain: CometChains, proposalId: number, flow: GovernanceFlows, transactions: ExecuteTransactionsInfo): Promise<GovernanceProposalAnalysis> {
   const { targets, signatures, calldatas, values } = transactions
 
   let messageCount = 0
@@ -49,19 +50,19 @@ async function getCompoundCheckResults(chain: CometChains, proposalId: number, t
       value: values?.[i],
     }
     if (Object.keys(l2Bridges).includes(target)) {
-      const cometChain = l2Bridges[target]
-      const l2TransactionsInfo = await getDecodedBytesForChain(cometChain, proposalId, transactionInfo)
-      const l2CheckResults = await getL2CompoundCheckResults(cometChain, proposalId, l2TransactionsInfo)
+      const l2Chain = l2Bridges[target]
+      const l2TransactionsInfo = await getDecodedBytesForChain(chain, l2Chain, proposalId, transactionInfo)
+      const l2CheckResults = await getL2CompoundCheckResults(l2Chain, proposalId, flow, l2TransactionsInfo)
       checkResults.chainedProposalAnalysis.push(l2CheckResults)
     } else {
-      const message = await getTransactionMessages(chain, proposalId, transactionInfo)
+      const message = await getTransactionMessages(chain, proposalId, flow, transactionInfo)
       pushMessageToCheckResults(checkResults, message, messageCount)
     }
   }
   return checkResults
 }
 
-async function getL2CompoundCheckResults(chain: CometChains, proposalId: number, transactions: ExecuteTransactionsInfo): Promise<ChainedProposalAnalysis> {
+async function getL2CompoundCheckResults(chain: CometChains, proposalId: number, flow: GovernanceFlows, transactions: ExecuteTransactionsInfo): Promise<ChainedProposalAnalysis> {
   const { targets, signatures, calldatas, values } = transactions
 
   let messageCount = 0
@@ -76,7 +77,7 @@ async function getL2CompoundCheckResults(chain: CometChains, proposalId: number,
       calldata: calldatas[i],
       value: values?.[i],
     }
-    const message = await getTransactionMessages(chain, proposalId, transactionInfo)
+    const message = await getTransactionMessages(chain, proposalId, flow, transactionInfo)
     pushMessageToChainAnalysis(chainedProposalAnalysis, message, messageCount)
   }
   return chainedProposalAnalysis
@@ -149,6 +150,7 @@ function storeTargetRegistryData(chain: string, address: string, contractName: s
 
 function storeTargetLookupData(
   chain: string,
+  flow: GovernanceFlows,
   addr: string,
   functionName: string,
   transactionFormatter: string,
@@ -156,7 +158,7 @@ function storeTargetLookupData(
   decodedCalldata: string[],
   contractName: string,
 ) {
-  const targetLookupFilePath = `./checks/compound/lookup/target/${chain}TargetLookup.json`
+  const targetLookupFilePath = `./checks/compound/lookup/${flow}/target/${chain}TargetLookup.json`
 
   let lookupData: TargetLookupData = {}
 
@@ -215,7 +217,7 @@ function storeTargetLookupData(
   fs.writeFileSync(targetLookupFilePath, JSON.stringify(lookupData, null, 2), 'utf-8')
 }
 
-async function getTransactionMessages(chain: CometChains, proposalId: number, transactionInfo: ExecuteTransactionInfo): Promise<ActionAnalysis> {
+async function getTransactionMessages(chain: CometChains, proposalId: number, flow: GovernanceFlows, transactionInfo: ExecuteTransactionInfo): Promise<ActionAnalysis> {
   console.log('Transaction info: ', transactionInfo)
   const { target, value, signature } = transactionInfo
   const contractNameAndAbi = await getContractNameAndAbiFromFile(chain, target)
@@ -266,6 +268,7 @@ async function getTransactionMessages(chain: CometChains, proposalId: number, tr
     }
     storeTargetLookupData(
       chain,
+      flow,
       target.toLowerCase(),
       functionSignature,
       transactionFormatter,

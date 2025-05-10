@@ -46,5 +46,9 @@
   "0x5875eee11cf8398102fdad704c9e96607675467a": {
     "symbol": "sUSDS",
     "decimals": "18"
+  },
+  "0xedfa23602d0ec14714057867a78d01e94176bea0": {
+    "symbol": "wrsETH",
+    "decimals": "18"
   }
 }

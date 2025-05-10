@@ -1,8 +1,8 @@
 import axios from 'axios'
 import FormData from 'form-data'
 import { DISCORD_WEBHOOK_URL } from './../../../utils/constants'
-import { GovernanceProposalAnalysis } from './../../compound/compound-types'
-import { capitalizeWord, checkforumPost } from './helper'
+import { GovernanceFlows, GovernanceProposalAnalysis } from './../../compound/compound-types'
+import { capitalizeWord, checkforumPost, getFlowText } from './helper'
 
 function extractChecksMarkdown(reportMarkdown: string) {
   return reportMarkdown.slice(reportMarkdown.indexOf('## Checks'))
@@ -60,21 +60,16 @@ function adjustMessageLength(messages: Embed[]): Embed[] {
 }
 
 export async function pushChecksSummaryToDiscordAsEmbeds(
+  flow: GovernanceFlows,
   failedChecks: string[],
   warningChecks: string[],
   compoundChecks: GovernanceProposalAnalysis,
-  proposalNo: string
+  proposalNo: string,
+  s3ReportsFolder: string,
 ) {
-  const s3ReportsFolder = process.env.AWS_BUCKET_BASE_PATH || 'all-proposals'
-
   const failedEmbeds = (failedChecks || []).map((m) => ({
     description: m,
     color: 16711680, // Red color for failed checks
-  }))
-
-  const warningEmbeds = (warningChecks || []).map((m) => ({
-    description: m,
-    color: 16776960, // Yellow color for warning checks
   }))
 
   const compoundMainnetEmbeds = compoundChecks.mainnetActionAnalysis.map((m) => {
@@ -97,7 +92,7 @@ export async function pushChecksSummaryToDiscordAsEmbeds(
   })
 
   // Combine failedEmbeds and compoundEmbeds
-  const allEmbeds = [...failedEmbeds, ...warningEmbeds, ...compoundMainnetEmbeds, ...compoundChainEmbeds]
+  const allEmbeds = [...failedEmbeds, ...compoundMainnetEmbeds, ...compoundChainEmbeds]
 
   // Discord limits
   const MAX_EMBEDS_PER_MESSAGE = 6
@@ -127,7 +122,7 @@ export async function pushChecksSummaryToDiscordAsEmbeds(
     let content = ''
     if (idx === 0) {
       content = `
-## Summary of Compound Checks - [${proposalNo}](https://compound.finance/governance/proposals/${proposalNo})
+## Summary of  ${getFlowText(flow, 'Compound Checks', 'Market Updates')} - Proposal #[${proposalNo}]${getFlowText(flow, `(https://compound.finance/governance/proposals/${proposalNo})`, '')}
 [Full Report](https://compound-governance-proposals.s3.amazonaws.com/${s3ReportsFolder}/${proposalNo}.pdf)
       `.trim()
     } else {

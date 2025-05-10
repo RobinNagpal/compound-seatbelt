@@ -63,8 +63,8 @@ export async function getProposal(
 
 export async function getTimelock(governorType: GovernorType, address: string) {
   const governor = getGovernor(governorType, address)
-  if (governorType === 'bravo') return timelock(await governor.admin())
-  return timelock(await governor.timelock())
+  if (governorType === 'bravo') return timelock(await governor.admin(), provider)
+  return timelock(await governor.timelock(), provider)
 }
 
 export async function getVotingToken(governorType: GovernorType, address: string, proposalId: BigNumberish) {
@@ -186,7 +186,7 @@ export function hashOperationBatchOz(
   )
 }
 
-export async function getImplementation(address: string, blockTag: number) {
+export async function getImplementation(address: string, blockTag: number, provider: ethers.providers.JsonRpcProvider) {
   // First try calling an `implementation` method.
   const abi = ['function implementation() external view returns (address)']
   const governor = new Contract(address, abi, provider)

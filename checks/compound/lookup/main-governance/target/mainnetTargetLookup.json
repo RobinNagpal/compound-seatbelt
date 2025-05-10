@@ -815,6 +815,14 @@
           "381": [
             "0xc10785fB7b1adD4fD521A27d0d55c5561EEf0940",
             "163562000000000000000000"
+          ],
+          "413": [
+            "0x6d903f6003cca6255D85CcA4D3B5E5146dC33925",
+            "25565000000000000000000"
+          ],
+          "438": [
+            "0x6d903f6003cca6255D85CcA4D3B5E5146dC33925",
+            "3600000000000000000000"
           ]
         }
       },
@@ -1214,7 +1222,9 @@
       370,
       372,
       379,
-      381
+      381,
+      413,
+      438
     ]
   },
   "0x12392f67bdf24fae0af363c24ac620a2f67dad86": {
@@ -1783,6 +1793,18 @@
           "379": [
             "0x3154Cf16ccdb4C6d922629664174b904d80F2C35",
             "4950000000000000000000"
+          ],
+          "412": [
+            "0x81014F44b0a345033bB2b3B21C7a1A308B35fEeA",
+            "300000000000000000000"
+          ],
+          "413": [
+            "0x40ec5B33f54e0E8A33A975908C5BA1c14e5BbbDf",
+            "25565000000000000000000"
+          ],
+          "438": [
+            "0x81014F44b0a345033bB2b3B21C7a1A308B35fEeA",
+            "3600000000000000000000"
           ]
         }
       },
@@ -1949,7 +1971,10 @@
       356,
       357,
       372,
-      379
+      379,
+      412,
+      413,
+      438
     ]
   },
   "0xcd18eaa163733da39c232722cbc4e8940b1d8888": {
@@ -2757,6 +2782,23 @@
             "0x3Afdc9BCA9213A35503b077a6072F3D0d5AB0840",
             "0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf",
             "100000000000"
+          ],
+          "421": [
+            "0xA17581A9E3356d9A858b789D68B4d866e593aE94",
+            "0xCd5fE23C85820F7B72D0926FC9b05b43E359b7ee",
+            "67500000000000000000000",
+            "0xc3d688B66703497DAA19211EEdff47f25384cdc3",
+            "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0",
+            "50000000000000000000000",
+            "0x3Afdc9BCA9213A35503b077a6072F3D0d5AB0840",
+            "0x514910771AF9Ca656af840dff83E8264EcF986CA",
+            "1000000000000000000000000",
+            "0x3Afdc9BCA9213A35503b077a6072F3D0d5AB0840",
+            "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
+            "180000000000",
+            "0x3Afdc9BCA9213A35503b077a6072F3D0d5AB0840",
+            "0xA663B02CF0a4b149d2aD41910CB81e23e1c41c32",
+            "40000000000000000000000000"
           ]
         }
       },
@@ -3076,6 +3118,14 @@
           "385": [
             "0x5D409e56D886231aDAf00c8775665AD0f9897b56",
             "50000000000000000"
+          ],
+          "422": [
+            "0xc3d688B66703497DAA19211EEdff47f25384cdc3",
+            "41660000000000000",
+            "0x5D409e56D886231aDAf00c8775665AD0f9897b56",
+            "41660000000000000",
+            "0x3Afdc9BCA9213A35503b077a6072F3D0d5AB0840",
+            "41660000000000000"
           ]
         }
       },
@@ -3152,6 +3202,14 @@
           "385": [
             "0x5D409e56D886231aDAf00c8775665AD0f9897b56",
             "3400000000000000000"
+          ],
+          "422": [
+            "0xc3d688B66703497DAA19211EEdff47f25384cdc3",
+            "3475000000000000000",
+            "0x5D409e56D886231aDAf00c8775665AD0f9897b56",
+            "3475000000000000000",
+            "0x3Afdc9BCA9213A35503b077a6072F3D0d5AB0840",
+            "3475000000000000000"
           ]
         }
       },
@@ -3244,6 +3302,14 @@
           "385": [
             "0x5D409e56D886231aDAf00c8775665AD0f9897b56",
             "54000000000000000"
+          ],
+          "422": [
+            "0xc3d688B66703497DAA19211EEdff47f25384cdc3",
+            "47250000000000000",
+            "0x5D409e56D886231aDAf00c8775665AD0f9897b56",
+            "47250000000000000",
+            "0x3Afdc9BCA9213A35503b077a6072F3D0d5AB0840",
+            "47250000000000000"
           ]
         }
       },
@@ -3312,6 +3378,14 @@
           "385": [
             "0x5D409e56D886231aDAf00c8775665AD0f9897b56",
             "3034000000000000000"
+          ],
+          "422": [
+            "0xc3d688B66703497DAA19211EEdff47f25384cdc3",
+            "3094700000000000000",
+            "0x5D409e56D886231aDAf00c8775665AD0f9897b56",
+            "3094700000000000000",
+            "0x3Afdc9BCA9213A35503b077a6072F3D0d5AB0840",
+            "3094700000000000000"
           ]
         }
       },
@@ -3430,6 +3504,14 @@
           "375": [
             "0x3Afdc9BCA9213A35503b077a6072F3D0d5AB0840",
             "0xd5F7838F5C461fefF7FE49ea5ebaF7728bB0ADfa,0x2f7439252Da796Ab9A93f7E478E70DED43Db5B89,18,800000000000000000,850000000000000000,950000000000000000,4000000000000000000000"
+          ],
+          "415": [
+            "0x3Afdc9BCA9213A35503b077a6072F3D0d5AB0840",
+            "0xCd5fE23C85820F7B72D0926FC9b05b43E359b7ee,0x9e0e0C58AA8287F9f6E2666a21fbF2adEeAD3fef,18,750000000000000000,800000000000000000,900000000000000000,12000000000000000000000"
+          ],
+          "418": [
+            "0xA17581A9E3356d9A858b789D68B4d866e593aE94",
+            "0xD11c452fc99cF405034ee446803b6F6c1F6d5ED8,0x5ECf850c770F78DC7B9f9760672484B2cCAeA818,18,880000000000000000,910000000000000000,960000000000000000,4000000000000000000000"
           ]
         }
       },
@@ -3649,7 +3731,11 @@
       382,
       383,
       384,
-      388
+      388,
+      415,
+      418,
+      421,
+      422
     ]
   },
   "0x1ec63b5883c3481134fd50d5daebc83ecd2e8779": {
@@ -4042,6 +4128,30 @@
             "0xc3d688B66703497DAA19211EEdff47f25384cdc3",
             "0x316f9708bB98af7dA9c68C1C3b5e79039cD336E3",
             "0x3Afdc9BCA9213A35503b077a6072F3D0d5AB0840"
+          ],
+          "415": [
+            "0x316f9708bB98af7dA9c68C1C3b5e79039cD336E3",
+            "0x3Afdc9BCA9213A35503b077a6072F3D0d5AB0840"
+          ],
+          "418": [
+            "0x316f9708bB98af7dA9c68C1C3b5e79039cD336E3",
+            "0xA17581A9E3356d9A858b789D68B4d866e593aE94"
+          ],
+          "421": [
+            "0x316f9708bB98af7dA9c68C1C3b5e79039cD336E3",
+            "0xA17581A9E3356d9A858b789D68B4d866e593aE94",
+            "0x316f9708bB98af7dA9c68C1C3b5e79039cD336E3",
+            "0xc3d688B66703497DAA19211EEdff47f25384cdc3",
+            "0x316f9708bB98af7dA9c68C1C3b5e79039cD336E3",
+            "0x3Afdc9BCA9213A35503b077a6072F3D0d5AB0840"
+          ],
+          "422": [
+            "0x316f9708bB98af7dA9c68C1C3b5e79039cD336E3",
+            "0xc3d688B66703497DAA19211EEdff47f25384cdc3",
+            "0x316f9708bB98af7dA9c68C1C3b5e79039cD336E3",
+            "0x5D409e56D886231aDAf00c8775665AD0f9897b56",
+            "0x316f9708bB98af7dA9c68C1C3b5e79039cD336E3",
+            "0x3Afdc9BCA9213A35503b077a6072F3D0d5AB0840"
           ]
         }
       }
@@ -4136,7 +4246,11 @@
       382,
       383,
       384,
-      388
+      388,
+      415,
+      418,
+      421,
+      422
     ]
   },
   "0x70e36f6bf80a52b3b46b3af8e106cc0ed743e8e4": {
@@ -4517,6 +4631,16 @@
             "0x7dcf87198fd673716e5a32b206d9379c4fcbad8875073f52bfd0656759bf89ed",
             "v3-official-markets",
             "{\"1\":[{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0xc3d688B66703497DAA19211EEdff47f25384cdc3\"},{\"baseSymbol\":\"WETH\",\"cometAddress\":\"0xA17581A9E3356d9A858b789D68B4d866e593aE94\"},{\"baseSymbol\":\"USDT\",\"cometAddress\":\"0x3Afdc9BCA9213A35503b077a6072F3D0d5AB0840\"},{\"baseSymbol\":\"wstETH\",\"cometAddress\":\"0x3D0bb1ccaB520A66e607822fC55BC921738fAFE3\"},{\"baseSymbol\":\"USDS\",\"cometAddress\":\"0x5D409e56D886231aDAf00c8775665AD0f9897b56\"}],\"10\":[{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0x2e44e174f7D53F0212823acC11C01A11d58c5bCB\"},{\"baseSymbol\":\"USDT\",\"cometAddress\":\"0x995E394b8B2437aC8Ce61Ee0bC610D617962B214\"},{\"baseSymbol\":\"WETH\",\"cometAddress\":\"0xE36A30D249f7761327fd973001A32010b521b6Fd\"}],\"137\":[{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0xF25212E676D1F7F89Cd72fFEe66158f541246445\"},{\"baseSymbol\":\"USDT\",\"cometAddress\":\"0xaeB318360f27748Acb200CE616E389A6C9409a07\"}],\"5000\":[{\"baseSymbol\":\"USDe\",\"cometAddress\":\"0x606174f62cd968d8e684c645080fa694c1D7786E\"}],\"8453\":[{\"baseSymbol\":\"USDbC\",\"cometAddress\":\"0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf\"},{\"baseSymbol\":\"WETH\",\"cometAddress\":\"0x46e6b214b524310239732D51387075E0e70970bf\"},{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0xb125E6687d4313864e53df431d5425969c15Eb2F\"},{\"baseSymbol\":\"AERO\",\"cometAddress\":\"0x784efeB622244d2348d4F2522f8860B96fbEcE89\"},{\"baseSymbol\":\"USDS\",\"cometAddress\":\"0x2c776041CCFe903071AF44aa147368a9c8EEA518\"}],\"42161\":[{\"baseSymbol\":\"USDC.e\",\"cometAddress\":\"0xA5EDBDD9646f8dFF606d7448e414884C7d905dCA\"},{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf\"},{\"baseSymbol\":\"WETH\",\"cometAddress\":\"0x6f7D514bbD4aFf3BcD1140B7344b32f063dEe486\"},{\"baseSymbol\":\"USDT\",\"cometAddress\":\"0xd98Be00b5D27fc98112BdE293e487f8D4cA57d07\"}],\"534352\":[{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0xB2f97c1Bd3bf02f5e74d13f02E3e26F93D77CE44\"}]}"
+          ],
+          "420": [
+            "0x7dcf87198fd673716e5a32b206d9379c4fcbad8875073f52bfd0656759bf89ed",
+            "v3-official-markets",
+            "{\"1\":[{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0xc3d688B66703497DAA19211EEdff47f25384cdc3\"},{\"baseSymbol\":\"WETH\",\"cometAddress\":\"0xA17581A9E3356d9A858b789D68B4d866e593aE94\"},{\"baseSymbol\":\"USDT\",\"cometAddress\":\"0x3Afdc9BCA9213A35503b077a6072F3D0d5AB0840\"},{\"baseSymbol\":\"wstETH\",\"cometAddress\":\"0x3D0bb1ccaB520A66e607822fC55BC921738fAFE3\"},{\"baseSymbol\":\"USDS\",\"cometAddress\":\"0x5D409e56D886231aDAf00c8775665AD0f9897b56\"},{\"baseSymbol\":\"WBTC\",\"cometAddress\":\"0xe85Dc543813B8c2CFEaAc371517b925a166a9293\"}],\"10\":[{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0x2e44e174f7D53F0212823acC11C01A11d58c5bCB\"},{\"baseSymbol\":\"USDT\",\"cometAddress\":\"0x995E394b8B2437aC8Ce61Ee0bC610D617962B214\"},{\"baseSymbol\":\"WETH\",\"cometAddress\":\"0xE36A30D249f7761327fd973001A32010b521b6Fd\"}],\"130\":[{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0x2c7118c4C88B9841FCF839074c26Ae8f035f2921\"}],\"137\":[{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0xF25212E676D1F7F89Cd72fFEe66158f541246445\"},{\"baseSymbol\":\"USDT\",\"cometAddress\":\"0xaeB318360f27748Acb200CE616E389A6C9409a07\"}],\"2020\":[{\"baseSymbol\":\"WETH\",\"cometAddress\":\"0x4006eD4097Ee51c09A04c3B0951D28CCf19e6DFE\"}],\"5000\":[{\"baseSymbol\":\"USDe\",\"cometAddress\":\"0x606174f62cd968d8e684c645080fa694c1D7786E\"}],\"8453\":[{\"baseSymbol\":\"USDbC\",\"cometAddress\":\"0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf\"},{\"baseSymbol\":\"WETH\",\"cometAddress\":\"0x46e6b214b524310239732D51387075E0e70970bf\"},{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0xb125E6687d4313864e53df431d5425969c15Eb2F\"},{\"baseSymbol\":\"AERO\",\"cometAddress\":\"0x784efeB622244d2348d4F2522f8860B96fbEcE89\"},{\"baseSymbol\":\"USDS\",\"cometAddress\":\"0x2c776041CCFe903071AF44aa147368a9c8EEA518\"}],\"42161\":[{\"baseSymbol\":\"USDC.e\",\"cometAddress\":\"0xA5EDBDD9646f8dFF606d7448e414884C7d905dCA\"},{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf\"},{\"baseSymbol\":\"WETH\",\"cometAddress\":\"0x6f7D514bbD4aFf3BcD1140B7344b32f063dEe486\"},{\"baseSymbol\":\"USDT\",\"cometAddress\":\"0xd98Be00b5D27fc98112BdE293e487f8D4cA57d07\"}],\"59144\":[{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0x8D38A3d6B3c3B7d96D6536DA7Eef94A9d7dbC991\"}],\"534352\":[{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0xB2f97c1Bd3bf02f5e74d13f02E3e26F93D77CE44\"}]}"
+          ],
+          "438": [
+            "0x7dcf87198fd673716e5a32b206d9379c4fcbad8875073f52bfd0656759bf89ed",
+            "v3-official-markets",
+            "{\"1\":[{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0xc3d688B66703497DAA19211EEdff47f25384cdc3\"},{\"baseSymbol\":\"WETH\",\"cometAddress\":\"0xA17581A9E3356d9A858b789D68B4d866e593aE94\"},{\"baseSymbol\":\"USDT\",\"cometAddress\":\"0x3Afdc9BCA9213A35503b077a6072F3D0d5AB0840\"},{\"baseSymbol\":\"wstETH\",\"cometAddress\":\"0x3D0bb1ccaB520A66e607822fC55BC921738fAFE3\"},{\"baseSymbol\":\"USDS\",\"cometAddress\":\"0x5D409e56D886231aDAf00c8775665AD0f9897b56\"},{\"baseSymbol\":\"WBTC\",\"cometAddress\":\"0xe85Dc543813B8c2CFEaAc371517b925a166a9293\"}],\"10\":[{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0x2e44e174f7D53F0212823acC11C01A11d58c5bCB\"},{\"baseSymbol\":\"USDT\",\"cometAddress\":\"0x995E394b8B2437aC8Ce61Ee0bC610D617962B214\"},{\"baseSymbol\":\"WETH\",\"cometAddress\":\"0xE36A30D249f7761327fd973001A32010b521b6Fd\"}],\"130\":[{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0x2c7118c4C88B9841FCF839074c26Ae8f035f2921\"},{\"baseSymbol\":\"WETH\",\"cometAddress\":\"0x6C987dDE50dB1dcDd32Cd4175778C2a291978E2a\"}],\"137\":[{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0xF25212E676D1F7F89Cd72fFEe66158f541246445\"},{\"baseSymbol\":\"USDT\",\"cometAddress\":\"0xaeB318360f27748Acb200CE616E389A6C9409a07\"}],\"2020\":[{\"baseSymbol\":\"WETH\",\"cometAddress\":\"0x4006eD4097Ee51c09A04c3B0951D28CCf19e6DFE\"}],\"5000\":[{\"baseSymbol\":\"USDe\",\"cometAddress\":\"0x606174f62cd968d8e684c645080fa694c1D7786E\"}],\"8453\":[{\"baseSymbol\":\"USDbC\",\"cometAddress\":\"0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf\"},{\"baseSymbol\":\"WETH\",\"cometAddress\":\"0x46e6b214b524310239732D51387075E0e70970bf\"},{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0xb125E6687d4313864e53df431d5425969c15Eb2F\"},{\"baseSymbol\":\"AERO\",\"cometAddress\":\"0x784efeB622244d2348d4F2522f8860B96fbEcE89\"},{\"baseSymbol\":\"USDS\",\"cometAddress\":\"0x2c776041CCFe903071AF44aa147368a9c8EEA518\"}],\"42161\":[{\"baseSymbol\":\"USDC.e\",\"cometAddress\":\"0xA5EDBDD9646f8dFF606d7448e414884C7d905dCA\"},{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf\"},{\"baseSymbol\":\"WETH\",\"cometAddress\":\"0x6f7D514bbD4aFf3BcD1140B7344b32f063dEe486\"},{\"baseSymbol\":\"USDT\",\"cometAddress\":\"0xd98Be00b5D27fc98112BdE293e487f8D4cA57d07\"}],\"59144\":[{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0x8D38A3d6B3c3B7d96D6536DA7Eef94A9d7dbC991\"}],\"534352\":[{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0xB2f97c1Bd3bf02f5e74d13f02E3e26F93D77CE44\"}]}"
           ]
         }
       }
@@ -4544,7 +4668,9 @@
       350,
       357,
       394,
-      395
+      395,
+      420,
+      438
     ]
   },
   "0xa0c68c638235ee32657e8f720a23cec1bfc77c77": {
@@ -4586,6 +4712,11 @@
             "0xaeB318360f27748Acb200CE616E389A6C9409a07",
             "0xdAC17F958D2ee523a2206206994597C13D831ec7",
             "0x00000000000000000000000000000000000000000000000000000002540be400"
+          ],
+          "413": [
+            "0x82f25d3314Ff32F4E8C9D1608fbAB7fC78559e33",
+            "0xc00e94Cb662C3520282E6f5717214004A7f26888",
+            "0x000000000000000000000000000000000000000000000569e1a532d32d540000"
           ]
         }
       }
@@ -4596,7 +4727,8 @@
       159,
       206,
       223,
-      265
+      265,
+      413
     ]
   },
   "0x72ce9c846789fdb6fc1f34ac4ad25dd9ef7031ef": {

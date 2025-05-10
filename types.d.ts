@@ -33,6 +33,11 @@ export interface SimulationConfigNew extends SimulationConfigBase {
 
 export type SimulationConfig = SimulationConfigExecuted | SimulationConfigProposed | SimulationConfigNew
 
+export type ConfigWithoutGovernorType =
+  | Omit<SimulationConfigExecuted, 'governorType'>
+  | Omit<SimulationConfigProposed, 'governorType'>
+  | Omit<SimulationConfigNew, 'governorType'>
+
 export interface BridgedSimulation {
   chain: L2Chain
   proposal?: ProposalEvent
@@ -50,6 +55,10 @@ export interface SimulationData extends SimulationResult {
   config: SimulationConfig
 }
 
+export interface MarketUpdateSimulationData extends SimulationResult {
+  config: ConfigWithoutGovernorType
+}
+
 // --- Proposal checks ---
 export type ProposalActions = [
   // defined as an array instead of an object because the return data from governor.getActions()
@@ -57,7 +66,7 @@ export type ProposalActions = [
   string[],
   BigNumber[],
   string[],
-  string[]
+  string[],
 ]
 
 // TODO If adding support for a third governor, instead of hardcoding optional governor-specific
@@ -114,6 +123,7 @@ export type ProposalData = {
   governor: Contract
   timelock: Contract
   provider: JsonRpcProvider
+  chain: CometChains
 }
 
 export interface ProposalCheck {
@@ -165,7 +175,7 @@ type ContractObject = {
 }
 
 export type TenderlyPayload = {
-  network_id: '1' | '3' | '4' | '5' | '42'
+  network_id: '1' | '3' | '4' | '5' | '42' | string
   block_number?: number
   transaction_index?: number
   from: string
@@ -703,6 +713,7 @@ export enum CometChains {
   scroll = 'scroll',
   optimism = 'optimism',
   mantle = 'mantle',
+  unichain = 'unichain',
 }
 
 export type L2Chain =
@@ -712,3 +723,4 @@ export type L2Chain =
   | CometChains.optimism
   | CometChains.scroll
   | CometChains.mantle
+  | CometChains.unichain

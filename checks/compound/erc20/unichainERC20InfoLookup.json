@@ -1,0 +1,30 @@
+{
+  "0x4200000000000000000000000000000000000006": {
+    "symbol": "WETH",
+    "decimals": "18"
+  },
+  "0xc02fe7317d4eb8753a02c35fe019786854a92001": {
+    "symbol": "wstETH",
+    "decimals": "18"
+  },
+  "0x7dcc39b4d1c53cb31e1abc0e358b43987fef80f7": {
+    "symbol": "weETH",
+    "decimals": "18"
+  },
+  "0x2416092f143378750bb29b79ed961ab195cceea5": {
+    "symbol": "ezETH",
+    "decimals": "18"
+  },
+  "0x8f187aa05619a017077f5308904739877ce9ea21": {
+    "symbol": "UNI",
+    "decimals": "18"
+  },
+  "0x927b51f251480a681271180da4de28d44ec4afb8": {
+    "symbol": "WBTC",
+    "decimals": "8"
+  },
+  "0xdf78e4f0a8279942ca68046476919a90f2288656": {
+    "symbol": "COMP",
+    "decimals": "18"
+  }
+}

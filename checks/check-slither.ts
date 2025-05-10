@@ -30,8 +30,9 @@ export const checkSlither: ProposalCheck = {
     // NOTE: This requires an archive node since we need to query for the governor implementation
     // at the simulation block number, since the implementation may have changed since.
     const addressesToSkip = new Set([deps.timelock.address, deps.governor.address])
+    // TODO - need to handle this try-catch for market update flow cause proposer doesnt have an implementation
     try {
-      const implementation = await getImplementation(deps.governor.address, sim.transaction.block_number)
+      const implementation = await getImplementation(deps.governor.address, sim.transaction.block_number, deps.provider)
       if (implementation) addressesToSkip.add(implementation)
     } catch (e) {
       const msg = `Could not read address of governor implementation at block \`${sim.transaction.block_number}\`. Make sure the \`RPC_URL\` is an archive node. As a result the Slither check will show warnings on the governor's implementation contract.`
@@ -40,7 +41,7 @@ export const checkSlither: ProposalCheck = {
       warnings.push(msg)
     }
 
-    const mainnetResults = await createSlitherResult(addressesToSkip, sim.contracts, CometChains.mainnet)
+    const mainnetResults = await createSlitherResult(addressesToSkip, sim.contracts, deps.chain)
     
     const bridgedSimulations = sim.bridgedSimulations || []
     const bridgedCheckResults: BridgedCheckResult[] = []
@@ -53,7 +54,7 @@ export const checkSlither: ProposalCheck = {
       if (b.sim) {
         const addressesToSkip = new Set([ChainAddresses.L2BridgeReceiver[b.chain], ChainAddresses.L2Timelock[b.chain]])
         const bridgedContracts : TenderlyContract[] = b.sim.simulation_results.flatMap((sr) => sr.contracts) || []
-        const bridgeResults = await createSlitherResult(addressesToSkip, bridgedContracts, b.chain)
+        const bridgeResults = await createSlitherResult(addressesToSkip, bridgedContracts, b.chain, deps.chain)
         bridgedCheckResults.push({ chain: b.chain, checkResults: { ...bridgeResults } });
       } else {
         bridgedCheckResults.push({ chain: b.chain, checkResults: { info: [], warnings: [], errors: ['No bridge simulation to run slither'] } });
@@ -67,7 +68,8 @@ export const checkSlither: ProposalCheck = {
 async function createSlitherResult(
   addressesToSkip: Set<string>,
   simContracts: TenderlyContract[],
-  chain: CometChains
+  chain: CometChains,
+  sourceChain?: CometChains
 ){
   const info: string[] = []
   const warnings: string[] = []
@@ -75,7 +77,7 @@ async function createSlitherResult(
   // Return early if the only contracts touched are the timelock and governor.
   const contracts = simContracts.filter((contract) => !addressesToSkip.has(getAddress(contract.address)))
   if (contracts.length === 0) {
-    return { info: [`No contracts to analyze: only the timelock and ${chain != CometChains.mainnet ? 'bridge receiver':'governor'} are touched`], warnings, errors: [] }
+    return { info: [`No contracts to analyze: only the timelock and ${chain != (sourceChain ?? chain) ? 'bridge receiver':'governor'} are touched`], warnings, errors: [] }
   }
   
   const apiKeyFlag = apiKeyFlagMap[chain]

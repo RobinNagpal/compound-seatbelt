@@ -114,5 +114,8 @@
     "0xcd83cbbfce149d141a5171c3d6a0f0fccee225ab": "CometRewards",
     "0x201eba5cc46d216ce6dc03f6a759e8e766e956ae": "USDT",
     "0xafb85a12babfafabfe1a518594492d5a830e782a": "LBRouter"
+  },
+  "unichain": {
+
   }
 }

@@ -4,7 +4,7 @@ dotenv.config()
 import { Contract, ethers } from 'ethers'
 import fs from 'fs'
 import mftch from 'micro-ftch'
-import { CometChains, SymbolAndDecimalsLookupData } from '../compound-types'
+import { CometChains, GovernanceFlows, SymbolAndDecimalsLookupData } from '../compound-types'
 import { customProvider } from './../../../utils/clients/ethers'
 import { defactorFn } from './../../../utils/roundingUtils'
 import { getContractNameAndAbiFromFile } from './../abi-utils'
@@ -31,6 +31,8 @@ export function getPlatform(chain: CometChains) {
       return 'optimistic.etherscan.io'
     case CometChains.mantle:
       return 'mantlescan.xyz'
+    case CometChains.unichain:
+      return 'uniscan.xyz'
   }
 }
 
@@ -50,6 +52,8 @@ export function getPlatformFromGecko(chain: CometChains) {
       return 'optimistic-ethereum'
     case CometChains.mantle:
       return 'mantle'
+    case CometChains.unichain:
+      return 'unichain'
   }
 }
 
@@ -142,7 +146,7 @@ export function getChangeTextFn(
   change: string,
   isPercentage: boolean = false,
   thresholds?: { warningThreshold?: number; criticalThreshold?: number },
-  criticalityChange?: string
+  criticalityChange?: string,
 ): string {
   const percentageSign = isPercentage ? '%' : ''
   const isNegative = change.startsWith('-')
@@ -151,13 +155,10 @@ export function getChangeTextFn(
   // Use the criticality change for sign if provided
   const criticalitySign =
     thresholds?.warningThreshold !== undefined && thresholds?.criticalThreshold !== undefined
-      ? getCriticalitySign(
-          criticalityChange ?? change,
-          {
-            warningThreshold: thresholds.warningThreshold,
-            criticalThreshold: thresholds.criticalThreshold,
-          }
-        )
+      ? getCriticalitySign(criticalityChange ?? change, {
+          warningThreshold: thresholds.warningThreshold,
+          criticalThreshold: thresholds.criticalThreshold,
+        })
       : ''
 
   return `${
@@ -176,7 +177,7 @@ export function formatTimestamp(timestampString: string) {
 
 export function getAttentionSign(
   changeInString: string,
-  { warningThreshold, criticalThreshold }: { warningThreshold: number; criticalThreshold: number }
+  { warningThreshold, criticalThreshold }: { warningThreshold: number; criticalThreshold: number },
 ): string {
   const change = Math.abs(parseFloat(changeInString))
 
@@ -188,7 +189,7 @@ export function getAttentionSign(
 
 export function getCriticalitySign(
   changeInString: string,
-  { warningThreshold, criticalThreshold }: { warningThreshold: number; criticalThreshold: number }
+  { warningThreshold, criticalThreshold }: { warningThreshold: number; criticalThreshold: number },
 ): string {
   const change = Math.abs(parseFloat(changeInString))
 
@@ -234,30 +235,34 @@ export async function fetchDataForAsset(query: string) {
 }
 
 export async function fetchAssetPrice(chain: CometChains, address: string): Promise<number | null> {
-  const platform = getPlatformFromGecko(chain);
-  const url = `https://api.coingecko.com/api/v3/simple/token_price/${platform}?contract_addresses=${address}&vs_currencies=usd`;
+  const platform = getPlatformFromGecko(chain)
+  const url = `https://api.coingecko.com/api/v3/simple/token_price/${platform}?contract_addresses=${address}&vs_currencies=usd`
 
-  console.log('Fetching data for Coin from Gecko API:', url);
+  console.log('Fetching data for Coin from Gecko API:', url)
 
   try {
-    const response = await fetchUrl(url);
+    const response = await fetchUrl(url)
+    if (!response || Object.keys(response).length === 0 || !response[address.toLowerCase()]) {
+      console.error('Empty response from Coin Gecko API')
+      return null
+    }
 
-    return response[address.toLowerCase()].usd;
-  } catch (error:any) {
+    return response[address.toLowerCase()].usd
+  } catch (error: any) {
     // Check if the response indicates rate limiting
     if (error?.statusCode === 429) {
       // Coin Gecko rate limit is 5 per minute
-      console.warn('Coin Gecko rate limit exceeded. Retrying after 1 minute...');
-      await delay(70000); // Wait for 1 minute and 10 seconds (10 sec as buffer) 
-      return fetchAssetPrice(chain, address); // Retry the request
+      console.warn('Coin Gecko rate limit exceeded. Retrying after 1 minute...')
+      await delay(70000) // Wait for 1 minute and 10 seconds (10 sec as buffer)
+      return fetchAssetPrice(chain, address) // Retry the request
     }
-    console.error('Error fetching data for Coin from Gecko API:', error);
-    return null;
+    console.error('Error fetching data for Coin from Gecko API:', error)
+    return null
   }
 }
 
 function delay(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 export function addCommas(number: string | number): string {
@@ -356,13 +361,13 @@ export const iconLookupTable: Record<IconType, { icon: string; description: stri
 
 export function getIcon(keyword: IconType) {
   const result = iconLookupTable[keyword]
-  if (result) {
-    return result.icon
-  } else {
-    return '❓'
-  }
+  return result.icon
 }
 
 export function capitalizeWord(word: string) {
   return word.charAt(0).toUpperCase() + word.slice(1)
+}
+
+export function getFlowText(flow: GovernanceFlows, mainFlowText: string, marketFlowText: string) {
+  return flow === GovernanceFlows.main ? mainFlowText : marketFlowText
 }
