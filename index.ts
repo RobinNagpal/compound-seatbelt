@@ -62,7 +62,7 @@ async function main() {
     const files = await listFilesInFolder(s3ReportsFolder)
     console.log('files', files)
     const proposalIdsArr =
-      process.env.SELECTED_PROPOSALS?.split(',') || allProposalIds.filter((id) => id.toNumber() > 432)
+      process.env.SELECTED_PROPOSALS?.split(',') || allProposalIds.filter((id) => id.toNumber() > 438)
 
     const proposalIds = proposalIdsArr.map((id) => BigNumber.from(id))
 
