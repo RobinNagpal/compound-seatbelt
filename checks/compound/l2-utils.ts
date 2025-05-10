@@ -3,7 +3,16 @@ import { AbiCoder, defaultAbiCoder, Interface } from '@ethersproject/abi'
 import { BigNumber } from '@ethersproject/bignumber'
 import { getFunctionFragmentAndDecodedCalldata, getFunctionSignature } from './abi-utils'
 import { CometChains, ExecuteTransactionInfo, ExecuteTransactionsInfo, L2Chain } from './compound-types'
-import { ARBITRUMSCAN_API_KEY, BASESCAN_API_KEY, ETHERSCAN_API_KEY, MANTLESCAN_API_KEY, OPTIMISMIC_ETHERSCAN_API_KEY, POLYGONSCAN_API_KEY, SCROLLSCAN_API_KEY } from './../../utils/constants'
+import {
+  ARBITRUMSCAN_API_KEY,
+  BASESCAN_API_KEY,
+  ETHERSCAN_API_KEY,
+  MANTLESCAN_API_KEY,
+  OPTIMISMIC_ETHERSCAN_API_KEY,
+  POLYGONSCAN_API_KEY,
+  SCROLLSCAN_API_KEY,
+  UNISCAN_API_KEY,
+} from './../../utils/constants'
 
 export const l2Bridges: { [address: string]: L2Chain } = {
   '0x4dbd4fc535ac27206064b68ffcf827b0a60bab3f': CometChains.arbitrum,
@@ -12,6 +21,7 @@ export const l2Bridges: { [address: string]: L2Chain } = {
   '0x6774bcbd5cecef1336b5300fb5186a12ddd8b367': CometChains.scroll,
   '0x25ace71c97b33cc4729cf772ae268934f7ab5fa1': CometChains.optimism,
   '0x676a795fe6e43c17c668de16730c3f690feb7120': CometChains.mantle,
+  '0x9a3d64e386c18cb1d6d5179a9596a4b5736e98a6': CometChains.unichain,
 }
 
 // Define network ID mapping for supported bridged chains
@@ -22,6 +32,7 @@ export const l2ChainIdMap: Record<L2Chain, string> = {
   [CometChains.base]: '8453',
   [CometChains.scroll]: '534352',
   [CometChains.mantle]: '5000',
+  [CometChains.unichain]: '130',
 }
 
 export const l2ChainSenderMap: Record<L2Chain, string> = {
@@ -29,17 +40,19 @@ export const l2ChainSenderMap: Record<L2Chain, string> = {
   [CometChains.optimism]: '0x4200000000000000000000000000000000000007', //L2CrossDomainMessenger
   [CometChains.polygon]: '0x8397259c983751DAf40400790063935a11afa28a', //fxChild
   [CometChains.base]: '0x4200000000000000000000000000000000000007', //L2CrossDomainMessenger
+  [CometChains.unichain]: '0x4200000000000000000000000000000000000007', //L2CrossDomainMessenger
   [CometChains.scroll]: '0x4dbd4fc535ac27206064b68ffcf827b0a60bab3f', //L2ScrollMessenger
   [CometChains.mantle]: '0x4200000000000000000000000000000000000007', //L2CrossDomainMessenger
 }
 
 export const MarketUpdateProposerMap: Record<CometChains, string> = {
-  [CometChains.mainnet]: '', 
-  [CometChains.arbitrum]: '', 
+  [CometChains.mainnet]: '',
+  [CometChains.arbitrum]: '',
   [CometChains.optimism]: '0xB6Ef3AC71E9baCF1F4b9426C149d855Bfc4415F9',
   [CometChains.polygon]: '',
   [CometChains.base]: '',
-  [CometChains.scroll]: '', 
+  [CometChains.unichain]: '',
+  [CometChains.scroll]: '',
   [CometChains.mantle]: '',
 }
 
@@ -60,11 +73,11 @@ export const apiKeyFlagMap: Record<CometChains, apiKeyFlagConfig> = {
   [CometChains.scroll]: { flag: '--scroll-apikey', key: SCROLLSCAN_API_KEY, prefix: 'scroll' },
   // TODO - Add correct Mantle Flag after crytic-compile/slither supports Mantle
   [CometChains.mantle]: { flag: '--mantle-apikey', key: MANTLESCAN_API_KEY, prefix: 'mantle' },
-};
-
+  [CometChains.unichain]: { flag: '--uni-apikey', key: UNISCAN_API_KEY, prefix: 'uni' },
+}
 
 export function getBridgeReceiverOverrides(chain: CometChains): Record<string, StateObject> | undefined {
-  if (chain === CometChains.optimism || chain === CometChains.base || chain === CometChains.mantle) {
+  if (chain === CometChains.optimism || chain === CometChains.base || chain === CometChains.mantle || chain === CometChains.unichain) {
     return {
       // Setting CrossDomainMessenger.xDomainMessageSender to the Main Governor Timelock address
       '0x4200000000000000000000000000000000000007': {
@@ -73,25 +86,24 @@ export function getBridgeReceiverOverrides(chain: CometChains): Record<string, S
         },
       },
     }
-  } 
+  }
 }
 
 export function getBridgeReceiverInput(chain: CometChains, l2TransactionsInfo: ExecuteTransactionsInfo): string {
   const { targets, values, signatures, calldatas } = l2TransactionsInfo
-  if (chain === CometChains.optimism || chain === CometChains.base || chain === CometChains.scroll || chain === CometChains.arbitrum || chain === CometChains.mantle) {
-    return defaultAbiCoder.encode(
-              ['address[]', 'uint256[]', 'string[]', 'bytes[]'],
-              [targets, values, signatures, calldatas]
-            )
+  if (
+    chain === CometChains.optimism ||
+    chain === CometChains.unichain ||
+    chain === CometChains.base ||
+    chain === CometChains.scroll ||
+    chain === CometChains.arbitrum ||
+    chain === CometChains.mantle
+  ) {
+    return defaultAbiCoder.encode(['address[]', 'uint256[]', 'string[]', 'bytes[]'], [targets, values, signatures, calldatas])
   } else if (chain === CometChains.polygon) {
-    const iface = new Interface([
-      'function processMessageFromRoot(uint256 stateId, address rootMessageSender, bytes data) external'
-    ]);
-    const data = defaultAbiCoder.encode(
-      ['address[]', 'uint256[]', 'string[]', 'bytes[]'],
-      [targets, values, signatures, calldatas]
-    )
-    return iface.encodeFunctionData('processMessageFromRoot', [1, AllChainAddresses.MAINNET_GOVERNOR_TIMELOCK, data]);
+    const iface = new Interface(['function processMessageFromRoot(uint256 stateId, address rootMessageSender, bytes data) external'])
+    const data = defaultAbiCoder.encode(['address[]', 'uint256[]', 'string[]', 'bytes[]'], [targets, values, signatures, calldatas])
+    return iface.encodeFunctionData('processMessageFromRoot', [1, AllChainAddresses.MAINNET_GOVERNOR_TIMELOCK, data])
   }
   throw new Error(`${chain} chain is not supported`)
 }
@@ -128,6 +140,11 @@ export const AllChainAddresses = {
   BASE_COMET_PROXY_ADMIN: '0xbdE8F31D2DdDA895264e27DD990faB3DC87b372d', // See - https://basescan.org/address/0xbdE8F31D2DdDA895264e27DD990faB3DC87b372d
   BASE_BRIDGE_RECEIVER: '0x18281dfC4d00905DA1aaA6731414EABa843c468A', // See - https://basescan.org/address/0x18281dfC4d00905DA1aaA6731414EABa843c468A
 
+  UNICHAIN_LOCAL_TIMELOCK: '0x2F4eAF29dfeeF4654bD091F7112926E108eF4Ed0', // See - https://basescan.org/address/0xCC3E7c85Bb0EE4f09380e041fee95a0caeDD4a02
+  // BASE_CONFIGURATOR_PROXY: '0x45939657d1CA34A8FA39A924B71D28Fe8431e581', // See - https://basescan.org/address/0x45939657d1CA34A8FA39A924B71D28Fe8431e581
+  UNICHAIN_COMET_PROXY_ADMIN: '0xaeB318360f27748Acb200CE616E389A6C9409a07', // See - https://basescan.org/address/0xbdE8F31D2DdDA895264e27DD990faB3DC87b372d
+  UNICHAIN_BRIDGE_RECEIVER: '0x4b5DeE60531a72C1264319Ec6A22678a4D0C8118', // See - https://basescan.org/address/0x18281dfC4d00905DA1aaA6731414EABa843c468A
+
   BASE_MARKET_ADMIN: '0x7e14050080306cd36b47DE61ce604b3a1EC70c4e',
   BASE_MARKET_UPDATE_PAUSE_GUARDIAN: '0x3cb4653F3B45F448D9100b118B75a1503281d2ee', // See - https://basescan.org/address/0x46e6b214b524310239732D51387075E0e70970bf#readProxyContract
   BASE_MARKET_UPDATE_PROPOSAL_GUARDIAN: '0x3cb4653F3B45F448D9100b118B75a1503281d2ee', // See - https://basescan.org/address/0x46e6b214b524310239732D51387075E0e70970bf#readProxyContract
@@ -149,12 +166,12 @@ export const AllChainAddresses = {
   OPTIMISM_MARKET_ADMIN: '0x7e14050080306cd36b47DE61ce604b3a1EC70c4e', // See - https://optimistic.etherscan.io/address/0x7e14050080306cd36b47DE61ce604b3a1EC70c4e
   OPTIMISM_MARKET_UPDATE_PAUSE_GUARDIAN: '0x3fFd6c073a4ba24a113B18C8F373569640916A45', // See - https://optimistic.etherscan.io/address/0xE36A30D249f7761327fd973001A32010b521b6Fd#readProxyContract
   OPTIMISM_MARKET_UPDATE_PROPOSAL_GUARDIAN: '0x3fFd6c073a4ba24a113B18C8F373569640916A45', // See - https://optimistic.etherscan.io/address/0xE36A30D249f7761327fd973001A32010b521b6Fd#readProxyContract
-  
+
   MANTLE_LOCAL_TIMELOCK: '0x16C7B5C1b10489F4B111af11de2Bd607c9728107', // See - https://mantlescan.xyz/address/0x6d903f6003cca6255D85CcA4D3B5E5146dC33925
   MANTLE_CONFIGURATOR_PROXY: '0xb77Cd4cD000957283D8BAf53cD782ECf029cF7DB', // See - https://mantlescan.xyz/address/0x4c8e3b3c4f3f1f6f4f1f4f4f4f4f4f4f4f4f4f4
   MANTLE_COMET_PROXY_ADMIN: '0xe268B436E75648aa0639e2088fa803feA517a0c7', // See - https://mantlescan.xyz/address/0x4c8e3b3c4f3f1f6f4f1f4f4f4f4f4f4f4f4f4f4
   MANTLE_BRIDGE_RECEIVER: '0xc91EcA15747E73d6dd7f616C49dAFF37b9F1B604', // See - https://mantlescan.xyz/address/0x4c8e3b3c4f3f1f6f4f1f4f4f4f4f4f4f4f4f4f4
-  
+
   MANTLE_MARKET_ADMIN: '0x7e14050080306cd36b47DE61ce604b3a1EC70c4e', // See - https://mantlescan.xyz/address/0x7e14050080306cd36b47DE61ce604b3a1EC70c4e
   MANTLE_MARKET_UPDATE_PAUSE_GUARDIAN: '0x3fFd6c073a4ba24a113B18C8F373569640916A45', // See - https://mantlescan.xyz/address/0xE36A30D249f7761327fd973001A32010b521b6Fd#readProxyContract
   MANTLE_MARKET_UPDATE_PROPOSAL_GUARDIAN: '0x3fFd6c073a4ba24a113B18C8F373569640916A45', // See - https://mantlescan.xyz/address/0xE36A30D249f7761327fd973001A32010b521b6Fd#readProxyContract
@@ -168,6 +185,7 @@ export const ChainAddresses = {
     [CometChains.base]: AllChainAddresses.BASE_LOCAL_TIMELOCK,
     [CometChains.scroll]: AllChainAddresses.SCROLL_LOCAL_TIMELOCK,
     [CometChains.mantle]: AllChainAddresses.MANTLE_LOCAL_TIMELOCK,
+    [CometChains.unichain]: AllChainAddresses.UNICHAIN_LOCAL_TIMELOCK,
   },
   L2BridgeReceiver: {
     [CometChains.arbitrum]: AllChainAddresses.ARBITRUM_BRIDGE_RECEIVER,
@@ -176,6 +194,7 @@ export const ChainAddresses = {
     [CometChains.base]: AllChainAddresses.BASE_BRIDGE_RECEIVER,
     [CometChains.scroll]: AllChainAddresses.SCROLL_BRIDGE_RECEIVER,
     [CometChains.mantle]: AllChainAddresses.MANTLE_BRIDGE_RECEIVER,
+    [CometChains.unichain]: AllChainAddresses.UNICHAIN_BRIDGE_RECEIVER,
   },
 }
 
@@ -183,7 +202,7 @@ export async function getDecodedBytesForChain(
   sourceChain: CometChains,
   chain: CometChains,
   proposalId: number,
-  transactionInfo: ExecuteTransactionInfo
+  transactionInfo: ExecuteTransactionInfo,
 ): Promise<ExecuteTransactionsInfo> {
   switch (chain) {
     case CometChains.arbitrum:
@@ -196,6 +215,8 @@ export async function getDecodedBytesForChain(
       return getDecodedBytesForScroll(sourceChain, proposalId, transactionInfo)
     case CometChains.optimism:
       return getDecodedBytesForOptimism(sourceChain, proposalId, transactionInfo)
+    case CometChains.unichain:
+      return getDecodedBytesForUnichain(sourceChain, proposalId, transactionInfo)
     case CometChains.mantle:
       return getDecodedBytesForMantle(sourceChain, proposalId, transactionInfo)
     default:
@@ -203,42 +224,77 @@ export async function getDecodedBytesForChain(
   }
 }
 
-export async function getDecodedBytesForArbitrum(sourceChain: CometChains, proposalId: number, transactionInfo: ExecuteTransactionInfo): Promise<ExecuteTransactionsInfo> {
+export async function getDecodedBytesForArbitrum(
+  sourceChain: CometChains,
+  proposalId: number,
+  transactionInfo: ExecuteTransactionInfo,
+): Promise<ExecuteTransactionsInfo> {
   const sentMessageSignature = 'createRetryableTicket(address,uint256,uint256,address,address,uint256,uint256,bytes)'
   const decodedCalldata = await getDecodedCallDataSentToBridge(sourceChain, proposalId, sentMessageSignature, transactionInfo)
   const parsedDataToBridge = decodedCalldata.at(7)
   return extractTransactionsFromBridgedData(parsedDataToBridge)
 }
 
-export async function getDecodedBytesForOptimism(sourceChain: CometChains, proposalId: number, transactionInfo: ExecuteTransactionInfo): Promise<ExecuteTransactionsInfo> {
+export async function getDecodedBytesForOptimism(
+  sourceChain: CometChains,
+  proposalId: number,
+  transactionInfo: ExecuteTransactionInfo,
+): Promise<ExecuteTransactionsInfo> {
   const sentMessageSignature = 'sendMessage(address,bytes,uint32)'
   const decodedCalldata = await getDecodedCallDataSentToBridge(sourceChain, proposalId, sentMessageSignature, transactionInfo)
   const parsedDataToBridge = decodedCalldata.at(1)
   return extractTransactionsFromBridgedData(parsedDataToBridge)
 }
 
-export async function getDecodedBytesForMantle(sourceChain: CometChains, proposalId: number, transactionInfo: ExecuteTransactionInfo): Promise<ExecuteTransactionsInfo> {
+export async function getDecodedBytesForMantle(
+  sourceChain: CometChains,
+  proposalId: number,
+  transactionInfo: ExecuteTransactionInfo,
+): Promise<ExecuteTransactionsInfo> {
   const sentMessageSignature = 'sendMessage(address,bytes,uint32)'
   const decodedCalldata = await getDecodedCallDataSentToBridge(sourceChain, proposalId, sentMessageSignature, transactionInfo)
   const parsedDataToBridge = decodedCalldata.at(1)
   return extractTransactionsFromBridgedData(parsedDataToBridge)
 }
 
-export async function getDecodedBytesForBase(sourceChain: CometChains, proposalId: number, transactionInfo: ExecuteTransactionInfo): Promise<ExecuteTransactionsInfo> {
+export async function getDecodedBytesForBase(
+  sourceChain: CometChains,
+  proposalId: number,
+  transactionInfo: ExecuteTransactionInfo,
+): Promise<ExecuteTransactionsInfo> {
   const sentMessageSignature = 'sendMessage(address,bytes,uint32)'
   const decodedCalldata = await getDecodedCallDataSentToBridge(sourceChain, proposalId, sentMessageSignature, transactionInfo)
   const parsedDataToBridge = decodedCalldata.at(1)
   return extractTransactionsFromBridgedData(parsedDataToBridge)
 }
 
-export async function getDecodedBytesForPolygon(sourceChain: CometChains, proposalId: number, transactionInfo: ExecuteTransactionInfo): Promise<ExecuteTransactionsInfo> {
+export async function getDecodedBytesForUnichain(
+  sourceChain: CometChains,
+  proposalId: number,
+  transactionInfo: ExecuteTransactionInfo,
+): Promise<ExecuteTransactionsInfo> {
+  const sentMessageSignature = 'sendMessage(address,bytes,uint32)'
+  const decodedCalldata = await getDecodedCallDataSentToBridge(sourceChain, proposalId, sentMessageSignature, transactionInfo)
+  const parsedDataToBridge = decodedCalldata.at(1)
+  return extractTransactionsFromBridgedData(parsedDataToBridge)
+}
+
+export async function getDecodedBytesForPolygon(
+  sourceChain: CometChains,
+  proposalId: number,
+  transactionInfo: ExecuteTransactionInfo,
+): Promise<ExecuteTransactionsInfo> {
   const sentMessageSignature = 'sendMessageToChild(address,bytes)'
   const decodedCalldata = await getDecodedCallDataSentToBridge(sourceChain, proposalId, sentMessageSignature, transactionInfo)
   const parsedDataToBridge = decodedCalldata.at(1)
   return extractTransactionsFromBridgedData(parsedDataToBridge)
 }
 
-export async function getDecodedBytesForScroll(sourceChain: CometChains, proposalId: number, transactionInfo: ExecuteTransactionInfo): Promise<ExecuteTransactionsInfo> {
+export async function getDecodedBytesForScroll(
+  sourceChain: CometChains,
+  proposalId: number,
+  transactionInfo: ExecuteTransactionInfo,
+): Promise<ExecuteTransactionsInfo> {
   const sentMessageSignature = 'sendMessage(address,uint256,bytes,uint256)'
   const decodedCalldata = await getDecodedCallDataSentToBridge(sourceChain, proposalId, sentMessageSignature, transactionInfo)
   const parsedDataToBridge = decodedCalldata.at(2)
@@ -257,7 +313,12 @@ function extractTransactionsFromBridgedData(parsedDataToBridge: any) {
   }
 }
 
-export async function getDecodedCallDataSentToBridge(sourceChain: CometChains, proposalId: number, sentMessageSignature: string, transactionInfo: ExecuteTransactionInfo) {
+export async function getDecodedCallDataSentToBridge(
+  sourceChain: CometChains,
+  proposalId: number,
+  sentMessageSignature: string,
+  transactionInfo: ExecuteTransactionInfo,
+) {
   const { fun, decodedCalldata } = await getFunctionFragmentAndDecodedCalldata(proposalId, sourceChain, {
     target: transactionInfo.target,
     signature: transactionInfo.signature,

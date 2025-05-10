@@ -12,20 +12,23 @@ export const checkTargetsNames: ProposalCheck = {
   async checkProposal(proposal, sim, deps) {
     const uniqueTargets = proposal.targets.filter((addr, i, targets) => targets.indexOf(addr) === i)
     const mainnetResults = await checkTargetRegistry(uniqueTargets, deps.chain)
-    
+
     const bridgedSimulations = sim.bridgedSimulations || []
     const bridgedCheckResults: BridgedCheckResult[] = await Promise.all(
       bridgedSimulations.map(async (b) => {
         if (b.proposal) {
-              const uniqueBridgeTargets = b.proposal.targets.filter((addr, i, targets) => targets.indexOf(addr) === i)
-              const bridgeResults = await checkTargetRegistry(uniqueBridgeTargets, b.chain);
-              return { chain: b.chain, checkResults: { ...bridgeResults } };
-          } else {
-              return { chain: b.chain, checkResults: { info: [], warnings: [], errors: ['No bridge simulation/proposal to verify the targets'] } };
+          const uniqueBridgeTargets = b.proposal.targets.filter((addr, i, targets) => targets.indexOf(addr) === i)
+          const bridgeResults = await checkTargetRegistry(uniqueBridgeTargets, b.chain)
+          return { chain: b.chain, checkResults: { ...bridgeResults } }
+        } else {
+          return {
+            chain: b.chain,
+            checkResults: { info: [], warnings: ['No bridge simulation/proposal to verify the targets'], errors: [] },
           }
-      })
-    );
-    
+        }
+      }),
+    )
+
     return { ...mainnetResults, bridgedCheckResults }
   },
 }
@@ -33,51 +36,48 @@ export const checkTargetsNames: ProposalCheck = {
 /**
  * For a given simulation response, check target registry for contract existence and name
  */
-async function checkTargetRegistry(
-  addresses: string[],
-  chain: CometChains
-) {
-  const info: string[] = [];
-  const warnings: string[] = [];
+async function checkTargetRegistry(addresses: string[], chain: CometChains) {
+  const info: string[] = []
+  const warnings: string[] = []
 
   // Fetch the registry data for the specified chain once
-  const registryData = getTargetRegistryData(chain);
+  const registryData = getTargetRegistryData(chain)
   if (!registryData) {
-    console.error(`Failed to fetch registry data for chain: ${chain}`);
-    return { info, warnings: [`Registry data for ${chain} not found`], errors: [] };
+    console.error(`Failed to fetch registry data for chain: ${chain}`)
+    return { info, warnings: [`Registry data for ${chain} not found`], errors: [] }
   }
 
   // Check each address against the registry data
   for (const addr of addresses) {
-    const contractName = registryData[addr.toLowerCase()];
-    const address = toAddressLink(addr, chain, false);
+    const contractName = registryData[addr.toLowerCase()]
+    const address = toAddressLink(addr, chain, false)
 
     if (contractName) {
-      info.push(bullet(`${address}: ${contractName}`));
+      info.push(bullet(`${address}: ${contractName}`))
     } else {
-      warnings.push(bullet(`${address}: Contract not in the Target Registry`));
+      warnings.push(bullet(`${address}: Contract not in the Target Registry`))
     }
   }
 
-  return { info, warnings, errors: [] };
+  return { info, warnings, errors: [] }
 }
 
 /**
  * Fetch the registry data for a given chain from the target registry file.
  */
 function getTargetRegistryData(chain: CometChains): Record<string, string> | null {
-  const targetRegistryFilePath = `./checks/compound/lookup/targetRegistry.json`;
+  const targetRegistryFilePath = `./checks/compound/lookup/targetRegistry.json`
 
   // Read and parse the file
-  const fileContent = fs.readFileSync(targetRegistryFilePath, 'utf-8');
-  const registryData = JSON.parse(fileContent);
+  const fileContent = fs.readFileSync(targetRegistryFilePath, 'utf-8')
+  const registryData = JSON.parse(fileContent)
 
   // Check if the chain exists in the registry
   if (!registryData[chain]) {
-    console.error(`Target registry not found for '${capitalizeWord(chain)}'.`);
-    return null;
+    console.error(`Target registry not found for '${capitalizeWord(chain)}'.`)
+    return null
   }
 
   // Return the data for the specific chain
-  return registryData[chain];
+  return registryData[chain]
 }

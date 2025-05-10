@@ -33,7 +33,7 @@ export interface TargetLookupData {
 export interface TargetRegistryData {
   [chain: string]: {
     [address: string]: string
-  };
+  }
 }
 
 export interface ContractTypeFormattingInfo {
@@ -91,14 +91,22 @@ export enum CometChains {
   polygon = 'polygon',
   mainnet = 'mainnet',
   base = 'base',
+  unichain = 'unichain',
   scroll = 'scroll',
   optimism = 'optimism',
   mantle = 'mantle',
 }
 
-export type L2Chain = CometChains.arbitrum | CometChains.polygon | CometChains.base | CometChains.optimism | CometChains.scroll | CometChains.mantle
+export type L2Chain =
+  | CometChains.arbitrum
+  | CometChains.polygon
+  | CometChains.base
+  | CometChains.optimism
+  | CometChains.scroll
+  | CometChains.mantle
+  | CometChains.unichain
 
 export enum GovernanceFlows {
   main = 'main-governance',
-  market = 'market-updates-governance'
+  market = 'market-updates-governance',
 }

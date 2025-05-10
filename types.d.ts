@@ -713,6 +713,7 @@ export enum CometChains {
   scroll = 'scroll',
   optimism = 'optimism',
   mantle = 'mantle',
+  unichain = 'unichain',
 }
 
 export type L2Chain =
@@ -722,3 +723,4 @@ export type L2Chain =
   | CometChains.optimism
   | CometChains.scroll
   | CometChains.mantle
+  | CometChains.unichain

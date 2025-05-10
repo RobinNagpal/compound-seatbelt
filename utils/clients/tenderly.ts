@@ -1,11 +1,3 @@
-import {
-  createSimulationPayload,
-  getLatestBlock,
-  sendBundleSimulation,
-  sendEncodeRequest,
-  sendSimulation,
-  SimulationPayloadParams,
-} from './tenderly-helpers'
 import { Block } from '@ethersproject/abstract-provider'
 import { getAddress } from '@ethersproject/address'
 import { BigNumber, BigNumberish } from '@ethersproject/bignumber'
@@ -14,8 +6,6 @@ import { Zero } from '@ethersproject/constants'
 import { keccak256 } from '@ethersproject/keccak256'
 import { toUtf8Bytes } from '@ethersproject/strings'
 import { writeFileSync } from 'fs'
-import mftch, { FETCH_OPT } from 'micro-ftch'
-
 import {
   BridgedSimulation,
   ProposalEvent,
@@ -25,21 +15,12 @@ import {
   SimulationConfigNew,
   SimulationConfigProposed,
   SimulationResult,
-  StorageEncodingResponse,
   TenderlyBundledSimulation,
   TenderlyContract,
   TenderlyPayload,
-  TenderlySimulation,
 } from '../../types'
 import { customProvider } from '../../utils/clients/ethers'
-import {
-  BLOCK_GAS_LIMIT,
-  TENDERLY_ACCESS_TOKEN,
-  TENDERLY_BASE_URL,
-  TENDERLY_ENCODE_URL,
-  TENDERLY_SIM_BUNDLE_URL,
-  TENDERLY_SIM_URL,
-} from '../constants'
+import { BLOCK_GAS_LIMIT } from '../constants'
 import {
   generateProposalId,
   getGovernor,
@@ -62,10 +43,15 @@ import {
 import { bridgeReceiver } from './../contracts/baseBridgeReceiver'
 import { provider } from './ethers'
 import { getGovernorOverrides, GovernorOverrideParams } from './governor-overrides'
+import {
+  createSimulationPayload,
+  getLatestBlock,
+  sendBundleSimulation,
+  sendEncodeRequest,
+  sendSimulation,
+  SimulationPayloadParams,
+} from './tenderly-helpers'
 import { generateTimelockOverrides, TimelockOverrideParams } from './timelock-overrides'
-
-// @ts-ignore
-const fetchUrl = mftch.default
 
 // Common constants
 
@@ -499,6 +485,8 @@ async function simulateBridgedTransactions(
         calldata: proposalEvent.calldatas[i],
         value: proposalEvent.values?.[i],
       }
+
+      console.log(transactionInfo)
 
       const networkId = l2ChainIdMap[destinationChain]
 

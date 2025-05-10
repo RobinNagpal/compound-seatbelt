@@ -173,8 +173,8 @@ export function createSimulationPayload(params: SimulationPayloadParams): Tender
     gas: gas || BLOCK_GAS_LIMIT,
     gas_price: gasPrice || '0',
     value,
-    save_if_fails: false,
-    save: false,
+    save_if_fails: true,
+    save: true,
     generate_access_list: true,
     block_header: {
       number: hexStripZeros(simBlock.toHexString()),

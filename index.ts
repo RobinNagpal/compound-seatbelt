@@ -62,7 +62,7 @@ async function main() {
     const files = await listFilesInFolder(s3ReportsFolder)
     console.log('files', files)
     const proposalIdsArr =
-      process.env.SELECTED_PROPOSALS?.split(',') || allProposalIds.filter((id) => id.toNumber() > 228)
+      process.env.SELECTED_PROPOSALS?.split(',') || allProposalIds.filter((id) => id.toNumber() > 432)
 
     const proposalIds = proposalIdsArr.map((id) => BigNumber.from(id))
 
@@ -139,18 +139,14 @@ async function main() {
         return String(process.env.SKIP_DEFAULT_CHECKS).toLowerCase() !== 'true'
       })
     console.log(`Running ${checksToRun.length} checks: ${checksToRun.join(', ')} for proposal ID ${proposal.id!}`)
-    const checkResults: AllCheckResults = Object.fromEntries(
-      await Promise.all(
-        checksToRun.map(async (checkId) => [
-          checkId,
-          {
-            name: ALL_CHECKS[checkId].name,
-            result: await ALL_CHECKS[checkId].checkProposal(proposal, sim, proposalData),
-          },
-        ]),
-      ),
-    )
-
+    const checkResults: AllCheckResults = {}
+    for (const checkToRun of checksToRun) {
+      console.log(`Running check ${checkToRun}...`)
+      checkResults[checkToRun] = {
+        name: ALL_CHECKS[checkToRun].name,
+        result: await ALL_CHECKS[checkToRun].checkProposal(proposal, sim, proposalData),
+      }
+    }
     const compProposalAnalysis =
       process.env.DISABLE_COMPOUND_CHECKS === 'true'
         ? { mainnetActionAnalysis: [], chainedProposalAnalysis: [] }
