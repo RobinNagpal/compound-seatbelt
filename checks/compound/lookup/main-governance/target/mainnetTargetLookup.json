@@ -819,6 +819,10 @@
           "413": [
             "0x6d903f6003cca6255D85CcA4D3B5E5146dC33925",
             "25565000000000000000000"
+          ],
+          "438": [
+            "0x6d903f6003cca6255D85CcA4D3B5E5146dC33925",
+            "3600000000000000000000"
           ]
         }
       },
@@ -1219,7 +1223,8 @@
       372,
       379,
       381,
-      413
+      413,
+      438
     ]
   },
   "0x12392f67bdf24fae0af363c24ac620a2f67dad86": {
@@ -1796,6 +1801,10 @@
           "413": [
             "0x40ec5B33f54e0E8A33A975908C5BA1c14e5BbbDf",
             "25565000000000000000000"
+          ],
+          "438": [
+            "0x81014F44b0a345033bB2b3B21C7a1A308B35fEeA",
+            "3600000000000000000000"
           ]
         }
       },
@@ -1964,7 +1973,8 @@
       372,
       379,
       412,
-      413
+      413,
+      438
     ]
   },
   "0xcd18eaa163733da39c232722cbc4e8940b1d8888": {
@@ -4626,6 +4636,11 @@
             "0x7dcf87198fd673716e5a32b206d9379c4fcbad8875073f52bfd0656759bf89ed",
             "v3-official-markets",
             "{\"1\":[{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0xc3d688B66703497DAA19211EEdff47f25384cdc3\"},{\"baseSymbol\":\"WETH\",\"cometAddress\":\"0xA17581A9E3356d9A858b789D68B4d866e593aE94\"},{\"baseSymbol\":\"USDT\",\"cometAddress\":\"0x3Afdc9BCA9213A35503b077a6072F3D0d5AB0840\"},{\"baseSymbol\":\"wstETH\",\"cometAddress\":\"0x3D0bb1ccaB520A66e607822fC55BC921738fAFE3\"},{\"baseSymbol\":\"USDS\",\"cometAddress\":\"0x5D409e56D886231aDAf00c8775665AD0f9897b56\"},{\"baseSymbol\":\"WBTC\",\"cometAddress\":\"0xe85Dc543813B8c2CFEaAc371517b925a166a9293\"}],\"10\":[{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0x2e44e174f7D53F0212823acC11C01A11d58c5bCB\"},{\"baseSymbol\":\"USDT\",\"cometAddress\":\"0x995E394b8B2437aC8Ce61Ee0bC610D617962B214\"},{\"baseSymbol\":\"WETH\",\"cometAddress\":\"0xE36A30D249f7761327fd973001A32010b521b6Fd\"}],\"130\":[{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0x2c7118c4C88B9841FCF839074c26Ae8f035f2921\"}],\"137\":[{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0xF25212E676D1F7F89Cd72fFEe66158f541246445\"},{\"baseSymbol\":\"USDT\",\"cometAddress\":\"0xaeB318360f27748Acb200CE616E389A6C9409a07\"}],\"2020\":[{\"baseSymbol\":\"WETH\",\"cometAddress\":\"0x4006eD4097Ee51c09A04c3B0951D28CCf19e6DFE\"}],\"5000\":[{\"baseSymbol\":\"USDe\",\"cometAddress\":\"0x606174f62cd968d8e684c645080fa694c1D7786E\"}],\"8453\":[{\"baseSymbol\":\"USDbC\",\"cometAddress\":\"0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf\"},{\"baseSymbol\":\"WETH\",\"cometAddress\":\"0x46e6b214b524310239732D51387075E0e70970bf\"},{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0xb125E6687d4313864e53df431d5425969c15Eb2F\"},{\"baseSymbol\":\"AERO\",\"cometAddress\":\"0x784efeB622244d2348d4F2522f8860B96fbEcE89\"},{\"baseSymbol\":\"USDS\",\"cometAddress\":\"0x2c776041CCFe903071AF44aa147368a9c8EEA518\"}],\"42161\":[{\"baseSymbol\":\"USDC.e\",\"cometAddress\":\"0xA5EDBDD9646f8dFF606d7448e414884C7d905dCA\"},{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf\"},{\"baseSymbol\":\"WETH\",\"cometAddress\":\"0x6f7D514bbD4aFf3BcD1140B7344b32f063dEe486\"},{\"baseSymbol\":\"USDT\",\"cometAddress\":\"0xd98Be00b5D27fc98112BdE293e487f8D4cA57d07\"}],\"59144\":[{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0x8D38A3d6B3c3B7d96D6536DA7Eef94A9d7dbC991\"}],\"534352\":[{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0xB2f97c1Bd3bf02f5e74d13f02E3e26F93D77CE44\"}]}"
+          ],
+          "438": [
+            "0x7dcf87198fd673716e5a32b206d9379c4fcbad8875073f52bfd0656759bf89ed",
+            "v3-official-markets",
+            "{\"1\":[{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0xc3d688B66703497DAA19211EEdff47f25384cdc3\"},{\"baseSymbol\":\"WETH\",\"cometAddress\":\"0xA17581A9E3356d9A858b789D68B4d866e593aE94\"},{\"baseSymbol\":\"USDT\",\"cometAddress\":\"0x3Afdc9BCA9213A35503b077a6072F3D0d5AB0840\"},{\"baseSymbol\":\"wstETH\",\"cometAddress\":\"0x3D0bb1ccaB520A66e607822fC55BC921738fAFE3\"},{\"baseSymbol\":\"USDS\",\"cometAddress\":\"0x5D409e56D886231aDAf00c8775665AD0f9897b56\"},{\"baseSymbol\":\"WBTC\",\"cometAddress\":\"0xe85Dc543813B8c2CFEaAc371517b925a166a9293\"}],\"10\":[{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0x2e44e174f7D53F0212823acC11C01A11d58c5bCB\"},{\"baseSymbol\":\"USDT\",\"cometAddress\":\"0x995E394b8B2437aC8Ce61Ee0bC610D617962B214\"},{\"baseSymbol\":\"WETH\",\"cometAddress\":\"0xE36A30D249f7761327fd973001A32010b521b6Fd\"}],\"130\":[{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0x2c7118c4C88B9841FCF839074c26Ae8f035f2921\"},{\"baseSymbol\":\"WETH\",\"cometAddress\":\"0x6C987dDE50dB1dcDd32Cd4175778C2a291978E2a\"}],\"137\":[{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0xF25212E676D1F7F89Cd72fFEe66158f541246445\"},{\"baseSymbol\":\"USDT\",\"cometAddress\":\"0xaeB318360f27748Acb200CE616E389A6C9409a07\"}],\"2020\":[{\"baseSymbol\":\"WETH\",\"cometAddress\":\"0x4006eD4097Ee51c09A04c3B0951D28CCf19e6DFE\"}],\"5000\":[{\"baseSymbol\":\"USDe\",\"cometAddress\":\"0x606174f62cd968d8e684c645080fa694c1D7786E\"}],\"8453\":[{\"baseSymbol\":\"USDbC\",\"cometAddress\":\"0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf\"},{\"baseSymbol\":\"WETH\",\"cometAddress\":\"0x46e6b214b524310239732D51387075E0e70970bf\"},{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0xb125E6687d4313864e53df431d5425969c15Eb2F\"},{\"baseSymbol\":\"AERO\",\"cometAddress\":\"0x784efeB622244d2348d4F2522f8860B96fbEcE89\"},{\"baseSymbol\":\"USDS\",\"cometAddress\":\"0x2c776041CCFe903071AF44aa147368a9c8EEA518\"}],\"42161\":[{\"baseSymbol\":\"USDC.e\",\"cometAddress\":\"0xA5EDBDD9646f8dFF606d7448e414884C7d905dCA\"},{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf\"},{\"baseSymbol\":\"WETH\",\"cometAddress\":\"0x6f7D514bbD4aFf3BcD1140B7344b32f063dEe486\"},{\"baseSymbol\":\"USDT\",\"cometAddress\":\"0xd98Be00b5D27fc98112BdE293e487f8D4cA57d07\"}],\"59144\":[{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0x8D38A3d6B3c3B7d96D6536DA7Eef94A9d7dbC991\"}],\"534352\":[{\"baseSymbol\":\"USDC\",\"cometAddress\":\"0xB2f97c1Bd3bf02f5e74d13f02E3e26F93D77CE44\"}]}"
           ]
         }
       }
@@ -4654,7 +4669,8 @@
       357,
       394,
       395,
-      420
+      420,
+      438
     ]
   },
   "0xa0c68c638235ee32657e8f720a23cec1bfc77c77": {

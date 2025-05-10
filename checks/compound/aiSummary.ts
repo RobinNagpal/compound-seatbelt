@@ -47,7 +47,7 @@ Just return the summary.
 `
 
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: 'o4-mini',
       messages: [
         {
           role: 'system',
@@ -58,7 +58,7 @@ Just return the summary.
           content: prompt,
         },
       ],
-      temperature: 0.7,
+      temperature: 1,
     })
 
     const message = response?.choices?.[0]?.message?.content
@@ -66,9 +66,9 @@ Just return the summary.
       console.error('Response from AI is empty, falling back to default formatter.')
       return await defaultFormatter(chain, target, signature, decodedCalldata)
     }
-    
+
     if (isNotAIGenerated) {
-      return (message.trim())
+      return message.trim()
     }
     return formatAISummary(message.trim())
   } catch (error) {
@@ -140,7 +140,7 @@ async function getContractNamesList(chain: CometChains, target: string, argument
 }
 
 function formatAISummary(summary: string) {
-  console.log("No function formatter found. Generating summary using AI...");
+  console.log('No function formatter found. Generating summary using AI...')
   return 'AI Generated: \n' + summary
 }
 
@@ -148,7 +148,7 @@ async function defaultFormatter(chain: CometChains, target: string, functionSign
   try {
     const { contractName } = await getContractNameAndAbiFromFile(chain, target)
     return `The function **${functionSignature}** was called on the contract **${contractName}** with the following parameters:\n- ${decodedCalldata.join(
-      ', '
+      ', ',
     )}`
   } catch (error) {
     console.error('Error in default formatter:', error)

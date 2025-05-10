@@ -11,6 +11,7 @@ import {
   OPTIMISMIC_ETHERSCAN_API_KEY,
   POLYGONSCAN_API_KEY,
   SCROLLSCAN_API_KEY,
+  UNISCAN_API_KEY,
 } from './../../utils/constants'
 
 // @ts-ignore
@@ -104,6 +105,8 @@ export function getExplorerApiUrl(chain: CometChains, address: string) {
     return `https://api-optimistic.etherscan.io/api?module=contract&action=getsourcecode&address=${address}&apikey=${OPTIMISMIC_ETHERSCAN_API_KEY}`
   } else if (chain === CometChains.mantle) {
     return `https://api.mantlescan.xyz/api?module=contract&action=getsourcecode&address=${address}&apikey=${MANTLESCAN_API_KEY}`
+  } else if (chain === CometChains.unichain) {
+    return `https://api.uniscan.xyz/api?module=contract&action=getsourcecode&address=${address}&apikey=${UNISCAN_API_KEY}`
   } else {
     throw new Error('Unknown chain: ' + chain)
   }
