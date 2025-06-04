@@ -53,7 +53,7 @@ export const MarketUpdateProposerMap: Record<CometChains, string> = {
   [CometChains.base]: '',
   [CometChains.unichain]: '',
   [CometChains.scroll]: '',
-  [CometChains.mantle]: '',
+  [CometChains.mantle]: '0xea45D76425be2a1de4EC5FE24fCe992e3e8593FD',
 }
 
 export interface apiKeyFlagConfig {

@@ -29,9 +29,11 @@ async function main() {
   // If no SIM_NAME is provided, we get proposals to simulate from the chain
   if (!DAO_NAME) throw new Error('Must provider a DAO_NAME')
 
-  for (const [chainKey, PROPOSER_ADDRESS] of Object.entries(MarketUpdateProposerMap).filter(
+  const chainsWithMarketAdminProposerEnabled = Object.entries(MarketUpdateProposerMap).filter(
     ([_, address]) => address !== '',
-  )) {
+  )
+
+  for (const [chainKey, PROPOSER_ADDRESS] of chainsWithMarketAdminProposerEnabled) {
     const chain = chainKey as CometChains
     // TODO: Remove this check after Tenderly add support for Scroll
     if (chain === CometChains.scroll) {
@@ -90,6 +92,13 @@ async function main() {
       }
 
       const pdfExists = files.includes(`${s3ReportsFolder}/${simProposal.id.toString()}.pdf`)
+
+      if (
+        process.env.SELECTED_MARKET_UPDATE_CHAINS &&
+        !process.env.SELECTED_MARKET_UPDATE_CHAINS.split(',').includes(chain)
+      ) {
+        continue
+      }
 
       if (!process.env.SELECTED_PROPOSALS && pdfExists) {
         console.log(`Skipping simulation for proposal ${simProposal.id}  as PDF already exists in S3...`)
