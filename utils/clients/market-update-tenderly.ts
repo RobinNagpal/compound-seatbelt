@@ -67,10 +67,16 @@ const DEFAULT_FROM = '0xD73a92Be73EfbFcF3854433A5FcbAbF9c1316073' // arbitrary E
  * @param config Configuration object
  */
 export async function simulate(config: ConfigWithoutGovernorType, provider: JsonRpcProvider, chain: CometChains) {
-  if (config.type === 'executed') return await simulateExecuted(config as SimulationConfigExecuted, provider, chain)
-  else if (config.type === 'proposed')
+  if (config.type === 'executed') {
+    console.log(`Simulating executed proposal:`, config)
+    return await simulateExecuted(config as SimulationConfigExecuted, provider, chain)
+  } else if (config.type === 'proposed') {
+    console.log(`Simulating proposed proposal:`, config)
     return await simulateProposed(config as SimulationConfigProposed, provider, chain)
-  else return await simulateNew(config as SimulationConfigNew, provider, chain)
+  } else {
+    console.log(`Simulating new proposal:`, config)
+    return await simulateNew(config as SimulationConfigNew, provider, chain)
+  }
 }
 
 /**
